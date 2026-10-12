@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/* Conserva los colores representativos de Panamá Viajero. */
+:root {
+  --brand: #4956a2;
+  --accent: #cd2e4c;
+}
+
+/* Expone los colores de marca como utilidades de Tailwind. */
+@theme inline {
+  --color-brand: var(--brand);
+  --color-accent: var(--accent);
+}
+
+/* Define la base visual provisional de padmin. */
+body {
+  margin: 0;
+  background: #f5f6fb;
+  color: #172033;
+  font-family: Arial, Helvetica, sans-serif;
+}
