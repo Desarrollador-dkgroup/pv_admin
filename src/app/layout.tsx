@@ -4,7 +4,7 @@ import "./globals.css";
 
 // Define la identidad y los metadatos de padmin.
 export const metadata: Metadata = {
-  title: "padmin | Panamá Viajero",
+  title: "Panel del propietario | Panamá Viajero",
   description: "Administración de Panamá Viajero.",
 };
 
