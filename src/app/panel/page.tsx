@@ -1,83 +1,79 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
-import { SignOut } from "@/components/sign-out";
+import { Panel } from "@/components/ui";
+import { getPanelIdentity } from "@/lib/panel-access";
+import { canManageCatalog } from "@/types/panel";
 
-// Verifica identidad y rol en el servidor; la vista previa nunca concede acceso a esta ruta.
+// Resume los servicios reales visibles para la cuenta autenticada.
 export default async function LivePanel() {
-  const supabase = await getSupabaseServerClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (error || !user) redirect("/acceso");
-  const [admin, memberships] = await Promise.all([
-    supabase.from("platform_admins").select("user_id").eq("user_id", user.id).maybeSingle(),
-    supabase.from("business_members").select("business_id, role").eq("user_id", user.id),
-  ]);
-  const role =
-    !admin.error && admin.data
-      ? "admin"
-      : !memberships.error && memberships.data?.length
-        ? "propietario"
-        : null;
-  let services: Array<{ id: string; name: string; status: string }> = [];
-  let readError = false;
-  // Se limita la consulta a los negocios que pertenecen al usuario autenticado.
-  if (role) {
-    const query = supabase.from("services").select("id, name, status");
-    const result =
-      role === "admin"
-        ? await query.limit(50)
-        : await query
-            .in(
-              "business_id",
-              memberships.data!.map((member) => member.business_id),
-            )
-            .limit(50);
-    readError = Boolean(result.error);
-    services = result.data ?? [];
-  }
+  const { supabase, role, businessIds } = await getPanelIdentity();
+  if (role === "collaborator") redirect("/panel/permisos");
+  const isStaff = canManageCatalog(role);
+  let query = supabase
+    .from("services")
+    .select("id, name, status, category_id, review_status")
+    .order("updated_at", { ascending: false })
+    .limit(100);
+
+  if (!isStaff) query = query.in("business_id", businessIds);
+
+  const { data: services, error } = await query;
+  if (error) throw new Error("No se pudieron cargar los servicios de esta cuenta.");
+
+  const records = services ?? [];
+  const drafts = records.filter((service) => service.status === "draft").length;
+  const published = records.filter((service) => service.status === "published").length;
+  const pending = records.filter((service) => service.review_status === "pending").length;
+
   return (
-    <main className="welcome">
-      <Link href="/" className="brand">
-        padmin
-      </Link>
-      <h1>Tu acceso</h1>
-      <section className="panel">
-        <h2>{role ? "Cuenta verificada" : "Acceso no habilitado"}</h2>
-        <p>{user.email}</p>
-        <p>
-          {role
-            ? `Rol registrado: ${role === "admin" ? "Administrador" : "Miembro de negocio"}.`
-            : "No encontramos una asignación administrativa disponible para esta cuenta."}
-        </p>
-        <p>
-          La edición real no está habilitada. Primero definiremos los permisos y la publicación.
-        </p>
-        {role && (
-          <>
-            <h2>Servicios disponibles para tu cuenta</h2>
-            {readError ? (
-              <p role="alert">No pudimos consultar tus servicios con el acceso actual.</p>
-            ) : services.length ? (
-              <ul>
-                {services.map((service) => (
-                  <li key={service.id}>
-                    {service.name} · {service.status}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No hay servicios disponibles.</p>
-            )}
-            <Link className="button secondary" href={`/vista-previa/${role}`}>
-              Explorar el diseño
-            </Link>
-          </>
-        )}
-        <SignOut />
-      </section>
-    </main>
+    <>
+      <header className="page-heading">
+        <div>
+          <h1>{isStaff ? "Administración" : "Mi panel"}</h1>
+          <p>Información actual de Panamá Viajero desde Supabase.</p>
+        </div>
+        <Link href="/panel/servicios" className="button primary">
+          Ver servicios
+        </Link>
+      </header>
+      <div className="metrics three">
+        <Panel>
+          <span className="metric-label">Servicios visibles</span>
+          <strong>{records.length}</strong>
+          <small>Registros accesibles para esta cuenta</small>
+        </Panel>
+        <Panel>
+          <span className="metric-label">Publicados</span>
+          <strong>{published}</strong>
+          <small>Servicios disponibles en la web</small>
+        </Panel>
+        <Panel>
+          <span className="metric-label">
+            {isStaff ? "Pendientes de revisión" : "Borradores"}
+          </span>
+          <strong>{isStaff ? pending : drafts}</strong>
+          <small>
+            {isStaff ? "Enviados por los negocios" : "Aún no publicados"}
+          </small>
+        </Panel>
+      </div>
+      <Panel>
+        <h2>Servicios recientes</h2>
+        {records.slice(0, 6).map((service) => (
+          <Link
+            className="queue-item"
+            href={`/panel/servicios/${service.id}`}
+            key={service.id}
+          >
+            <b>{service.name}</b>
+            <small>
+              {service.category_id} · {service.status}
+            </small>
+          </Link>
+        ))}
+        {!records.length && <p>No hay servicios asociados a esta cuenta.</p>}
+      </Panel>
+      {error && <p role="alert">No se pudieron cargar los servicios.</p>}
+    </>
   );
 }

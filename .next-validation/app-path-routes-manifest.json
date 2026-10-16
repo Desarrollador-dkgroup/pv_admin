@@ -1,0 +1,16 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/_global-error/page": "/_global-error",
+  "/favicon.ico/route": "/favicon.ico",
+  "/acceso/page": "/acceso",
+  "/page": "/",
+  "/vista-previa/[role]/[[...path]]/page": "/vista-previa/[role]/[[...path]]",
+  "/vista-previa/acceso/page": "/vista-previa/acceso",
+  "/panel/page": "/panel",
+  "/panel/servicios/[id]/galeria/page": "/panel/servicios/[id]/galeria",
+  "/panel/servicios/[id]/menu/page": "/panel/servicios/[id]/menu",
+  "/panel/servicios/[id]/page": "/panel/servicios/[id]",
+  "/panel/servicios/[id]/unidades/page": "/panel/servicios/[id]/unidades",
+  "/panel/servicios/nuevo/page": "/panel/servicios/nuevo",
+  "/panel/servicios/page": "/panel/servicios"
+}

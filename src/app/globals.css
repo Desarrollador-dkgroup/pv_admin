@@ -840,18 +840,6 @@ td:first-child a:hover {
   height: auto;
   margin-top: 20px;
 }
-.test-credentials {
-  display: grid;
-  gap: 6px;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.6;
-  font-weight: 400;
-  overflow-wrap: anywhere;
-}
-.test-credentials code {
-  font-family: inherit;
-}
 .auth-form {
   display: flex;
   align-items: center;

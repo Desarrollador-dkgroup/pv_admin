@@ -1,6 +1,6 @@
-﻿import { AuthScreen } from "@/components/auth-screen";
+import { redirect } from "next/navigation";
 
-// Abre el acceso directamente, sin una página intermedia de selección de recorridos.
+// Envía la ruta principal al único formulario de acceso real.
 export default function HomePage() {
-  return <AuthScreen preview />;
+  redirect("/acceso");
 }

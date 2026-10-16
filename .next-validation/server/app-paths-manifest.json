@@ -1,0 +1,16 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/_global-error/page": "app/_global-error/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/acceso/page": "app/acceso/page.js",
+  "/page": "app/page.js",
+  "/vista-previa/[role]/[[...path]]/page": "app/vista-previa/[role]/[[...path]]/page.js",
+  "/vista-previa/acceso/page": "app/vista-previa/acceso/page.js",
+  "/panel/page": "app/panel/page.js",
+  "/panel/servicios/[id]/galeria/page": "app/panel/servicios/[id]/galeria/page.js",
+  "/panel/servicios/[id]/menu/page": "app/panel/servicios/[id]/menu/page.js",
+  "/panel/servicios/[id]/page": "app/panel/servicios/[id]/page.js",
+  "/panel/servicios/[id]/unidades/page": "app/panel/servicios/[id]/unidades/page.js",
+  "/panel/servicios/nuevo/page": "app/panel/servicios/nuevo/page.js",
+  "/panel/servicios/page": "app/panel/servicios/page.js"
+}

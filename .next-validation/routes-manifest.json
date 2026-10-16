@@ -1,0 +1,141 @@
+{
+  "version": 3,
+  "pages404": true,
+  "appType": "app",
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "onMatchHeaders": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/panel/servicios/[id]",
+      "regex": "^/panel/servicios/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/panel/servicios/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/panel/servicios/[id]/galeria",
+      "regex": "^/panel/servicios/([^/]+?)/galeria(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/panel/servicios/(?<nxtPid>[^/]+?)/galeria(?:/)?$"
+    },
+    {
+      "page": "/panel/servicios/[id]/menu",
+      "regex": "^/panel/servicios/([^/]+?)/menu(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/panel/servicios/(?<nxtPid>[^/]+?)/menu(?:/)?$"
+    },
+    {
+      "page": "/panel/servicios/[id]/unidades",
+      "regex": "^/panel/servicios/([^/]+?)/unidades(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/panel/servicios/(?<nxtPid>[^/]+?)/unidades(?:/)?$"
+    },
+    {
+      "page": "/vista-previa/[role]/[[...path]]",
+      "regex": "^/vista\\-previa/([^/]+?)(?:/(.+?))?(?:/)?$",
+      "routeKeys": {
+        "nxtProle": "nxtProle",
+        "nxtPpath": "nxtPpath"
+      },
+      "namedRegex": "^/vista\\-previa/(?<nxtProle>[^/]+?)(?:/(?<nxtPpath>.+?))?(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/acceso",
+      "regex": "^/acceso(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/acceso(?:/)?$"
+    },
+    {
+      "page": "/favicon.ico",
+      "regex": "^/favicon\\.ico(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/favicon\\.ico(?:/)?$"
+    },
+    {
+      "page": "/panel",
+      "regex": "^/panel(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/panel(?:/)?$"
+    },
+    {
+      "page": "/panel/servicios",
+      "regex": "^/panel/servicios(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/panel/servicios(?:/)?$"
+    },
+    {
+      "page": "/panel/servicios/nuevo",
+      "regex": "^/panel/servicios/nuevo(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/panel/servicios/nuevo(?:/)?$"
+    },
+    {
+      "page": "/vista-previa/acceso",
+      "regex": "^/vista\\-previa/acceso(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/vista\\-previa/acceso(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

@@ -1,0 +1,611 @@
+"use client";
+
+import { useActionState } from "react";
+import { Button, Panel } from "@/components/ui";
+import { getLodgingDetailFields } from "@/data/lodging-details";
+import { saveServiceAction } from "@/app/panel/actions";
+import { canManageCatalog, type PanelRole } from "@/types/panel";
+
+type Option = { id: string; name?: string; label?: string; province_id?: string };
+type Props = {
+  role: PanelRole;
+  service: Record<string, unknown>;
+  lodging: Record<string, unknown>;
+  restaurant: Record<string, unknown>;
+  businesses: Option[];
+  categories: Option[];
+  cities: Option[];
+  lodgingTypes: Option[];
+  sites: Option[];
+  amenities: Option[];
+  restaurantFeatures: Option[];
+  selectedSiteIds: string[];
+  selectedAmenityIds: string[];
+  selectedFeatureIds: string[];
+};
+
+// Presenta campos reales para el servicio y su ficha específica.
+export function ServiceEditorForm(props: Props) {
+  const [state, action, pending] = useActionState(saveServiceAction, { error: "" });
+  const { role, service, lodging, restaurant } = props;
+  const isStaff = canManageCatalog(role);
+  const isNew = !service.id;
+  const categoryId = String(service.category_id ?? "hospedaje");
+  const lodgingTypeId = String(service.hospedaje_type_id ?? "");
+  const detailFields = getLodgingDetailFields(lodgingTypeId);
+  const details = (lodging.details ?? {}) as Record<string, string>;
+  const selectedSites = props.selectedSiteIds.length
+    ? props.selectedSiteIds
+    : service.tourist_site_id ? [String(service.tourist_site_id)] : [];
+
+  return (
+    <form action={action}>
+      <input type="hidden" name="service_id" value={String(service.id ?? "")} />
+      <Panel>
+        <h2>Información general</h2>
+        <label className="field">
+          Nombre comercial
+          <input name="name" required defaultValue={String(service.name ?? "")} />
+        </label>
+        <label className="field">
+          Identificador de la página
+          <input name="slug" required defaultValue={String(service.slug ?? "")} />
+        </label>
+        <label className="field">
+          Negocio
+          <select
+            name="business_id"
+            required
+            defaultValue={String(service.business_id ?? props.businesses[0]?.id ?? "")}
+            disabled={!isStaff}
+          >
+            {props.businesses.map((business) => (
+              <option key={business.id} value={business.id}>
+                {business.name ?? business.id}
+              </option>
+            ))}
+          </select>
+          {!isStaff && (
+            <input
+              type="hidden"
+              name="business_id"
+              value={String(service.business_id ?? props.businesses[0]?.id ?? "")}
+            />
+          )}
+        </label>
+        <label className="field">
+          Categoría
+          <select name="category_id" defaultValue={categoryId} required>
+            {props.categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.label ?? category.name ?? category.id}
+              </option>
+            ))}
+          </select>
+        </label>
+        {categoryId === "hospedaje" && (
+          <label className="field">
+            Tipo de hospedaje
+            <select
+              name="hospedaje_type_id"
+              defaultValue={lodgingTypeId}
+              required
+            >
+              <option value="">Selecciona un tipo</option>
+              {props.lodgingTypes.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.label ?? type.name ?? type.id}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <label className="field">
+          Ciudad
+          <select name="city_id" defaultValue={String(service.city_id ?? "")} required>
+            <option value="">Selecciona una ciudad</option>
+            {props.cities.map((city) => (
+              <option key={city.id} value={city.id}>
+                {city.name ?? city.id}
+              </option>
+            ))}
+          </select>
+        </label>
+        <TextField label="Dirección" name="address" value={service.address} />
+        <TextField label="Área o barrio" name="area_label" value={service.area_label} />
+        <TextField
+          label="Descripción para búsquedas"
+          name="search_description"
+          value={service.search_description}
+          multiline
+        />
+        <TextField
+          label="Descripción completa"
+          name="description"
+          value={service.description}
+          multiline
+          required
+        />
+        <TextField label="Latitud" name="latitude" value={service.latitude} type="number" />
+        <TextField label="Longitud" name="longitude" value={service.longitude} type="number" />
+        <TextField label="Consulta de mapa" name="maps_query" value={service.maps_query} />
+        <fieldset className="choice-group">
+          <legend>Sitios turísticos relacionados</legend>
+          <small>El servicio puede aparecer en varios destinos cercanos.</small>
+          {props.sites.map((site) => (
+            <label className="checkbox-option" key={site.id}>
+              <input
+                type="checkbox"
+                name="tourist_site_ids"
+                value={site.id}
+                defaultChecked={selectedSites.includes(site.id)}
+              />
+              {site.name} · {site.province_id ?? "Provincia sin indicar"}
+            </label>
+          ))}
+        </fieldset>
+        <fieldset className="choice-group">
+          <legend>Servicios y comodidades</legend>
+          {props.amenities.map((amenity) => (
+            <label className="checkbox-option" key={amenity.id}>
+              <input
+                type="checkbox"
+                name="amenity_ids"
+                value={amenity.id}
+                defaultChecked={props.selectedAmenityIds.includes(amenity.id)}
+              />
+              {amenity.label ?? amenity.id}
+            </label>
+          ))}
+        </fieldset>
+        <TextField
+          label="Precio desde (USD)"
+          name="base_price"
+          value={dollars(service.base_price_cents)}
+          type="number"
+        />
+        {isStaff && (
+          <>
+            <label className="field">
+              Publicación
+              <select name="status" defaultValue={String(service.status ?? "draft")}>
+                <option value="draft">Borrador</option>
+                <option value="published">Publicado</option>
+                <option value="suspended">Suspendido</option>
+              </select>
+            </label>
+            <label className="checkbox-option">
+              <input
+                type="checkbox"
+                name="is_recommended"
+                defaultChecked={service.is_recommended === true}
+              />
+              Servicio recomendado
+            </label>
+            <TextField
+              label="Nota de revisión"
+              name="review_comment"
+              value={service.review_comment}
+              multiline
+            />
+          </>
+        )}
+      </Panel>
+
+      {categoryId === "hospedaje" && (
+        <Panel>
+          <h2>Operación del hospedaje</h2>
+          <TextField
+            label="Teléfono de contacto"
+            name="contact_phone"
+            value={lodging.contact_phone}
+          />
+          <TextField
+            label="Correo de contacto"
+            name="contact_email"
+            value={lodging.contact_email}
+          />
+          <TextField label="Sitio web" name="website_url" value={lodging.website_url} />
+          <TextField
+            label="Recepción"
+            name="reception_hours"
+            value={lodging.reception_hours}
+          />
+          <TextField
+            label="Método de llegada"
+            name="arrival_method"
+            value={lodging.arrival_method}
+          />
+          <TextField
+            label="Instrucciones de llegada"
+            name="arrival_instructions"
+            value={lodging.arrival_instructions}
+            multiline
+          />
+          <TextField
+            label="Check-in desde"
+            name="check_in_from"
+            value={lodging.check_in_from}
+            type="time"
+          />
+          <TextField
+            label="Check-in hasta"
+            name="check_in_to"
+            value={lodging.check_in_to}
+            type="time"
+          />
+          <TextField
+            label="Hora de check-out"
+            name="check_out_time"
+            value={lodging.check_out_time}
+            type="time"
+          />
+          <TextField
+            label="Idiomas"
+            name="languages"
+            value={arrayText(lodging.languages)}
+          />
+          <TextField
+            label="Comidas y planes"
+            name="meal_service_details"
+            value={lodging.meal_service_details}
+            multiline
+          />
+          <TextField
+            label="Estacionamiento"
+            name="parking_details"
+            value={lodging.parking_details}
+            multiline
+          />
+          <TextField
+            label="Accesibilidad"
+            name="accessibility_details"
+            value={lodging.accessibility_details}
+            multiline
+          />
+          <TextField
+            label="Wi-Fi y conectividad"
+            name="wifi_details"
+            value={lodging.wifi_details}
+            multiline
+          />
+          <TextField
+            label="Agua y potabilidad"
+            name="water_details"
+            value={lodging.water_details}
+            multiline
+          />
+          <TextField
+            label="Energía"
+            name="energy_details"
+            value={lodging.energy_details}
+            multiline
+          />
+          <TextField
+            label="Temporadas y clima"
+            name="seasonal_conditions"
+            value={lodging.seasonal_conditions}
+            multiline
+          />
+          <TextField
+            label="Reglas para huéspedes"
+            name="guest_rules"
+            value={lodging.guest_rules}
+            multiline
+          />
+          <TextField
+            label="Política de mascotas"
+            name="pet_policy"
+            value={lodging.pet_policy}
+            multiline
+          />
+          <TextField
+            label="Política de fumar"
+            name="smoking_policy"
+            value={lodging.smoking_policy}
+            multiline
+          />
+          <TextField
+            label="Política de eventos"
+            name="events_policy"
+            value={lodging.events_policy}
+            multiline
+          />
+          <TextField
+            label="Cancelación"
+            name="cancellation_policy"
+            value={lodging.cancellation_policy}
+            multiline
+          />
+          <TextField
+            label="Registro turístico"
+            name="tourism_registration_number"
+            value={lodging.tourism_registration_number}
+          />
+          {detailFields.map((field) => (
+            <TextField
+              key={field.key}
+              label={field.label}
+              name={`detail__${field.key}`}
+              value={details[field.key]}
+              multiline={field.multiline}
+            />
+          ))}
+        </Panel>
+      )}
+
+      {categoryId === "restaurantes" && (
+        <RestaurantFields
+          restaurant={restaurant}
+          features={props.restaurantFeatures}
+          selectedFeatureIds={props.selectedFeatureIds}
+        />
+      )}
+
+      {state.error && (
+        <p className="form-error" role="alert">
+          {state.error}
+        </p>
+      )}
+      <footer className="sticky-actions">
+        <Button type="submit" name="intent" value="save" disabled={pending}>
+          {pending
+            ? "Guardando..."
+            : !isStaff ? "Guardar como borrador" : "Guardar cambios"}
+        </Button>
+        {!isStaff && (
+          <Button
+            tone="secondary"
+            type="submit"
+            name="intent"
+            value="submit"
+            disabled={pending}
+          >
+            Enviar a revisión
+          </Button>
+        )}
+        {!isStaff && !isNew && (
+          <small>
+            Al guardar o enviar cambios, el servicio queda como borrador hasta que
+            un administrador lo revise y publique.
+          </small>
+        )}
+        {isNew && <small>El nuevo servicio se guardará como borrador.</small>}
+      </footer>
+    </form>
+  );
+}
+
+// Agrupa la ficha del restaurante, las reservas y los datos del menú.
+function RestaurantFields({
+  restaurant,
+  features,
+  selectedFeatureIds,
+}: {
+  restaurant: Record<string, unknown>;
+  features: Option[];
+  selectedFeatureIds: string[];
+}) {
+  const days = [
+    "Domingo",
+    "Lunes",
+    "Martes",
+    "Miércoles",
+    "Jueves",
+    "Viernes",
+    "Sábado",
+  ];
+  const weeklyHours = Array.isArray(restaurant.weekly_hours)
+    ? restaurant.weekly_hours
+    : [];
+
+  return (
+    <Panel>
+      <h2>Restaurante y reservas</h2>
+      <TextField
+        label="Tipo de cocina"
+        name="cuisine_type"
+        value={restaurant.cuisine_type}
+      />
+      <label className="field">
+        Estilo de servicio
+        <select name="service_style" defaultValue={String(restaurant.service_style ?? "casual")}>
+          <option value="casual">Casual</option>
+          <option value="formal">Formal</option>
+        </select>
+      </label>
+      <TextField
+        label="Teléfono de reservas"
+        name="restaurant_phone"
+        value={restaurant.contact_phone}
+        type="tel"
+      />
+      <TextField
+        label="Correo de contacto"
+        name="contact_email"
+        value={restaurant.contact_email}
+      />
+      <TextField
+        label="Sitio web o redes"
+        name="website_url"
+        value={restaurant.website_url}
+      />
+      <TextField
+        label="Enlace externo del menú"
+        name="menu_url"
+        value={restaurant.menu_url}
+        type="url"
+      />
+      <TextField
+        label="Ambiente"
+        name="ambience"
+        value={restaurant.ambience}
+        multiline
+      />
+      <TextField
+        label="Métodos de pago (separados por comas)"
+        name="payment_methods"
+        value={arrayText(restaurant.payment_methods)}
+      />
+      <h3>Horario semanal de reservas</h3>
+      <small>
+        Escribe uno o varios turnos por día, separados por comas. Ejemplo:
+        12:00-15:00, 18:00-22:00.
+      </small>
+      {days.map((day, index) => (
+        <TextField
+          key={day}
+          label={day}
+          name={`hours_${index}`}
+          value={weeklyHours[index]}
+        />
+      ))}
+      <TextField
+        label="Precio promedio mínimo (USD)"
+        name="average_price_min"
+        value={dollars(restaurant.average_price_min_cents)}
+        type="number"
+      />
+      <TextField
+        label="Precio promedio máximo (USD)"
+        name="average_price_max"
+        value={dollars(restaurant.average_price_max_cents)}
+        type="number"
+      />
+      <TextField
+        label="Accesibilidad"
+        name="accessibility_details"
+        value={restaurant.accessibility_details}
+        multiline
+      />
+      <fieldset className="choice-group">
+        <legend>Características del restaurante</legend>
+        {features.map((feature) => (
+          <label className="checkbox-option" key={feature.id}>
+            <input
+              type="checkbox"
+              name="restaurant_feature_ids"
+              value={feature.id}
+              defaultChecked={selectedFeatureIds.includes(feature.id)}
+            />
+            {feature.label ?? feature.id}
+          </label>
+        ))}
+      </fieldset>
+      <TextField
+        label="Política de cancelación"
+        name="cancellation_policy"
+        value={restaurant.cancellation_policy}
+        multiline
+      />
+      <label className="checkbox-option">
+        <input
+          type="checkbox"
+          name="accepts_reservations"
+          defaultChecked={restaurant.accepts_reservations !== false}
+        />
+        Acepta reservas
+      </label>
+      <label className="checkbox-option">
+        <input
+          type="checkbox"
+          name="reservation_requires_confirmation"
+          defaultChecked={restaurant.reservation_requires_confirmation !== false}
+        />
+        Requiere confirmación del restaurante
+      </label>
+      <TextField
+        label="Duración por reserva (minutos)"
+        name="reservation_duration_minutes"
+        value={restaurant.reservation_duration_minutes}
+        type="number"
+      />
+      <TextField
+        label="Mínimo de comensales"
+        name="reservation_min_party_size"
+        value={restaurant.reservation_min_party_size}
+        type="number"
+      />
+      <TextField
+        label="Máximo de comensales"
+        name="reservation_max_party_size"
+        value={restaurant.reservation_max_party_size}
+        type="number"
+      />
+      <TextField
+        label="Anticipación mínima (minutos)"
+        name="reservation_min_advance_minutes"
+        value={restaurant.reservation_min_advance_minutes}
+        type="number"
+      />
+      <TextField
+        label="Días disponibles para reservar"
+        name="reservation_max_days_ahead"
+        value={restaurant.reservation_max_days_ahead}
+        type="number"
+      />
+      <TextField
+        label="Capacidad por turno"
+        name="reservation_capacity_per_slot"
+        value={restaurant.reservation_capacity_per_slot}
+        type="number"
+      />
+      <TextField
+        label="Cierre de cancelación (minutos)"
+        name="reservation_cancellation_cutoff_minutes"
+        value={restaurant.reservation_cancellation_cutoff_minutes}
+        type="number"
+      />
+      <TextField
+        label="Política de reservas"
+        name="reservation_policy"
+        value={restaurant.reservation_policy}
+        multiline
+      />
+    </Panel>
+  );
+}
+
+// Mantiene etiquetas y valores consistentes entre todos los formularios.
+function TextField({
+  label,
+  name,
+  value,
+  type = "text",
+  multiline = false,
+  required = false,
+}: {
+  label: string;
+  name: string;
+  value: unknown;
+  type?: string;
+  multiline?: boolean;
+  required?: boolean;
+}) {
+  const initial = value == null ? "" : String(value);
+  return (
+    <label className="field">
+      {label}
+      {multiline ? (
+        <textarea name={name} defaultValue={initial} rows={3} required={required} />
+      ) : (
+        <input
+          name={name}
+          type={type}
+          defaultValue={initial}
+          required={required}
+          min={type === "number" ? 0 : undefined}
+          step={type === "number" ? "0.01" : undefined}
+        />
+      )}
+    </label>
+  );
+}
+
+function dollars(value: unknown) {
+  return value == null ? "" : (Number(value) / 100).toFixed(2);
+}
+
+function arrayText(value: unknown) {
+  return Array.isArray(value) ? value.join(", ") : "";
+}

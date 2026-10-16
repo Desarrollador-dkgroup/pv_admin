@@ -1,0 +1,393 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button, Panel } from "@/components/ui";
+import { getLodgingUnitFields } from "@/data/lodging-details";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
+
+export type Room = {
+  id: string;
+  name: string;
+  description: string;
+  capacity: number;
+  beds_label: string;
+  price_cents: number;
+  total_units: number;
+  booking_unit: string;
+  bedroom_count: number | null;
+  bathroom_count: number | null;
+  area_m2: number | null;
+  details: Record<string, string>;
+};
+
+export type Area = {
+  id: string;
+  name: string;
+  description: string | null;
+  is_available: boolean;
+  opening_hours: string | null;
+  capacity: number | null;
+  included_in_rate: boolean | null;
+  additional_price_cents: number | null;
+  access_details: string | null;
+  details: Record<string, string>;
+};
+
+export type RatePeriod = {
+  id: string;
+  room_type_id: string;
+  valid_from: string;
+  valid_to: string;
+  price_cents: number;
+  minimum_nights: number | null;
+  included_guests: number | null;
+  extra_guest_price_cents: number | null;
+  cleaning_fee_cents: number | null;
+  taxes_details: string | null;
+  deposit_cents: number | null;
+  cancellation_policy: string | null;
+};
+
+// Gestiona unidades reservables y espacios con galerías independientes.
+export function LodgingCatalogManager({
+  serviceId,
+  lodgingTypeId,
+  rooms: initialRooms,
+  areas: initialAreas,
+  rates: initialRates,
+}: {
+  serviceId: string;
+  lodgingTypeId: string;
+  rooms: Room[];
+  areas: Area[];
+  rates: RatePeriod[];
+}) {
+  const router = useRouter();
+  const [rooms, setRooms] = useState(initialRooms);
+  const [areas, setAreas] = useState(initialAreas);
+  const [rates, setRates] = useState(initialRates);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const unitFields = getLodgingUnitFields(lodgingTypeId);
+
+  async function saveRoom(formData: FormData) {
+    setBusy(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const payload = {
+      service_id: serviceId,
+      name: value(formData, "room_name"),
+      description: value(formData, "room_description"),
+      capacity: Number(value(formData, "capacity")),
+      beds_label: value(formData, "beds_label"),
+      price_cents: Math.round(Number(value(formData, "price")) * 100),
+      total_units: Number(value(formData, "total_units")),
+      booking_unit: value(formData, "booking_unit"),
+      bedroom_count: numberOrNull(value(formData, "bedroom_count")),
+      bathroom_count: numberOrNull(value(formData, "bathroom_count")),
+      area_m2: numberOrNull(value(formData, "area_m2")),
+      details: Object.fromEntries(
+        [...formData.entries()]
+          .filter(([key]) => key.startsWith("unit__"))
+          .map(([key, item]) => [key.slice(6), String(item).trim()]),
+      ),
+      position: rooms.length,
+    };
+    const { data, error: failure } = await supabase
+      .from("room_types")
+      .insert(payload)
+      .select(
+        "id, name, description, capacity, beds_label, price_cents, total_units, " +
+        "booking_unit, bedroom_count, bathroom_count, area_m2, details",
+      )
+      .single();
+    if (failure) setError(failure.message);
+    else {
+      setRooms((current) => [...current, data as unknown as Room]);
+      router.refresh();
+    }
+    setBusy(false);
+  }
+
+  async function saveArea(formData: FormData) {
+    setBusy(true);
+    setError("");
+    const supabase = getSupabaseBrowserClient();
+    const { data, error: failure } = await supabase
+      .from("lodging_areas")
+      .insert({
+        service_id: serviceId,
+        name: value(formData, "area_name"),
+        description: nullable(value(formData, "area_description")),
+        opening_hours: nullable(value(formData, "opening_hours")),
+        capacity: numberOrNull(value(formData, "area_capacity")),
+        included_in_rate: formData.get("included_in_rate") === "on",
+        additional_price_cents: priceOrNull(value(formData, "additional_price")),
+        access_details: nullable(value(formData, "access_details")),
+        details: Object.fromEntries(
+          [...formData.entries()]
+            .filter(([key]) => key.startsWith("area__"))
+            .map(([key, item]) => [key.slice(6), String(item).trim()]),
+        ),
+        position: areas.length,
+      })
+      .select(
+        "id, name, description, is_available, opening_hours, capacity, " +
+        "included_in_rate, additional_price_cents, access_details, details",
+      )
+      .single();
+    if (failure) setError(failure.message);
+    else {
+      setAreas((current) => [...current, data as unknown as Area]);
+      router.refresh();
+    }
+    setBusy(false);
+  }
+
+  // Registra un precio temporal y sus condiciones para una unidad.
+  async function saveRate(formData: FormData) {
+    setBusy(true);
+    setError("");
+    const roomTypeId = value(formData, "room_type_id");
+    const { data, error: failure } = await getSupabaseBrowserClient()
+      .from("lodging_rate_periods")
+      .insert({
+        room_type_id: roomTypeId,
+        valid_from: value(formData, "valid_from"),
+        valid_to: value(formData, "valid_to"),
+        price_cents: priceOrNull(value(formData, "season_price")),
+        minimum_nights: numberOrNull(value(formData, "minimum_nights")),
+        included_guests: numberOrNull(value(formData, "included_guests")),
+        extra_guest_price_cents: priceOrNull(value(formData, "extra_guest_price")),
+        cleaning_fee_cents: priceOrNull(value(formData, "cleaning_fee")),
+        deposit_cents: priceOrNull(value(formData, "deposit")),
+        taxes_details: nullable(value(formData, "taxes_details")),
+        cancellation_policy: nullable(value(formData, "rate_cancellation")),
+      })
+      .select(
+        "id, room_type_id, valid_from, valid_to, price_cents, minimum_nights, " +
+        "included_guests, extra_guest_price_cents, cleaning_fee_cents, " +
+        "taxes_details, deposit_cents, cancellation_policy",
+      )
+      .single();
+    if (failure) setError(failure.message);
+    else if (data) {
+      setRates((current) => [...current, data as unknown as RatePeriod]);
+    }
+    setBusy(false);
+  }
+
+  // Elimina el periodo temporal seleccionado.
+  async function deleteRate(rateId: string) {
+    setBusy(true);
+    setError("");
+    const { error: failure } = await getSupabaseBrowserClient()
+      .from("lodging_rate_periods")
+      .delete()
+      .eq("id", rateId);
+    if (failure) setError(failure.message);
+    else setRates((current) => current.filter((rate) => rate.id !== rateId));
+    setBusy(false);
+  }
+
+  async function deleteRecord(table: "room_types" | "lodging_areas", id: string) {
+    setBusy(true);
+    setError("");
+    const { error: failure } = await getSupabaseBrowserClient()
+      .from(table)
+      .delete()
+      .eq("id", id);
+    if (failure) setError(failure.message);
+    else if (table === "room_types") {
+      setRooms((current) => current.filter((room) => room.id !== id));
+    } else {
+      setAreas((current) => current.filter((area) => area.id !== id));
+    }
+    setBusy(false);
+  }
+
+  return (
+    <>
+      <Panel>
+        <h2>Habitaciones, unidades o parcelas</h2>
+        {rooms.map((room) => (
+          <article className="history-event" key={room.id}>
+            <b>{room.name}</b>
+            <span>{room.capacity} personas · ${dollars(room.price_cents)} por noche</span>
+            {Object.entries(room.details ?? {}).map(([key, detail]) => (
+              <small key={key}>{labelFor(key)}: {detail}</small>
+            ))}
+            <a href={`/panel/servicios/${serviceId}/galeria`}>Administrar fotos</a>
+            {rates.filter((rate) => rate.room_type_id === room.id).map((rate) => (
+              <div className="history-event" key={rate.id}>
+                <span>
+                  {rate.valid_from} al {rate.valid_to} · ${dollars(rate.price_cents)}
+                </span>
+                <Button
+                  tone="quiet"
+                  disabled={busy}
+                  onClick={() => void deleteRate(rate.id)}
+                >
+                  Eliminar tarifa
+                </Button>
+              </div>
+            ))}
+            <form action={saveRate}>
+              <input type="hidden" name="room_type_id" value={room.id} />
+              <h4>Tarifa de temporada</h4>
+              <Field label="Válida desde" name="valid_from" type="date" required />
+              <Field label="Válida hasta" name="valid_to" type="date" required />
+              <Field label="Precio por noche (USD)" name="season_price" type="number" required />
+              <Field label="Estancia mínima (noches)" name="minimum_nights" type="number" />
+              <Field label="Huéspedes incluidos" name="included_guests" type="number" />
+              <Field label="Cargo por huésped extra (USD)" name="extra_guest_price" type="number" />
+              <Field label="Limpieza (USD)" name="cleaning_fee" type="number" />
+              <Field label="Depósito (USD)" name="deposit" type="number" />
+              <Field label="Impuestos y cargos" name="taxes_details" multiline />
+              <Field label="Cancelación para esta tarifa" name="rate_cancellation" multiline />
+              <Button type="submit" disabled={busy}>Guardar tarifa</Button>
+            </form>
+            <Button
+              tone="quiet"
+              disabled={busy}
+              onClick={() => void deleteRecord("room_types", room.id)}
+            >
+              Eliminar unidad
+            </Button>
+          </article>
+        ))}
+        <form action={saveRoom}>
+          <h3>Añadir unidad reservable</h3>
+          <Field label="Nombre o tipo" name="room_name" required />
+          <Field label="Descripción" name="room_description" multiline required />
+          <label className="field">
+            Unidad que reserva el cliente
+            <select name="booking_unit" defaultValue="room">
+              <option value="room">Habitación completa</option>
+              <option value="bed">Cama individual</option>
+              <option value="unit">Unidad completa</option>
+              <option value="site">Parcela o sitio</option>
+            </select>
+          </label>
+          <Field label="Capacidad de huéspedes" name="capacity" type="number" required />
+          <Field label="Camas y distribución" name="beds_label" required />
+          <Field label="Precio base por noche (USD)" name="price" type="number" required />
+          <Field label="Cantidad disponible" name="total_units" type="number" required />
+          <Field label="Dormitorios" name="bedroom_count" type="number" />
+          <Field label="Baños" name="bathroom_count" type="number" />
+          <Field label="Área (m²)" name="area_m2" type="number" />
+          {unitFields.map((field) => (
+            <Field
+              key={field.key}
+              label={field.label}
+              name={`unit__${field.key}`}
+              multiline={field.multiline}
+            />
+          ))}
+          <Button type="submit" disabled={busy}>Guardar unidad</Button>
+        </form>
+      </Panel>
+      <Panel>
+        <h2>Áreas e instalaciones</h2>
+        {areas.map((area) => (
+          <div className="history-event" key={area.id}>
+            <b>{area.name}</b>
+            <span>{area.description ?? "Sin descripción"}</span>
+            {Object.entries(area.details ?? {}).map(([key, detail]) => (
+              <small key={key}>{labelFor(key)}: {detail}</small>
+            ))}
+            <a href={`/panel/servicios/${serviceId}/galeria`}>Administrar fotos</a>
+            <Button
+              tone="quiet"
+              disabled={busy}
+              onClick={() => void deleteRecord("lodging_areas", area.id)}
+            >
+              Eliminar
+            </Button>
+          </div>
+        ))}
+        <form action={saveArea}>
+          <h3>Añadir área</h3>
+          <Field label="Nombre del área" name="area_name" required />
+          <Field label="Descripción y servicios" name="area_description" multiline />
+          <Field label="Horario de uso" name="opening_hours" />
+          <Field label="Capacidad" name="area_capacity" type="number" />
+          <label className="checkbox-option">
+            <input type="checkbox" name="included_in_rate" defaultChecked />
+            Incluida en la tarifa
+          </label>
+          <Field label="Cargo adicional (USD)" name="additional_price" type="number" />
+          <Field label="Acceso y restricciones" name="access_details" multiline />
+          <Field label="Tipo de espacio o servicio" name="area__kind" />
+          <Field label="Privacidad o uso compartido" name="area__privacy" />
+          <Field label="Distancia o tiempo desde la unidad" name="area__distance" />
+          <Field label="Temporada o condiciones de uso" name="area__season" multiline />
+          <Field label="Equipamiento y especificaciones" name="area__equipment" multiline />
+          <Field label="Accesibilidad del área" name="area__accessibility" multiline />
+          <Field label="Seguridad y riesgos" name="area__safety" multiline />
+          <Field label="Restricciones y notas" name="area__restrictions" multiline />
+          <Button type="submit" disabled={busy}>Guardar área</Button>
+        </form>
+      </Panel>
+      {error && <p className="form-error" role="alert">{error}</p>}
+    </>
+  );
+}
+
+function Field({
+  label,
+  name,
+  type = "text",
+  multiline = false,
+  required = false,
+}: {
+  label: string;
+  name: string;
+  type?: string;
+  multiline?: boolean;
+  required?: boolean;
+}) {
+  return (
+    <label className="field">
+      {label}
+      {multiline ? (
+        <textarea name={name} rows={3} required={required} />
+      ) : (
+        <input
+          name={name}
+          type={type}
+          min={type === "number" ? 0 : undefined}
+          step={type === "number" ? "0.01" : undefined}
+          required={required}
+        />
+      )}
+    </label>
+  );
+}
+
+function value(formData: FormData, key: string) {
+  return String(formData.get(key) ?? "").trim();
+}
+
+function nullable(input: string) {
+  return input || null;
+}
+
+function numberOrNull(input: string) {
+  return input ? Number(input) : null;
+}
+
+function priceOrNull(input: string) {
+  const price = numberOrNull(input);
+  return price === null ? null : Math.round(price * 100);
+}
+
+function dollars(cents: number) {
+  return (cents / 100).toFixed(2);
+}
+
+// Convierte claves de atributos para mostrarlas como etiquetas.
+function labelFor(key: string) {
+  return key.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
+}

@@ -6,13 +6,12 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Button } from "@/components/ui";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
-import { findTestAccount, testAccounts } from "@/lib/test-accounts";
 
 type AuthMode = "login" | "forgot" | "change" | "temporary" | "sent";
-type Props = { preview?: boolean; initialMode?: AuthMode };
+type Props = { initialMode?: AuthMode };
 
-// Mantiene el recorrido ilustrativo separado de la autenticación real de Supabase.
-export function AuthScreen({ preview = false, initialMode = "login" }: Props) {
+// Gestiona el inicio de sesión real y la recuperación de contraseña en Supabase.
+export function AuthScreen({ initialMode = "login" }: Props) {
   const router = useRouter();
   // Controla el formulario, la validación y el progreso del acceso.
   const [mode, setMode] = useState<AuthMode>(initialMode);
@@ -34,22 +33,6 @@ export function AuthScreen({ preview = false, initialMode = "login" }: Props) {
     const password = String(values.get("password") ?? "");
     if (["change", "temporary"].includes(mode) && password !== values.get("confirm")) {
       setError("Las contraseñas no coinciden.");
-      return;
-    }
-    if (preview) {
-      // Deduce el rol de la cuenta validada, sin un selector ni roles recibidos desde la URL.
-      if (mode === "forgot") {
-        setMode("sent");
-        return;
-      }
-      const account = findTestAccount(email, password);
-      if (!account) {
-        setError("El correo o la contraseña no coinciden con una cuenta de prueba.");
-        return;
-      }
-      router.push(
-        account.role === "admin" ? "/vista-previa/admin/propietarios" : "/vista-previa/propietario",
-      );
       return;
     }
     setBusy(true);
@@ -120,17 +103,7 @@ export function AuthScreen({ preview = false, initialMode = "login" }: Props) {
                     name="email"
                     required
                     autoComplete="username"
-                    aria-describedby={preview && mode === "login" ? "test-emails" : undefined}
                   />
-                  {preview && mode === "login" && (
-                    <span id="test-emails" className="test-credentials">
-                      {testAccounts.map((account) => (
-                        <span key={account.role}>
-                          {account.label}: <code>{account.email}</code>
-                        </span>
-                      ))}
-                    </span>
-                  )}
                 </label>
               )}
               {mode !== "forgot" && (
@@ -142,17 +115,7 @@ export function AuthScreen({ preview = false, initialMode = "login" }: Props) {
                     required
                     minLength={mode === "login" ? 1 : 12}
                     autoComplete={mode === "login" ? "current-password" : "new-password"}
-                    aria-describedby={preview && mode === "login" ? "test-passwords" : undefined}
                   />
-                  {preview && mode === "login" && (
-                    <span id="test-passwords" className="test-credentials">
-                      {testAccounts.map((account) => (
-                        <span key={account.role}>
-                          {account.label}: <code>{account.password}</code>
-                        </span>
-                      ))}
-                    </span>
-                  )}
                 </label>
               )}
               {["change", "temporary"].includes(mode) && (

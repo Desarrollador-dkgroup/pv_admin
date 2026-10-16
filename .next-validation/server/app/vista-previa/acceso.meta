@@ -1,0 +1,41 @@
+{
+  "status": 307,
+  "headers": {
+    "location": "/",
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/vista-previa/layout,_N_T_/vista-previa/acceso/layout,_N_T_/vista-previa/acceso/page,_N_T_/vista-previa/acceso"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/vista-previa/acceso/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 96,
+            "slots": {
+              "children": {
+                "hints": 160,
+                "slots": null
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "routeCache": {
+    "key": "/route-cache/APP_PAGE/6ffe0ebb58dde53bc81fa6c47232dd9846d62d347d502ab025363e3f89c94316/$/vista-previa/acceso",
+    "owner": {
+      "kind": "APP_PAGE",
+      "sourceRoute": "/vista-previa/acceso/page"
+    },
+    "isFallback": false
+  }
+}
