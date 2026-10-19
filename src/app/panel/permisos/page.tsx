@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { Badge, Button, Panel } from "@/components/ui";
-import { CreateTeamAccountForm, TeamRoleForm } from "@/components/panel-team-forms";
-import { PersonNameForm } from "@/components/panel-person-name-form";
+import { CreateTeamAccountForm } from "@/components/panel-team-forms";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
-import { assignableTeamRoles, canEditName, canManageAccount } from "@/lib/panel-permissions";
+import { assignableTeamRoles, canManageAccount } from "@/lib/panel-permissions";
 import { getAccountProfiles } from "@/lib/panel-people";
+import { getOrphanAccounts, type OrphanAccount } from "@/lib/panel-team";
 import { formatDate } from "@/lib/panel-format";
 import { ROLE_LABELS, type PanelRole } from "@/types/panel";
-import { removeTeamAccountAction } from "./actions";
 
 // Filtros del equipo. "Todos" es el inicial.
 const FILTERS = [
@@ -18,6 +17,15 @@ const FILTERS = [
 type FilterValue = (typeof FILTERS)[number]["value"];
 
 type SearchParams = Promise<{ q?: string; rol?: string }>;
+
+// Fila de la tabla: cuenta con rol de equipo, o cuenta creada desde el panel sin rol.
+type Row = {
+  userId: string;
+  role: PanelRole | null;
+  date: string | null;
+  name: string;
+  email: string;
+};
 
 // Equipo interno: búsqueda por nombre o correo, filtro por rol y gestión según la matriz.
 export default async function PermissionsPage({ searchParams }: { searchParams: SearchParams }) {
@@ -62,28 +70,50 @@ export default async function PermissionsPage({ searchParams }: { searchParams: 
   if (error) throw new Error("No se pudo cargar el equipo de Panamá Viajero.");
 
   const members = team ?? [];
-  const profiles = await getAccountProfiles(supabase, members.map((member) => member.user_id));
+  // Cuentas creadas desde el panel que quedaron sin rol. Si falta la clave de servidor,
+  // la lista muestra solo el equipo.
+  let orphans: OrphanAccount[] = [];
+  try {
+    orphans = await getOrphanAccounts(members.map((member) => member.user_id));
+  } catch {
+    orphans = [];
+  }
 
-  // Une cada cuenta con su nombre y correo, y aplica filtro y búsqueda.
-  const rows = members
-    .map((member) => {
+  const profiles = await getAccountProfiles(supabase, [
+    ...members.map((member) => member.user_id),
+    ...orphans.map((orphan) => orphan.userId),
+  ]);
+
+  const rows: Row[] = [
+    ...members.map((member) => {
       const profile = profiles.get(member.user_id);
       return {
         userId: member.user_id,
         role: member.platform_role as PanelRole,
-        grantedAt: member.granted_at,
+        date: member.granted_at,
         name: profile?.name ?? "Cuenta sin nombre",
         email: profile?.email ?? "Sin correo registrado",
       };
-    })
+    }),
+    ...orphans.map((orphan) => {
+      const profile = profiles.get(orphan.userId);
+      return {
+        userId: orphan.userId,
+        role: null,
+        date: orphan.createdAt,
+        name: profile?.name ?? "Cuenta sin nombre",
+        email: profile?.email ?? (orphan.email || "Sin correo registrado"),
+      };
+    }),
+  ]
     .filter((row) => filter === "todos" || row.role === filter)
     .filter((row) =>
       !term || row.name.toLowerCase().includes(term) || row.email.toLowerCase().includes(term))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const roles = assignableTeamRoles(role);
   const searchHref = (value: FilterValue) =>
     `/panel/permisos?rol=${value}${q ? `&q=${encodeURIComponent(q)}` : ""}`;
+  const roles = assignableTeamRoles(role);
 
   return (
     <>
@@ -134,39 +164,33 @@ export default async function PermissionsPage({ searchParams }: { searchParams: 
             </thead>
             <tbody>
               {rows.map((row) => {
-                const manageable = canManageAccount(role, row.role);
-                const isOwner = row.role === "owner";
+                const effective: PanelRole = row.role ?? "collaborator";
+                const canOpen = canManageAccount(role, effective) && row.role !== "owner";
                 return (
                   <tr key={row.userId}>
                     <td>
-                      {canEditName(role, row.role) ? (
-                        <PersonNameForm userId={row.userId} name={row.name} />
-                      ) : (
-                        row.name
-                      )}
+                      <span className="table-name">{row.name}</span>
                       {row.userId === user.id && (
                         <small className="table-subtitle">Tu cuenta</small>
                       )}
                     </td>
                     <td>{row.email}</td>
-                    <td><Badge>{ROLE_LABELS[row.role]}</Badge></td>
-                    <td>{formatDate(row.grantedAt)}</td>
                     <td>
-                      {isOwner && <small className="muted">Protegida</small>}
-                      {manageable && !isOwner && (
-                        <div className="team-actions">
-                          <TeamRoleForm
-                            userId={row.userId}
-                            currentRole={row.role as "admin" | "collaborator"}
-                            roles={roles}
-                          />
-                          <form action={removeTeamAccountAction}>
-                            <input type="hidden" name="user_id" value={row.userId} />
-                            <Button tone="quiet" type="submit">Quitar del equipo</Button>
-                          </form>
-                        </div>
+                      {row.role ? (
+                        <Badge>{ROLE_LABELS[row.role]}</Badge>
+                      ) : (
+                        <Badge tone="warning">Sin rol de equipo</Badge>
                       )}
-                      {!manageable && !isOwner && (
+                    </td>
+                    <td>{row.date ? formatDate(row.date) : "—"}</td>
+                    <td className="manage-cell">
+                      {row.role === "owner" && <small className="muted">Protegida</small>}
+                      {canOpen && (
+                        <Link className="button secondary" href={`/panel/permisos/${row.userId}`}>
+                          Editar
+                        </Link>
+                      )}
+                      {!canOpen && row.role !== "owner" && (
                         <small className="muted">Sin permiso para esta cuenta</small>
                       )}
                     </td>
@@ -196,7 +220,8 @@ export default async function PermissionsPage({ searchParams }: { searchParams: 
           <li>El propietario principal administra admins, colaboradores y propietarios.</li>
           <li>El administrador administra colaboradores y propietarios, no a otros admins.</li>
           <li>Solo el propietario principal cambia el nombre de un administrador.</li>
-          <li>La cuenta del propietario principal no se puede modificar ni quitar.</li>
+          <li>La cuenta del propietario principal no se puede modificar ni eliminar.</li>
+          <li>Eliminar una cuenta borra su acceso y su perfil. Si tiene reservas, no se borra.</li>
         </ul>
       </Panel>
     </>

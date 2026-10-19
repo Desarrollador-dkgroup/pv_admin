@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useActionState, useState, useTransition } from "react";
 import {
   createTeamAccountAction,
+  deleteTeamAccountAction,
   generateTemporaryPasswordAction,
+  resetTemporaryPasswordAction,
   updateTeamRoleAction,
 } from "@/app/panel/permisos/actions";
 import { Button } from "@/components/ui";
@@ -175,6 +177,54 @@ export function TeamRoleForm({
         {busy ? "Guardando…" : "Cambiar"}
       </Button>
       {message && <small role="alert" className="form-error">{message}</small>}
+    </form>
+  );
+}
+
+// Elimina la cuenta por completo, previa confirmación. El servidor vuelve a validar el permiso.
+export function DeleteTeamAccountForm({ userId, name }: { userId: string; name: string }) {
+  const [state, action, pending] = useActionState(deleteTeamAccountAction, { error: "" });
+  const question = `¿Eliminar la cuenta de ${name}? Esta acción no se puede deshacer.`;
+
+  return (
+    <form
+      action={action}
+      className="team-delete"
+      onSubmit={(event) => {
+        if (!window.confirm(question)) event.preventDefault();
+      }}
+    >
+      <input type="hidden" name="user_id" value={userId} />
+      <button type="submit" className="button danger-button" disabled={pending}>
+        {pending ? "Eliminando…" : "Eliminar cuenta"}
+      </button>
+      {state.error && <small role="alert" className="form-error">{state.error}</small>}
+    </form>
+  );
+}
+
+// Genera una contraseña temporal nueva para la cuenta. Se muestra una sola vez para entregarla.
+export function ResetPasswordForm({ userId }: { userId: string }) {
+  const [state, action, pending] = useActionState(resetTemporaryPasswordAction, { error: "" });
+
+  return (
+    <form action={action} className="account-form">
+      <input type="hidden" name="user_id" value={userId} />
+      {state.password && (
+        <div className="password-box">
+          <span className="field">Nueva contraseña temporal</span>
+          <div className="password-row">
+            <input readOnly value={state.password} aria-label="Nueva contraseña temporal" />
+          </div>
+          <small className="muted">
+            Entrégala junto con el correo. Se muestra una sola vez en esta pantalla.
+          </small>
+        </div>
+      )}
+      <Button tone="secondary" type="submit" disabled={pending}>
+        {pending ? "Generando…" : "Generar nueva contraseña temporal"}
+      </Button>
+      {state.error && <p role="alert" className="form-error">{state.error}</p>}
     </form>
   );
 }

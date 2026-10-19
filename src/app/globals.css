@@ -1523,3 +1523,92 @@ select[multiple] {
   background: #e6f6ee;
   border-radius: 10px;
 }
+
+/* Edición de una cuenta del equipo: tarjetas en una columna legible. */
+.back-link {
+  display: inline-block;
+  margin-bottom: 6px;
+  color: #4956a2;
+  font-weight: 600;
+  text-decoration: none;
+}
+.account-editor {
+  display: grid;
+  gap: 16px;
+  max-width: 760px;
+}
+.account-card {
+  display: grid;
+  gap: 12px;
+  padding: 22px 24px;
+  border: 1px solid #e3e6f0;
+  border-radius: 18px;
+  background: #ffffff;
+}
+.account-card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.account-card > p {
+  margin: 0;
+}
+.account-card input,
+.account-card select {
+  width: 100%;
+  min-width: 0;
+}
+.account-card .inline-form,
+.account-card .inline-name-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.account-card .inline-form select,
+.account-card .inline-name-form input {
+  flex: 1 1 240px;
+}
+.account-card .account-form {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+.account-card .password-box {
+  width: 100%;
+}
+.account-danger {
+  border-color: #f2c6cf;
+  background: #fff8f9;
+}
+.account-danger h2 {
+  color: #cd2e4c;
+}
+.team-delete {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.danger-button {
+  padding: 10px 18px;
+  border: 1px solid #cd2e4c;
+  border-radius: 999px;
+  background: transparent;
+  color: #cd2e4c;
+  font-weight: 600;
+  cursor: pointer;
+}
+.danger-button:hover:not(:disabled) {
+  background: #cd2e4c;
+  color: #ffffff;
+}
+.danger-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.manage-cell {
+  white-space: nowrap;
+}
+.table-name {
+  display: block;
+  font-weight: 600;
+}

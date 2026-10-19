@@ -7,5 +7,7 @@ export default async function AccessPage({
   searchParams: Promise<{ modo?: string }>;
 }) {
   const query = await searchParams;
-  return <AuthScreen initialMode={query.modo === "cambiar" ? "change" : "login"} />;
+  const initialMode =
+    query.modo === "cambiar" ? "change" : query.modo === "temporal" ? "temporary" : "login";
+  return <AuthScreen initialMode={initialMode} />;
 }

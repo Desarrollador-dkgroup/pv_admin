@@ -45,15 +45,30 @@ export function AuthScreen({ initialMode = "login" }: Props) {
         if (result.error)
           throw new Error("No se pudieron enviar las instrucciones. Intenta nuevamente.");
         setMode("sent");
-      } else if (mode === "change") {
-        const result = await supabase.auth.updateUser({ password });
-        if (result.error) throw new Error("El enlace de recuperación no es válido o expiró.");
+      } else if (mode === "change" || mode === "temporary") {
+        // Guarda la contraseña definitiva y quita la marca de contraseña temporal.
+        const result = await supabase.auth.updateUser({
+          password,
+          data: { must_change_password: false },
+        });
+        if (result.error) {
+          throw new Error(
+            mode === "change"
+              ? "El enlace de recuperación no es válido o expiró."
+              : "No se pudo guardar la contraseña. Intenta nuevamente.",
+          );
+        }
         router.push("/panel");
         router.refresh();
       } else {
         const result = await supabase.auth.signInWithPassword({ email, password });
         if (result.error)
           throw new Error("No pudimos iniciar sesión. Revisa tu correo y contraseña.");
+        // Una contraseña temporal obliga a definir una nueva antes de entrar al panel.
+        if (result.data.user?.user_metadata?.must_change_password === true) {
+          setMode("temporary");
+          return;
+        }
         router.push("/panel");
         router.refresh();
       }
@@ -94,7 +109,7 @@ export function AuthScreen({ initialMode = "login" }: Props) {
                 : "Ingresa con el acceso que te proporcionó Panamá Viajero."}
           </p>
           {mode !== "sent" && (
-            <form onSubmit={submit}>
+            <form key={mode} onSubmit={submit}>
               {["login", "forgot"].includes(mode) && (
                 <label className="field">
                   Correo electrónico

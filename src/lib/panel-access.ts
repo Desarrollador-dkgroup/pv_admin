@@ -12,6 +12,9 @@ export async function getPanelIdentity() {
 
   if (authError || !user) redirect("/acceso");
 
+  // Una contraseña temporal debe cambiarse antes de usar cualquier pantalla del panel.
+  if (user.user_metadata?.must_change_password === true) redirect("/acceso?modo=temporal");
+
   // Consulta roles internos, negocios asignados y suspensión en paralelo.
   const [adminResult, membershipResult, blockedResult] = await Promise.all([
     supabase
