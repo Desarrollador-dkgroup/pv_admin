@@ -29,6 +29,19 @@ El acceso local determina el rol a partir del correo y contraseña de la misma c
 Las credenciales de prueba se muestran debajo de sus campos y no se envían a Supabase.
 El enlace anterior `/vista-previa/acceso` redirige al formulario de `/`.
 
+## Panel real por rol
+
+Después de iniciar sesión, cada rol ve su propio menú y su portada, validados en Supabase:
+
+- Propietario principal y admin: resumen con indicadores reales, Revisión, Servicios,
+  Negocios, Propietarios, Sitios turísticos, Promociones, Notificaciones y Permisos.
+- Colaborador: inicio con propietarios y negocios, gestión de propietarios, Negocios,
+  Notificaciones y Permisos de su alcance.
+- Propietario de negocio: Mi panel, Mi negocio, Mis servicios, Mis promociones y avisos.
+
+La matriz de gestión de cuentas está en `src/lib/panel-permissions.ts`.
+Las reglas de la base de datos están en `supabase/migrations/`.
+
 ## Acceso real a Supabase
 
 `/acceso` permite iniciar sesión y recuperar una cuenta existente con Supabase Auth.

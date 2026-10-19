@@ -1,40 +1,38 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
-import type { PanelRole } from "@/types/panel";
+import { usePathname } from "next/navigation";
+import { useState, type ReactNode } from "react";
+import { Menu, X } from "lucide-react";
+import { PanelNotifications } from "@/components/panel-notifications";
 import { SignOut } from "@/components/sign-out";
+import type { PanelNotification } from "@/lib/panel-notifications";
+import { getPanelNavigation } from "@/lib/panel-navigation";
+import { ROLE_LABELS, type PanelRole } from "@/types/panel";
 
-const adminLinks = [
-  ["Resumen", "/panel"],
-  ["Servicios", "/panel/servicios"],
-  ["Revisión", "/panel/revision"],
-  ["Permisos", "/panel/permisos"],
-];
-
-const ownerLinks = [
-  ["Mi panel", "/panel"],
-  ["Mis servicios", "/panel/servicios"],
-];
-
-const collaboratorLinks = [["Permisos", "/panel/permisos"]];
-
-// Presenta la navegación real para administradores y propietarios autenticados.
-export function PanelShell({
-  role,
-  children,
-}: {
+type Props = {
   role: PanelRole;
+  notifications: PanelNotification[];
   children: ReactNode;
-}) {
-  const isStaff = role !== "propietario";
-  const links = role === "collaborator"
-    ? collaboratorLinks
-    : isStaff ? adminLinks : ownerLinks;
+};
+
+// Estructura del panel: barra lateral por rol, avisos y área de contenido.
+export function PanelShell({ role, notifications, children }: Props) {
+  // Controla si el menú lateral está abierto en pantallas pequeñas.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const links = getPanelNavigation(role);
+
+  // Marca como activa la sección actual; la raíz solo coincide consigo misma.
+  function isActive(href: string) {
+    return href === "/panel" ? pathname === "/panel" : pathname.startsWith(href);
+  }
 
   return (
     <div className="app-shell">
-      <aside className="sidebar" aria-label="Menú principal">
-        <Link href="/panel" aria-label="Panamá Viajero, panel">
+      <aside className={`sidebar ${menuOpen ? "open" : ""}`} aria-label="Menú principal">
+        <Link href="/panel" aria-label="Panamá Viajero, panel" onClick={() => setMenuOpen(false)}>
           <Image
             src="/Logo-rectangular.svg"
             width={1062}
@@ -43,28 +41,51 @@ export function PanelShell({
             className="sidebar-logo"
           />
         </Link>
-        <span className="badge">
-          {role === "owner" ? "Propietario principal" :
-            role === "admin" ? "Administrador" :
-              role === "collaborator" ? "Colaborador" : "Panel del propietario"}
-        </span>
+        <span className="role-chip">{ROLE_LABELS[role]}</span>
         <nav className="navigation">
-          {links.map(([label, href]) => (
-            <Link href={href} key={href}>
+          {links.map(({ href, label, icon: Icon }) => (
+            <Link
+              href={href}
+              key={href}
+              className={isActive(href) ? "active" : undefined}
+              aria-current={isActive(href) ? "page" : undefined}
+              onClick={() => setMenuOpen(false)}
+            >
+              <Icon size={18} aria-hidden="true" />
               {label}
             </Link>
           ))}
         </nav>
-        <div className="account-link">
-          <span>{role === "owner" ? "Propietario principal" :
-            role === "admin" ? "Administrador" :
-              role === "collaborator" ? "Colaborador" : "Propietario de negocio"}</span>
+        <div className="sidebar-footer">
+          <SignOut />
         </div>
-        <SignOut />
       </aside>
-      <main id="contenido" className="workspace-content">
-        {children}
-      </main>
+      {menuOpen && (
+        <button
+          type="button"
+          className="sidebar-backdrop"
+          aria-label="Cerrar menú"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+      <div className="workspace">
+        <header className="topbar">
+          <button
+            type="button"
+            className="menu-button"
+            aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((value) => !value)}
+          >
+            {menuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
+          </button>
+          <p className="breadcrumb">Panel del propietario · {ROLE_LABELS[role]}</p>
+          <PanelNotifications items={notifications} />
+        </header>
+        <main id="contenido" className="workspace-content">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

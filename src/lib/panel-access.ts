@@ -12,7 +12,8 @@ export async function getPanelIdentity() {
 
   if (authError || !user) redirect("/acceso");
 
-  const [adminResult, membershipResult] = await Promise.all([
+  // Consulta roles internos, negocios asignados y suspensión en paralelo.
+  const [adminResult, membershipResult, blockedResult] = await Promise.all([
     supabase
       .from("platform_admins")
       .select("platform_role")
@@ -22,12 +23,18 @@ export async function getPanelIdentity() {
       .from("business_members")
       .select("business_id, role")
       .eq("user_id", user.id),
+    supabase
+      .from("blocked_users")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle(),
   ]);
 
-  if (adminResult.error || membershipResult.error) {
+  if (adminResult.error || membershipResult.error || blockedResult.error) {
     throw new Error("No se pudo comprobar el rol de esta cuenta en Supabase.");
   }
 
+  // Un rol interno tiene prioridad; si no existe, la cuenta es propietario de negocio.
   const role: PanelRole | null = adminResult.data?.platform_role
     ? adminResult.data.platform_role as PanelRole
     : membershipResult.data.length
@@ -40,5 +47,12 @@ export async function getPanelIdentity() {
     user,
     role,
     businessIds: membershipResult.data.map((membership) => membership.business_id),
+    // Las cuentas internas nunca quedan suspendidas desde el panel.
+    suspended: role === "propietario" && Boolean(blockedResult.data),
   };
+}
+
+// Redirige a la pantalla de inicio cuando el rol actual no tiene acceso a la sección.
+export function requireRole(role: PanelRole, allowed: PanelRole[]) {
+  if (!allowed.includes(role)) redirect("/panel");
 }

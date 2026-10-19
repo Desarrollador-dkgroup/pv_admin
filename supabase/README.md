@@ -49,6 +49,53 @@ límite de fotos para restaurantes.
 - El rol `admin` administra el catálogo; `collaborator` queda limitado a
   permisos y membresías de proveedores.
 
+## Panel por rol (migración 202610160001)
+
+Orden recomendado para aplicarla en Supabase:
+
+1. Ejecutar `verify-panel-management.sql` y revisar cada resultado. Si `promotions`
+   no tiene RLS activo (`rls_enabled = false`), detenerse y revisarlo antes de seguir.
+2. Ejecutar `migrations/202610160001_panel_management_access.sql` en el SQL Editor.
+3. Ejecutar otra vez `verify-panel-management.sql` y comprobar que aparezcan las
+   políticas nuevas y las funciones `padmin_is_platform_account` y `padmin_is_suspended`.
+
+Qué agrega:
+
+- Suspensiones de propietarios en `blocked_users`, con RLS. El equipo puede suspender
+  y reactivar, pero nunca a una cuenta interna ni a sí mismo.
+- Una cuenta suspendida pierde la escritura de sus negocios en `padmin_owns_business`
+  y `padmin_can_manage_service`.
+- Los miembros de un negocio pueden verse entre sí; el equipo puede leer `profiles`
+  para mostrar nombres.
+- Promociones: el equipo interno las administra y cada negocio ve las que propuso o
+  las que apuntan a sus servicios.
+
+## Cuentas del equipo (migración 202610160002)
+
+Ejecutar después de `202610160001`:
+
+1. Ejecutar `migrations/202610160002_team_accounts_and_names.sql`.
+2. Ejecutar otra vez `verify-panel-management.sql`. En el resultado 7, `profiles` no
+   debe tener `UPDATE` sobre `email`.
+
+Qué agrega:
+
+- `profiles.email`: correo visible para buscar. La migración lo copia desde Auth y crea
+  perfiles para las cuentas que no tengan uno.
+- Nombre editable: el propietario principal cambia cualquier nombre; el admin, los de
+  colaboradores y propietarios, nunca el de otro admin ni el del propietario principal.
+
+Crear cuentas: la acción del servidor usa `SUPABASE_SERVICE_ROLE_KEY`. Esa clave:
+
+- Va solo en `.env.local` (para desarrollo) y como secreto de Cloudflare Workers
+  (`npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY`).
+- No debe tener prefijo `NEXT_PUBLIC_` ni aparecer en el navegador.
+- Nunca se sube a Git.
+
+Cada cuenta nueva se crea con correo confirmado y contraseña temporal. El correo
+de la cuenta no se cambia desde el panel; si hace falta, se corrige en Authentication
+y en `profiles.email` al mismo tiempo.
+
 ## Promociones
 
 - `description`: descripción detallada.

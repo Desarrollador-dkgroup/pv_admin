@@ -1052,3 +1052,474 @@ td:first-child a:hover {
     transition: none !important;
   }
 }
+
+/* ===== Panel administrativo por rol: navegación, avisos, tarjetas y formularios. ===== */
+
+/* Barra lateral: marca de rol, enlaces con icono y pie con cierre de sesión. */
+.role-chip {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: var(--pale);
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 500;
+}
+.navigation a {
+  font-weight: 500;
+}
+.navigation a svg {
+  flex-shrink: 0;
+}
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* Barra superior con botón de menú móvil y campana de avisos. */
+.topbar {
+  padding: 18px 40px;
+  border-bottom: 1px solid var(--border);
+}
+.topbar .breadcrumb {
+  font-weight: 500;
+}
+.notification-menu {
+  position: relative;
+}
+.notification-trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--canvas);
+  color: var(--brand);
+}
+.notification-trigger:hover {
+  background: var(--pale);
+}
+.notification-dot {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}
+.notification-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(340px, calc(100vw - 32px));
+  padding: 18px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 40px #20274722;
+}
+.notification-popover h2 {
+  font-size: 16px;
+}
+.notification-summary-item,
+.notification-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-left: 4px solid var(--brand);
+  border-radius: 10px;
+  background: var(--canvas);
+  font-size: 14px;
+}
+.notification-summary-item span,
+.notification-card span {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.notification-summary-item.alert,
+.notification-card.alert {
+  border-left-color: var(--accent);
+}
+.notification-card:hover b {
+  color: var(--brand);
+}
+.notification-card {
+  text-decoration: none;
+}
+
+/* Cuadrícula de indicadores con tarjetas que responden al teclado y al ratón. */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+.metric-card {
+  gap: 6px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 6px 24px #20274710;
+}
+a.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px #20274718;
+}
+.metric-card strong {
+  font-size: 32px;
+}
+
+/* Encabezado de bienvenida con gradiente de la marca. */
+.hero-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 28px 32px;
+  border-radius: var(--radius);
+  background: linear-gradient(120deg, var(--brand) 0%, #6b77c4 70%, var(--accent) 140%);
+  color: white;
+}
+.hero-card h1 {
+  color: white;
+  font-size: 30px;
+  margin-top: 4px;
+}
+.hero-card p {
+  margin-top: 6px;
+  opacity: 0.9;
+}
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.hero-date {
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: #ffffff26;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* Encabezados de bloque y accesos rápidos. */
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.text-link {
+  color: var(--brand);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.text-link:hover {
+  text-decoration: underline;
+}
+
+/* Filtros tipo chip, con estado activo visible. */
+.chip-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: white;
+  color: var(--muted);
+  font-size: 14px;
+}
+.chip span {
+  padding: 0 7px;
+  border-radius: 10px;
+  background: var(--pale);
+  color: var(--brand);
+  font-size: 12px;
+}
+.chip:hover {
+  border-color: var(--brand);
+}
+.chip.active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: white;
+}
+.chip.active span {
+  background: #ffffff33;
+  color: white;
+}
+
+/* Tablas: subtítulos bajo cada celda y filas con borde suave. */
+.table-subtitle {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+}
+.table-panel td {
+  vertical-align: middle;
+}
+
+/* Revisión: tarjetas de servicio con acciones y formulario de cambios. */
+.review-card {
+  gap: 14px;
+}
+.review-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.review-card-head h2 {
+  margin-bottom: 4px;
+}
+.review-excerpt {
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.review-form {
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+/* Formularios: dos columnas en escritorio y una en pantallas pequeñas. */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.promotion-form,
+.site-form,
+.member-form,
+.team-form {
+  gap: 20px;
+}
+.promotion-form > .panel,
+.site-form > .panel {
+  gap: 18px;
+}
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+select[multiple] {
+  min-height: 120px;
+}
+
+/* Miembros de negocio y equipo: filas con acción alineada a la derecha. */
+.member-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.member-row small {
+  display: block;
+  color: var(--muted);
+}
+.inline-form,
+.team-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.inline-form select {
+  width: auto;
+  min-width: 170px;
+}
+.remove-team {
+  margin-top: 6px;
+}
+.permission-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Suspensión: pantalla centrada que no expone el panel. */
+.suspended-screen {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 24px;
+}
+.suspended-card {
+  max-width: 480px;
+  gap: 14px;
+}
+
+/* Responsive: el shell pasa a menú deslizable y las cuadrículas se apilan. */
+@media (max-width: 1100px) {
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1000px) {
+  .topbar {
+    padding: 14px 20px;
+  }
+  .topbar .breadcrumb {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 760px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .hero-card {
+    flex-direction: column;
+    padding: 22px;
+  }
+  .hero-card h1 {
+    font-size: 24px;
+  }
+  .member-row {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 560px) {
+  .metrics,
+  .metrics.three {
+    grid-template-columns: 1fr;
+  }
+  .workspace-content {
+    padding: 20px 16px;
+  }
+  .notification-popover {
+    right: -8px;
+  }
+  .review-card-head {
+    flex-direction: column;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .metric-card,
+  .chip {
+    transition: none;
+  }
+}
+
+/* Tonos de estado para las etiquetas del panel. */
+.badge.tone-neutral {
+  background: var(--canvas);
+  color: var(--muted);
+}
+.badge.tone-success {
+  background: #e6f6ee;
+  color: #17744a;
+}
+.badge.tone-warning {
+  background: #fff4dc;
+  color: #936000;
+}
+.badge.tone-danger {
+  background: #fdebef;
+  color: #a01835;
+}
+.badge.tone-info {
+  background: var(--pale);
+  color: var(--brand);
+}
+
+/* Equipo: barra de búsqueda, mensajes de éxito, contraseña temporal y nombres en línea. */
+.team-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.search-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-width: min(360px, 100%);
+}
+.search-field input {
+  min-width: 0;
+}
+.search-field .button {
+  padding: 13px 16px;
+}
+.create-account-form {
+  gap: 16px;
+}
+.password-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--pale);
+}
+.password-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.password-row input {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  letter-spacing: 0.04em;
+}
+.inline-name-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  flex-direction: row;
+}
+.inline-name-form input {
+  width: auto;
+  min-width: 180px;
+  padding: 9px 12px;
+}
+.inline-name-form .button {
+  padding: 9px 14px;
+}
+.form-success {
+  color: #17744a;
+  padding: 12px;
+  background: #e6f6ee;
+  border-radius: 10px;
+}

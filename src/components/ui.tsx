@@ -17,8 +17,15 @@ export function Button({
   return <button type="button" className={`button ${tone} ${className}`} {...props} />;
 }
 
-export function Badge({ children }: { children: ReactNode }) {
-  return <span className="badge">{children}</span>;
+// Etiqueta de estado; el tono colorea el fondo sin cambiar el texto.
+export function Badge({
+  children,
+  tone,
+}: {
+  children: ReactNode;
+  tone?: "neutral" | "success" | "warning" | "danger" | "info";
+}) {
+  return <span className={tone ? `badge tone-${tone}` : "badge"}>{children}</span>;
 }
 
 export function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {

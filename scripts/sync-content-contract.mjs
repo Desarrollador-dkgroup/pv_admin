@@ -11,6 +11,8 @@ const migrations = [
   "supabase/migrations/202610150002_padmin_access_and_catalog_details.sql",
   "supabase/migrations/202610150003_restaurant_menu_link_and_gallery.sql",
   "supabase/migrations/202610150004_platform_account_roles.sql",
+  "supabase/migrations/202610160001_panel_management_access.sql",
+  "supabase/migrations/202610160002_team_accounts_and_names.sql",
 ];
 
 // Genera un solo archivo transaccional para ejecutar manualmente en Supabase.
