@@ -37,6 +37,7 @@ export function ServiceEditorForm(props: Props) {
   const { role, service, lodging, restaurant } = props;
   const isStaff = canManageCatalog(role);
   const isNew = !service.id;
+  const isPublished = service.status === "published";
   const categoryId = String(service.category_id ?? "hospedaje");
   const lodgingTypeId = String(service.hospedaje_type_id ?? "");
   const detailFields = getLodgingDetailFields(lodgingTypeId);
@@ -56,7 +57,8 @@ export function ServiceEditorForm(props: Props) {
         </label>
         <label className="field">
           Identificador de la página
-          <input name="slug" required defaultValue={String(service.slug ?? "")} />
+          <input name="slug" required defaultValue={String(service.slug ?? "")}
+            readOnly={!isStaff} />
         </label>
         <label className="field">
           Negocio
@@ -82,13 +84,14 @@ export function ServiceEditorForm(props: Props) {
         </label>
         <label className="field">
           Categoría
-          <select name="category_id" defaultValue={categoryId} required>
+          <select name="category_id" defaultValue={categoryId} required disabled={!isStaff}>
             {props.categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.label ?? category.name ?? category.id}
               </option>
             ))}
           </select>
+          {!isStaff && <input type="hidden" name="category_id" value={categoryId} />}
         </label>
         {categoryId === "hospedaje" && (
           <label className="field">
@@ -97,6 +100,7 @@ export function ServiceEditorForm(props: Props) {
               name="hospedaje_type_id"
               defaultValue={lodgingTypeId}
               required
+              disabled={!isStaff}
             >
               <option value="">Selecciona un tipo</option>
               {props.lodgingTypes.map((type) => (
@@ -105,6 +109,7 @@ export function ServiceEditorForm(props: Props) {
                 </option>
               ))}
             </select>
+            {!isStaff && <input type="hidden" name="hospedaje_type_id" value={lodgingTypeId} />}
           </label>
         )}
         <ServiceSitePicker
@@ -337,9 +342,9 @@ export function ServiceEditorForm(props: Props) {
         <Button type="submit" name="intent" value="save" disabled={pending}>
           {pending
             ? "Guardando..."
-            : !isStaff ? "Guardar como borrador" : "Guardar cambios"}
+            : !isStaff && !isPublished ? "Guardar como borrador" : "Guardar cambios"}
         </Button>
-        {!isStaff && (
+        {!isStaff && !isPublished && (
           <Button
             tone="secondary"
             type="submit"
@@ -350,7 +355,10 @@ export function ServiceEditorForm(props: Props) {
             Enviar a revisión
           </Button>
         )}
-        {!isStaff && !isNew && (
+        {!isStaff && isPublished && (
+          <small>Los cambios de esta ficha publicada se muestran en el catálogo al guardarlos.</small>
+        )}
+        {!isStaff && !isPublished && !isNew && (
           <small>
             Al guardar o enviar cambios, el servicio queda como borrador hasta que
             un administrador lo revise y publique.

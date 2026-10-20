@@ -6,6 +6,7 @@ import { PGlite } from "../.validation/node_modules/@electric-sql/pglite/dist/in
 const businessId = "20000000-0000-0000-0000-000000000001";
 const serviceId = "20000000-0000-0000-0000-000000000002";
 const memberId = "20000000-0000-0000-0000-000000000003";
+const adminId = "20000000-0000-0000-0000-000000000004";
 
 test("Permisos de padmin y lectura pública de servicios publicados", async () => {
   const db = new PGlite();
@@ -47,6 +48,7 @@ test("Permisos de padmin y lectura pública de servicios publicados", async () =
       CREATE TABLE public.restaurant_feature_catalog (id text PRIMARY KEY, label text);
       CREATE TABLE public.services (
         id uuid PRIMARY KEY, business_id uuid NOT NULL,
+        description text,
         hospedaje_type_id text, status text NOT NULL DEFAULT 'draft',
         is_recommended boolean NOT NULL DEFAULT false
       );
@@ -92,6 +94,7 @@ test("Permisos de padmin y lectura pública de servicios publicados", async () =
       VALUES ('${serviceId}', '${businessId}', 'hotel', 'published');
       INSERT INTO public.business_members (business_id, user_id, role)
       VALUES ('${businessId}', '${memberId}', 'owner');
+      INSERT INTO public.platform_admins (user_id) VALUES ('${adminId}');
       GRANT SELECT ON public.services TO anon, authenticated;
     `);
 
@@ -149,6 +152,43 @@ test("Permisos de padmin y lectura pública de servicios publicados", async () =
       "SELECT service_id FROM public.lodging_profiles",
     );
     assert.equal(publishedProfile.rows.length, 1);
+    await db.exec("RESET ROLE");
+
+    // Un miembro actualiza el contenido publicado sin retirar la ficha del catálogo.
+    await db.query("UPDATE public.services SET status = 'published' WHERE id = $1", [serviceId]);
+    await db.query("SELECT set_config('request.jwt.claim.sub', $1, false)", [memberId]);
+    await db.exec("SET ROLE authenticated");
+    await db.query(
+      "UPDATE public.services SET description = 'Nueva ubicación e información' WHERE id = $1",
+      [serviceId],
+    );
+    await db.exec("RESET ROLE");
+    const stillPublished = await db.query(
+      "SELECT status, description FROM public.services WHERE id = $1", [serviceId],
+    );
+    assert.equal(stillPublished.rows[0].status, "published");
+    assert.equal(stillPublished.rows[0].description, "Nueva ubicación e información");
+
+    // Un comercio solo edita servicios que el equipo ya le asignó.
+    const assignedServicesMigration = await readFile(
+      new URL("../supabase/migrations/202610200001_provider_assigned_services.sql", import.meta.url),
+      "utf8",
+    );
+    await db.exec(assignedServicesMigration);
+    await db.exec("SET ROLE authenticated");
+    await assert.rejects(
+      db.query("INSERT INTO public.services (id, business_id) VALUES ($1, $2)", [
+        "20000000-0000-0000-0000-000000000005", businessId,
+      ]),
+      /row-level security policy/,
+    );
+    await db.exec("RESET ROLE");
+
+    await db.query("SELECT set_config('request.jwt.claim.sub', $1, false)", [adminId]);
+    await db.exec("SET ROLE authenticated");
+    await db.query("INSERT INTO public.services (id, business_id) VALUES ($1, $2)", [
+      "20000000-0000-0000-0000-000000000006", businessId,
+    ]);
     await db.exec("RESET ROLE");
 
     // Un dueño retira la ficha a borrador mientras espera revisión.

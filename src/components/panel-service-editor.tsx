@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Panel } from "@/components/ui";
 import { ServiceEditorForm } from "@/components/service-editor-form";
 import { getPanelIdentity } from "@/lib/panel-access";
@@ -9,6 +9,8 @@ import { canManageCatalog } from "@/types/panel";
 export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) {
   const { supabase, role, businessIds } = await getPanelIdentity();
   if (role === "collaborator") redirect("/panel/permisos");
+  // Los servicios y sus categorías los asigna el equipo de Panamá Viajero.
+  if (!serviceId && role === "propietario") redirect("/panel/servicios");
   const businessQuery = supabase
     .from("businesses")
     .select("id, name")
@@ -52,6 +54,10 @@ export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) 
   }
 
   const service = serviceResult.data ?? {};
+  if (serviceId && (!serviceResult.data ||
+    (role === "propietario" && !businessIds.includes(String(service.business_id))))) {
+    notFound();
+  }
   const [lodgingResult, restaurantResult, scheduleResult, siteLinks,
     amenityLinks, featureLinks] = serviceId
     ? await Promise.all([

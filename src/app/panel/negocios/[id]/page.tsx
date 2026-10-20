@@ -169,12 +169,18 @@ export default async function BusinessDetailPage({
           <Link className="text-link" href="/panel/servicios">Ver servicios</Link>
         </div>
         {(servicesResult.data ?? []).map((service) => (
-          <Link className="queue-item" href={`/panel/servicios/${service.id}`} key={service.id}>
+          <div className="queue-item" key={service.id}>
             <b>{service.name}</b>
-            <small>
-              {service.category_id} · {service.status} · {service.review_status}
-            </small>
-          </Link>
+            <small>{service.category_id} · {service.status} · {service.review_status}</small>
+            <div className="actions">
+              <Link className="button secondary" href={`/panel/servicios/${service.id}`}>
+                Editar ficha y ubicación
+              </Link>
+              <Link className="button quiet" href={`/panel/servicios/${service.id}/galeria`}>
+                Fotos del establecimiento y habitaciones
+              </Link>
+            </div>
+          </div>
         ))}
         {!servicesResult.data?.length && (
           <p className="muted">No hay servicios registrados.</p>

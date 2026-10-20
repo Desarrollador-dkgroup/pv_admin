@@ -15,13 +15,14 @@ export default async function LodgingUnitsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { supabase } = await getPanelIdentity();
+  const { supabase, role, businessIds } = await getPanelIdentity();
   const { data: service, error } = await supabase
     .from("services")
-    .select("id, name, hospedaje_type_id")
+    .select("id, name, hospedaje_type_id, business_id")
     .eq("id", id)
     .maybeSingle();
-  if (error || !service || !service.hospedaje_type_id) notFound();
+  if (error || !service || !service.hospedaje_type_id || role === "collaborator" ||
+    (role === "propietario" && !businessIds.includes(service.business_id))) notFound();
 
   const [rooms, areas] = await Promise.all([
     supabase

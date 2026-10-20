@@ -43,9 +43,11 @@ export default async function ServicesPage() {
           <h1>{isStaff ? "Servicios" : "Mis servicios"}</h1>
           <p>Los cambios se guardan en la base de datos compartida.</p>
         </div>
-        <Link href="/panel/servicios/nuevo" className="button primary">
-          + Crear servicio
-        </Link>
+        {isStaff && (
+          <Link href="/panel/servicios/nuevo" className="button primary">
+            + Crear servicio
+          </Link>
+        )}
       </header>
       <Panel className="table-panel">
         <div className="table-scroll">
