@@ -18,7 +18,7 @@ export function AuthScreen({ initialMode = "login" }: Props) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const titles = {
-    login: "Bienvenido al Panel del propietario",
+    login: "Bienvenido al panel",
     forgot: "Recupera tu acceso",
     change: "Cambiar contraseña",
     temporary: "Cambia tu contraseña temporal",
@@ -82,7 +82,7 @@ export function AuthScreen({ initialMode = "login" }: Props) {
   return (
     <main className="auth-layout">
       <section className="auth-brand">
-        <span className="brand">Panel del propietario</span>
+        <span className="brand">Panamá Viajero</span>
         <h1>
           Un solo lugar.
           <br />
@@ -106,7 +106,7 @@ export function AuthScreen({ initialMode = "login" }: Props) {
               ? "Antes de continuar, reemplaza tu contraseña temporal."
               : mode === "sent"
                 ? "Si el correo pertenece a una cuenta, recibirás las instrucciones."
-                : "Ingresa con el acceso que te proporcionó Panamá Viajero."}
+                : "Ingresa con tu cuenta de Panamá Viajero. Verás las herramientas que tienes asignadas."}
           </p>
           {mode !== "sent" && (
             <form key={mode} onSubmit={submit}>

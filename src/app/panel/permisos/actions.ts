@@ -12,7 +12,6 @@ import {
 import { generateTemporaryPassword } from "@/lib/panel-password";
 import { loadTeamTarget } from "@/lib/panel-team";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
-import type { PanelRole } from "@/types/panel";
 
 type FormState = { error: string };
 type PasswordState = { error: string; password?: string };

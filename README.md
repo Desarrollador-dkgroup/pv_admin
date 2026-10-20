@@ -37,7 +37,33 @@ Después de iniciar sesión, cada rol ve su propio menú y su portada, validados
   Negocios, Propietarios, Sitios turísticos, Promociones, Notificaciones y Permisos.
 - Colaborador: inicio con propietarios y negocios, gestión de propietarios, Negocios,
   Notificaciones y Permisos de su alcance.
-- Propietario de negocio: Mi panel, Mi negocio, Mis servicios, Mis promociones y avisos.
+- Propietario de negocio: Mi panel, Mis establecimientos, Mis servicios, Mis promociones y avisos.
+
+La pantalla de acceso real es única (`/acceso`, también accesible desde `/`). El rol
+sale de la cuenta autenticada, nunca de un selector en el formulario. Una misma cuenta
+de comercio puede tener varios negocios asignados en `business_members` y verá todos
+en su portada, con enlaces a cada servicio. Panamá Viajero asigna los negocios y crea
+los servicios iniciales; el comercio no puede crear servicios de categorías nuevas.
+
+Los miembros de un negocio editan nombre público, descripciones, destino, dirección,
+mapa, amenidades y detalles propios de cada servicio en «Mis servicios». La
+galería de cada servicio permite fotos generales y, en hospedajes, fotos por habitación;
+«Habitaciones y unidades» administra capacidad, camas, inventario y tarifas. Restaurantes
+incluyen su menú. Las fichas ya publicadas conservan su publicación cuando su miembro
+guarda información nueva, para que el catálogo compartido pueda mostrarla; los servicios
+nuevos siguen siendo asignados y publicados por el equipo. El estado de activación del
+negocio y la asignación de cuentas siguen reservados a Panamá Viajero.
+
+En una habitación ya creada se pueden corregir nombre, descripción, camas, dimensiones,
+atributos y precio base sin cambiar su identificador ni borrar sus fotos. Capacidad,
+unidad de reserva e inventario quedan fijos al editarla, porque pueden afectar reservas
+existentes. Las áreas comunes también se pueden modificar sin borrar su galería.
+
+La migración `202610200003_provider_assigned_services.sql` cierra INSERT directo de
+servicios para comerciantes en la base. **Debe aplicarse al proyecto compartido antes
+de usar esta versión del panel con comercios reales**; comprueba primero el esquema
+del proyecto y coordina la aplicación con el equipo móvil y web. La UI y la acción
+del servidor también rechazan la creación, pero no sustituyen esa política RLS.
 
 La matriz de gestión de cuentas está en `src/lib/panel-permissions.ts`.
 Las reglas de la base de datos están en `supabase/migrations/`.
@@ -46,12 +72,10 @@ Las reglas de la base de datos están en `supabase/migrations/`.
 
 `/acceso` permite iniciar sesión y recuperar una cuenta existente con Supabase Auth.
 `/panel` verifica el usuario en el servidor y consulta `platform_admins` y
-`business_members` para determinar su acceso. Muestra servicios reales en modo lectura.
-
-La interfaz de edición todavía no escribe en Supabase. Antes de habilitarla se deben
-revisar las políticas RLS y conectar cada formulario con el contrato de datos real.
-La contraseña temporal obligatoria y las invitaciones reales requieren un flujo
-administrativo de servidor; la simulación no constituye una comprobación de seguridad.
+`business_members` para determinar su acceso. Los formularios reales de servicios,
+galerías, habitaciones y menú escriben en Supabase con la sesión del usuario y las
+políticas RLS. Requieren el esquema y las variables de entorno configurados. La ruta
+`/vista-previa` sigue siendo ilustrativa y guarda sus cambios solo en el navegador.
 
 Copiar `.env.example` a `.env.local` y completar las variables públicas.
 No publicar claves privadas en variables con prefijo `NEXT_PUBLIC_`.

@@ -55,11 +55,14 @@ export async function saveServiceAction(
   if (!isStaff && !businessIds.includes(businessId)) {
     return { error: "Solo puedes guardar servicios de un negocio asignado." };
   }
+  if (!isStaff && !serviceId) {
+    return { error: "El equipo de Panamá Viajero debe asignarte el servicio antes de editarlo." };
+  }
 
   const { data: existing } = serviceId
     ? await supabase
         .from("services")
-        .select("id, business_id, category_id, hospedaje_type_id, status")
+        .select("id, business_id, category_id, hospedaje_type_id, status, slug")
         .eq("id", serviceId)
         .maybeSingle()
     : { data: null };
@@ -69,6 +72,19 @@ export async function saveServiceAction(
   }
   if (existing && !isStaff && existing.business_id !== businessId) {
     return { error: "No puedes mover un servicio a otro negocio." };
+  }
+  if (existing && !isStaff && !businessIds.includes(existing.business_id)) {
+    return { error: "No tienes acceso a este servicio." };
+  }
+  if (existing && !isStaff &&
+    (categoryId !== existing.category_id || slug !== existing.slug)) {
+    return { error: "Solo el equipo puede cambiar la categoría o el identificador del servicio." };
+  }
+  if (existing && !isStaff &&
+    (categoryId === "hospedaje"
+      ? text(formData, "hospedaje_type_id") !== (existing.hospedaje_type_id ?? "")
+      : Boolean(existing.hospedaje_type_id))) {
+    return { error: "Solo el equipo puede cambiar el tipo de hospedaje." };
   }
 
   const lodgingTypeId =
@@ -93,9 +109,9 @@ export async function saveServiceAction(
   const selectedStatus = text(formData, "status") || "draft";
   const serviceValues = {
     name,
-    slug,
+    slug: isStaff ? slug : existing?.slug ?? slug,
     business_id: isStaff ? businessId : existing?.business_id ?? businessId,
-    category_id: categoryId,
+    category_id: isStaff ? categoryId : existing?.category_id ?? categoryId,
     destination_province_id: nullable(text(formData, "destination_province_id")),
     search_description: text(formData, "search_description"),
     description: text(formData, "description"),
@@ -104,9 +120,11 @@ export async function saveServiceAction(
     base_price_cents: numberValue(text(formData, "base_price")) === null
       ? null
       : Math.round(Number(text(formData, "base_price")) * 100),
-    hospedaje_type_id: nullable(lodgingTypeId),
+    hospedaje_type_id: isStaff ? nullable(lodgingTypeId) : existing?.hospedaje_type_id ?? null,
     review_status: !isStaff
-      ? intent === "submit" ? "pending" : "not_submitted"
+      ? existing?.status === "published"
+        ? undefined
+        : intent === "submit" ? "pending" : "not_submitted"
       : selectedStatus === "published"
         ? "approved"
         : selectedStatus === "suspended"
@@ -118,7 +136,7 @@ export async function saveServiceAction(
     is_recommended: isStaff
       ? formData.get("is_recommended") === "on"
       : undefined,
-    status: isStaff ? selectedStatus : "draft",
+    status: isStaff ? selectedStatus : existing?.status === "published" ? "published" : "draft",
   };
 
   const writableValues = Object.fromEntries(

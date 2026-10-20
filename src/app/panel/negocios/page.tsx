@@ -10,7 +10,7 @@ type SearchParams = Promise<{ categoria?: string }>;
 export default async function BusinessesPage({ searchParams }: { searchParams: SearchParams }) {
   const { supabase, role, businessIds } = await getPanelIdentity();
   if (role === "propietario" && !businessIds.length) {
-    return <Panel><p role="alert">La cuenta no tiene un negocio asignado.</p></Panel>;
+    return <Panel><p role="alert">La cuenta no tiene establecimientos asignados.</p></Panel>;
   }
   const { categoria = "" } = await searchParams;
   const isStaff = role !== "propietario";
@@ -44,11 +44,11 @@ export default async function BusinessesPage({ searchParams }: { searchParams: S
     <>
       <header className="page-heading">
         <div>
-          <h1>{isStaff ? "Negocios" : "Mi negocio"}</h1>
+          <h1>{isStaff ? "Negocios" : "Mis establecimientos"}</h1>
           <p>
             {isStaff
               ? "Negocios registrados, sus propietarios y el tipo de servicios que ofrecen."
-              : "Datos de tu negocio y las personas que tienen acceso."}
+              : "Tus establecimientos, servicios y las personas que tienen acceso."}
           </p>
         </div>
       </header>

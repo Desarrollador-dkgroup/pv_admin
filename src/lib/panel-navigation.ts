@@ -51,7 +51,7 @@ const NAVIGATION: Record<PanelRole, PanelNavItem[]> = {
   ],
   propietario: [
     { href: "/panel", label: "Mi panel", icon: LayoutDashboard },
-    { href: "/panel/negocios", label: "Mi negocio", icon: Briefcase },
+    { href: "/panel/negocios", label: "Mis establecimientos", icon: Briefcase },
     { href: "/panel/servicios", label: "Mis servicios", icon: Layers },
     { href: "/panel/promociones", label: "Mis promociones", icon: Tag },
     { href: "/panel/notificaciones", label: "Notificaciones", icon: Bell },

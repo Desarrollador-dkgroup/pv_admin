@@ -11,14 +11,15 @@ export default async function ServiceGalleryPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { supabase } = await getPanelIdentity();
+  const { supabase, role, businessIds } = await getPanelIdentity();
   const { data: service, error } = await supabase
     .from("services")
-    .select("id, name, category_id, hospedaje_type_id")
+    .select("id, name, category_id, hospedaje_type_id, business_id")
     .eq("id", id)
     .maybeSingle();
 
-  if (error || !service) notFound();
+  if (error || !service || role === "collaborator" ||
+    (role === "propietario" && !businessIds.includes(service.business_id))) notFound();
 
   const isLodging = service.hospedaje_type_id !== null;
   const servicePhotos = await supabase
