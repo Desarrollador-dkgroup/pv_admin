@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Badge, Button, Panel } from "@/components/ui";
+import { CreateOwnerForm } from "@/components/panel-owner-form";
 import { PersonNameForm } from "@/components/panel-person-name-form";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { canEditName, canManageProviders } from "@/lib/panel-permissions";
@@ -27,12 +28,16 @@ export default async function OwnersPage({ searchParams }: { searchParams: Searc
     ? (estado as FilterValue)
     : "activos";
 
-  const [owners, blocked, businesses] = await Promise.all([
+  const [owners, blocked, businesses, categories, lodgingTypes] = await Promise.all([
     supabase.from("business_members").select("business_id, user_id").eq("role", "owner"),
     supabase.from("blocked_users").select("user_id"),
-    supabase.from("businesses").select("id, name"),
+    supabase.from("businesses").select("id, name").order("name"),
+    supabase.from("categories").select("id, label").order("sort_order"),
+    supabase.from("hospedaje_types").select("id, label").order("sort_order"),
   ]);
-  if (owners.error || blocked.error || businesses.error) {
+  if (
+    owners.error || blocked.error || businesses.error || categories.error || lodgingTypes.error
+  ) {
     throw new Error("No se pudo cargar la lista de propietarios.");
   }
 
@@ -67,6 +72,9 @@ export default async function OwnersPage({ searchParams }: { searchParams: Searc
           <h1>Propietarios</h1>
           <p>Personas que administran un negocio. Suspender bloquea su acceso al panel.</p>
         </div>
+        {canManageProviders(role) && (
+          <a className="button primary" href="#agregar-propietario">+ Agregar propietario</a>
+        )}
       </header>
 
       <nav className="chip-filter" aria-label="Filtrar por estado">
@@ -131,6 +139,21 @@ export default async function OwnersPage({ searchParams }: { searchParams: Searc
         </div>
         {!rows.length && <p className="muted">No hay propietarios para este filtro.</p>}
       </Panel>
+
+      {canManageProviders(role) && (
+        <section id="agregar-propietario">
+          <Panel>
+            <h2>Agregar propietario</h2>
+            <p className="muted">
+              Crea la cuenta con una contraseña temporal y asígnala como propietario de un negocio.
+            </p>
+            <CreateOwnerForm
+              categories={categories.data ?? []}
+              lodgingTypes={lodgingTypes.data ?? []}
+            />
+          </Panel>
+        </section>
+      )}
     </>
   );
 }

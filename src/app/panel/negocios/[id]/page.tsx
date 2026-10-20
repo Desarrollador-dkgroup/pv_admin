@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge, Button, Panel } from "@/components/ui";
 import { MemberAddForm } from "@/components/panel-member-form";
+import { OwnBusinessForm } from "@/components/panel-own-business-form";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { canManageProviders } from "@/lib/panel-permissions";
 import { getAccountNames } from "@/lib/panel-people";
@@ -26,13 +27,14 @@ export default async function BusinessDetailPage({
 
   const { data: business, error } = await supabase
     .from("businesses")
-    .select("id, name, description, is_active, cities(name)")
+    .select("id, name, description, city_id, is_active, cities(name)")
     .eq("id", id)
     .maybeSingle();
   if (error) throw new Error("No se pudo cargar el negocio.");
   if (!business) notFound();
 
-  const [membersResult, servicesResult, accountsResult] = await Promise.all([
+  const [membersResult, servicesResult, accountsResult, plansResult, citiesResult] =
+    await Promise.all([
     supabase
       .from("business_members")
       .select("user_id, role")
@@ -46,8 +48,17 @@ export default async function BusinessDetailPage({
     canManageProviders(role)
       ? supabase.from("profiles").select("id, display_name").order("display_name").limit(300)
       : Promise.resolve({ data: [], error: null }),
+    supabase
+      .from("business_service_plans")
+      .select("id, quantity, categories(label), hospedaje_types(label)")
+      .eq("business_id", id)
+      .order("created_at"),
+    supabase.from("cities").select("id, name").order("name"),
   ]);
-  if (membersResult.error || servicesResult.error || accountsResult.error) {
+  if (
+    membersResult.error || servicesResult.error || accountsResult.error ||
+    plansResult.error || citiesResult.error
+  ) {
     throw new Error("No se pudo cargar la información del negocio.");
   }
 
@@ -73,6 +84,20 @@ export default async function BusinessDetailPage({
         </div>
         <Badge>{business.is_active ? "Activo" : "Inactivo"}</Badge>
       </header>
+
+      {role === "propietario" && (
+        <Panel>
+          <h2>Datos del negocio</h2>
+          <p className="muted">Completa la información que verán los visitantes.</p>
+          <OwnBusinessForm
+            businessId={id}
+            name={business.name}
+            description={business.description ?? ""}
+            cityId={business.city_id}
+            cities={citiesResult.data ?? []}
+          />
+        </Panel>
+      )}
 
       <div className="dashboard-grid">
         <Panel>
@@ -120,6 +145,23 @@ export default async function BusinessDetailPage({
           )}
         </Panel>
       </div>
+
+      <Panel>
+        <h2>Plan de servicios</h2>
+        {(plansResult.data ?? []).map((plan) => {
+          const category = related(plan.categories);
+          const lodging = related(plan.hospedaje_types);
+          return (
+            <div className="member-row" key={plan.id}>
+              <b>{plan.quantity} × {category?.label ?? "Servicio"}</b>
+              {lodging && <small>{lodging.label}</small>}
+            </div>
+          );
+        })}
+        {!plansResult.data?.length && (
+          <p className="muted">No hay un plan de servicios registrado para este negocio.</p>
+        )}
+      </Panel>
 
       <Panel>
         <div className="section-heading">

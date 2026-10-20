@@ -1,5 +1,7 @@
 "use server";
 
+import { extractMapsEmbedUrl } from "@/lib/panel-maps";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getPanelIdentity } from "@/lib/panel-access";
@@ -47,8 +49,8 @@ export async function saveServiceAction(
   const name = text(formData, "name");
   const slug = text(formData, "slug");
 
-  if (!name || !slug || !categoryId || !text(formData, "city_id")) {
-    return { error: "Completa nombre, identificador, categoría y ciudad." };
+  if (!name || !slug || !categoryId || !text(formData, "destination_province_id")) {
+    return { error: "Completa nombre, identificador, categoría y destino." };
   }
   if (!isStaff && !businessIds.includes(businessId)) {
     return { error: "Solo puedes guardar servicios de un negocio asignado." };
@@ -81,6 +83,12 @@ export async function saveServiceAction(
     return { error: "Agrega al menos un turno semanal para el restaurante." };
   }
 
+  const mapsRaw = text(formData, "maps_embed");
+  const mapsUrl = mapsRaw ? extractMapsEmbedUrl(mapsRaw) : null;
+  if (mapsRaw && !mapsUrl) {
+    return { error: "Ese código no es un mapa de Google válido." };
+  }
+
   const intent = text(formData, "intent");
   const selectedStatus = text(formData, "status") || "draft";
   const serviceValues = {
@@ -88,14 +96,11 @@ export async function saveServiceAction(
     slug,
     business_id: isStaff ? businessId : existing?.business_id ?? businessId,
     category_id: categoryId,
-    city_id: text(formData, "city_id"),
+    destination_province_id: nullable(text(formData, "destination_province_id")),
     search_description: text(formData, "search_description"),
     description: text(formData, "description"),
     address: nullable(text(formData, "address")),
-    area_label: nullable(text(formData, "area_label")),
-    latitude: numberValue(text(formData, "latitude")),
-    longitude: numberValue(text(formData, "longitude")),
-    maps_query: nullable(text(formData, "maps_query")),
+    maps_embed_url: mapsUrl,
     base_price_cents: numberValue(text(formData, "base_price")) === null
       ? null
       : Math.round(Number(text(formData, "base_price")) * 100),

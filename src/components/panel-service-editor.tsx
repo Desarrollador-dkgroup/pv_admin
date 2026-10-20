@@ -17,14 +17,17 @@ export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) 
     ? businessQuery
     : businessQuery.in("id", businessIds);
 
-  const [businessResult, categoryResult, cityResult, typeResult, siteResult,
+  const [businessResult, categoryResult, typeResult, siteResult, destinationResult,
     amenityResult, featureResult, serviceResult] =
     await Promise.all([
       scopedBusinessQuery,
       supabase.from("categories").select("id, label").order("sort_order"),
-      supabase.from("cities").select("id, name").order("name"),
       supabase.from("hospedaje_types").select("id, label").order("sort_order"),
-      supabase.from("tourist_sites").select("id, name, province_id").order("name"),
+      supabase
+        .from("tourist_sites")
+        .select("id, name, province_id")
+        .order("name"),
+      supabase.from("destinations").select("province_id, name").order("sort_order").order("name"),
       supabase.from("amenities").select("id, label").order("sort_order"),
       supabase
         .from("restaurant_feature_catalog")
@@ -38,9 +41,9 @@ export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) 
   if (
     businessResult.error ||
     categoryResult.error ||
-    cityResult.error ||
     typeResult.error ||
     siteResult.error ||
+    destinationResult.error ||
     amenityResult.error ||
     featureResult.error ||
     serviceResult.error
@@ -118,6 +121,14 @@ export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) 
     );
   }
 
+  const selectedSiteIds = (siteLinks.data ?? []).map((item) => item.tourist_site_id);
+  const serviceProvinceId = (service as { destination_province_id?: string | null })
+    .destination_province_id;
+  const destinationProvinceId =
+    serviceProvinceId ??
+    (siteResult.data ?? []).find((site) => selectedSiteIds.includes(site.id))?.province_id ??
+    "";
+
   return (
     <>
       <header className="page-heading">
@@ -136,12 +147,16 @@ export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) 
         restaurant={restaurant as Record<string, unknown>}
         businesses={businesses}
         categories={categoryResult.data ?? []}
-        cities={cityResult.data ?? []}
         lodgingTypes={typeResult.data ?? []}
         sites={siteResult.data ?? []}
+        destinations={(destinationResult.data ?? []).map((row) => ({
+          provinceId: row.province_id,
+          name: row.name,
+        }))}
+        destinationProvinceId={destinationProvinceId}
         amenities={amenityResult.data ?? []}
         restaurantFeatures={featureResult.data ?? []}
-        selectedSiteIds={(siteLinks.data ?? []).map((item) => item.tourist_site_id)}
+        selectedSiteIds={selectedSiteIds}
         selectedAmenityIds={(amenityLinks.data ?? []).map((item) => item.amenity_id)}
         selectedFeatureIds={(featureLinks.data ?? []).map((item) => item.feature_id)}
       />

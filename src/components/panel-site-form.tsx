@@ -1,9 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { saveTouristSiteAction } from "@/app/panel/sitios/actions";
 import { Button, Panel } from "@/components/ui";
+import { extractMapsEmbedUrl } from "@/lib/panel-maps";
+import {
+  SITE_IMAGE_BUCKET,
+  SITE_IMAGE_MAX_BYTES,
+  SITE_IMAGE_TYPES,
+  siteImageExtension,
+} from "@/lib/panel-sites";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 type Option = { id: string; label: string };
 type Site = {
@@ -15,23 +23,73 @@ type Site = {
   province_id: string | null;
   city_id: string | null;
   sort_order: number;
+  latitude: number | null;
+  longitude: number | null;
+  photo_storage_path: string | null;
+  maps_embed_url: string | null;
 };
 
-// Formulario de un sitio turístico. Muestra el país fijo y la provincia como destino.
+// Formulario de un sitio turístico: datos, foto, ubicación y mapa de Google.
 export function SiteForm({
   site,
   provinces,
   cities,
+  defaultProvinceId = "",
 }: {
   site: Site | null;
   provinces: Option[];
   cities: Option[];
+  defaultProvinceId?: string;
 }) {
   const [state, action, pending] = useActionState(saveTouristSiteAction, { error: "" });
+  // La carpeta de la foto usa el identificador del sitio. Un sitio nuevo lo recibe al subir
+  // su primera imagen, así la foto ya queda guardada en su carpeta antes de crear el sitio.
+  const [siteId, setSiteId] = useState(site?.id ?? "");
+  const [photoPath, setPhotoPath] = useState(site?.photo_storage_path ?? "");
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [mapsInput, setMapsInput] = useState(site?.maps_embed_url ?? "");
+  const mapsUrl = extractMapsEmbedUrl(mapsInput);
+  const mapsInvalid = mapsInput.trim() !== "" && !mapsUrl;
+
+  // Valida la imagen y la sube a la carpeta del sitio.
+  async function uploadPhoto(file: File | undefined) {
+    setPhotoError("");
+    if (!file) return;
+    if (!(SITE_IMAGE_TYPES as readonly string[]).includes(file.type)) {
+      setPhotoError("La imagen debe ser JPG, PNG o WebP.");
+      return;
+    }
+    if (file.size > SITE_IMAGE_MAX_BYTES) {
+      setPhotoError("La imagen no puede pesar más de 3 MB.");
+      return;
+    }
+    const folder = siteId || crypto.randomUUID();
+    setSiteId(folder);
+    setPhotoBusy(true);
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const path = `${folder}/${crypto.randomUUID()}.${siteImageExtension(file.type)}`;
+      const { error: uploadError } = await supabase.storage
+        .from(SITE_IMAGE_BUCKET)
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (uploadError) {
+        setPhotoError("No se pudo subir la imagen. Intenta de nuevo.");
+        return;
+      }
+      setPhotoPath(supabase.storage.from(SITE_IMAGE_BUCKET).getPublicUrl(path).data.publicUrl);
+    } finally {
+      setPhotoBusy(false);
+      if (fileInput.current) fileInput.current.value = "";
+    }
+  }
 
   return (
     <form action={action} className="site-form">
-      <input type="hidden" name="site_id" value={site?.id ?? ""} />
+      <input type="hidden" name="site_id" value={siteId} />
+      <input type="hidden" name="is_new" value={site ? "" : "1"} />
+      <input type="hidden" name="photo_storage_path" value={photoPath} />
       <Panel>
         <div className="form-row">
           <label className="field">
@@ -47,6 +105,10 @@ export function SiteForm({
               defaultValue={site?.slug ?? ""}
               placeholder="casco-antiguo"
             />
+            <small className="muted">
+              Es la última parte de la dirección de la página del sitio:
+              /sitios-turisticos/identificador. Usa solo minúsculas, números y guiones.
+            </small>
           </label>
         </div>
         <div className="form-row">
@@ -56,7 +118,11 @@ export function SiteForm({
           </label>
           <label className="field">
             Provincia destino
-            <select name="province_id" required defaultValue={site?.province_id ?? ""}>
+            <select
+            name="province_id"
+            required
+            defaultValue={site?.province_id ?? defaultProvinceId}
+          >
               <option value="" disabled>Selecciona una provincia</option>
               {provinces.map((province) => (
                 <option key={province.id} value={province.id}>{province.label}</option>
@@ -85,6 +151,107 @@ export function SiteForm({
             />
           </label>
         </div>
+
+        <section className="destination-block">
+          <h3>Foto del sitio</h3>
+          <p className="muted">
+            Tamaño recomendado: 1920 × 1080 px (horizontal). Formatos JPG, PNG o WebP, máximo
+            3 MB. Es la imagen grande de la página del sitio.
+          </p>
+          <div className="destination-image-row">
+            <div className="destination-image-preview">
+              {photoPath ? (
+                // Vista previa de la foto; la URL pública no necesita optimización aquí.
+                <img src={photoPath} alt="" />
+              ) : (
+                <span className="muted">Sin imagen</span>
+              )}
+            </div>
+            <div className="destination-image-actions">
+              <input
+                ref={fileInput}
+                type="file"
+                hidden
+                accept={SITE_IMAGE_TYPES.join(",")}
+                onChange={(event) => uploadPhoto(event.target.files?.[0])}
+                aria-label="Foto del sitio"
+              />
+              <div className="actions">
+                <Button
+                  type="button"
+                  tone="secondary"
+                  disabled={photoBusy}
+                  onClick={() => fileInput.current?.click()}
+                >
+                  {photoBusy ? "Subiendo imagen…" : photoPath ? "Cambiar imagen" : "Añadir imagen"}
+                </Button>
+                {photoPath && (
+                  <Button type="button" tone="quiet" onClick={() => setPhotoPath("")}>
+                    Quitar imagen
+                  </Button>
+                )}
+              </div>
+              {photoError && <small role="alert" className="form-error">{photoError}</small>}
+            </div>
+          </div>
+        </section>
+
+        <div className="form-row">
+          <label className="field">
+            Latitud
+            <input
+              name="latitude"
+              type="number"
+              step="any"
+              min={-90}
+              max={90}
+              defaultValue={site?.latitude ?? ""}
+            />
+          </label>
+          <label className="field">
+            Longitud
+            <input
+              name="longitude"
+              type="number"
+              step="any"
+              min={-180}
+              max={180}
+              defaultValue={site?.longitude ?? ""}
+            />
+          </label>
+        </div>
+        <small>Sirve para elegir el sitio más cercano a cada servicio del destino.</small>
+
+        <section className="destination-block">
+          <h3>Mapa de Google</h3>
+          <p className="muted">
+            En Google Maps busca el lugar, pulsa <strong>Compartir → Insertar un mapa</strong> y
+            pega aquí el código completo (iframe) o solo la URL del atributo src.
+          </p>
+          <textarea
+            name="maps_embed"
+            value={mapsInput}
+            onChange={(event) => setMapsInput(event.target.value)}
+            rows={3}
+            placeholder='<iframe src="https://www.google.com/maps/embed?..."></iframe>'
+            aria-invalid={mapsInvalid}
+          />
+          {mapsInvalid && (
+            <small role="alert" className="form-error">
+              Ese código no es un mapa de Google válido.
+            </small>
+          )}
+          {mapsUrl && (
+            <iframe
+              className="destination-map"
+              src={mapsUrl}
+              title="Vista previa del mapa"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          )}
+        </section>
+
         <label className="field">
           Descripción breve
           <input name="short_description" defaultValue={site?.short_description ?? ""} />
@@ -96,10 +263,12 @@ export function SiteForm({
       </Panel>
       {state.error && <p role="alert" className="form-error">{state.error}</p>}
       <div className="actions">
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending || photoBusy || mapsInvalid}>
           {pending ? "Guardando…" : site ? "Guardar sitio" : "Crear sitio"}
         </Button>
-        <Link className="button quiet" href="/panel/sitios">Cancelar</Link>
+        <Link className="button quiet" href={site ? `/panel/sitios/${site.id}` : "/panel/sitios"}>
+          Cancelar
+        </Link>
       </div>
     </form>
   );

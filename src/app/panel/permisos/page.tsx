@@ -214,16 +214,7 @@ export default async function PermissionsPage({ searchParams }: { searchParams: 
         </Panel>
       )}
 
-      <Panel>
-        <h2>Reglas de permisos</h2>
-        <ul className="permission-list">
-          <li>El propietario principal administra admins, colaboradores y propietarios.</li>
-          <li>El administrador administra colaboradores y propietarios, no a otros admins.</li>
-          <li>Solo el propietario principal cambia el nombre de un administrador.</li>
-          <li>La cuenta del propietario principal no se puede modificar ni eliminar.</li>
-          <li>Eliminar una cuenta borra su acceso y su perfil. Si tiene reservas, no se borra.</li>
-        </ul>
-      </Panel>
+      
     </>
   );
 }

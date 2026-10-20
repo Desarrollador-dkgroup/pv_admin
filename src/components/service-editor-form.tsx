@@ -1,9 +1,15 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Button, Panel } from "@/components/ui";
 import { getLodgingDetailFields } from "@/data/lodging-details";
+import {
+  ServiceSitePicker,
+  type DestinationOption,
+  type SiteOption,
+} from "@/components/panel-service-site-picker";
 import { saveServiceAction } from "@/app/panel/actions";
+import { extractMapsEmbedUrl } from "@/lib/panel-maps";
 import { canManageCatalog, type PanelRole } from "@/types/panel";
 
 type Option = { id: string; name?: string; label?: string; province_id?: string };
@@ -14,9 +20,10 @@ type Props = {
   restaurant: Record<string, unknown>;
   businesses: Option[];
   categories: Option[];
-  cities: Option[];
   lodgingTypes: Option[];
-  sites: Option[];
+  sites: SiteOption[];
+  destinations: DestinationOption[];
+  destinationProvinceId: string;
   amenities: Option[];
   restaurantFeatures: Option[];
   selectedSiteIds: string[];
@@ -100,19 +107,13 @@ export function ServiceEditorForm(props: Props) {
             </select>
           </label>
         )}
-        <label className="field">
-          Ciudad
-          <select name="city_id" defaultValue={String(service.city_id ?? "")} required>
-            <option value="">Selecciona una ciudad</option>
-            {props.cities.map((city) => (
-              <option key={city.id} value={city.id}>
-                {city.name ?? city.id}
-              </option>
-            ))}
-          </select>
-        </label>
+        <ServiceSitePicker
+          destinations={props.destinations}
+          sites={props.sites}
+          initialProvinceId={props.destinationProvinceId}
+          initialSiteIds={selectedSites}
+        />
         <TextField label="Dirección" name="address" value={service.address} />
-        <TextField label="Área o barrio" name="area_label" value={service.area_label} />
         <TextField
           label="Descripción para búsquedas"
           name="search_description"
@@ -126,24 +127,9 @@ export function ServiceEditorForm(props: Props) {
           multiline
           required
         />
-        <TextField label="Latitud" name="latitude" value={service.latitude} type="number" />
-        <TextField label="Longitud" name="longitude" value={service.longitude} type="number" />
-        <TextField label="Consulta de mapa" name="maps_query" value={service.maps_query} />
-        <fieldset className="choice-group">
-          <legend>Sitios turísticos relacionados</legend>
-          <small>El servicio puede aparecer en varios destinos cercanos.</small>
-          {props.sites.map((site) => (
-            <label className="checkbox-option" key={site.id}>
-              <input
-                type="checkbox"
-                name="tourist_site_ids"
-                value={site.id}
-                defaultChecked={selectedSites.includes(site.id)}
-              />
-              {site.name} · {site.province_id ?? "Provincia sin indicar"}
-            </label>
-          ))}
-        </fieldset>
+        <MapsEmbedField
+          initial={service.maps_embed_url == null ? "" : String(service.maps_embed_url)}
+        />
         <fieldset className="choice-group">
           <legend>Servicios y comodidades</legend>
           {props.amenities.map((amenity) => (
@@ -373,6 +359,45 @@ export function ServiceEditorForm(props: Props) {
         {isNew && <small>El nuevo servicio se guardará como borrador.</small>}
       </footer>
     </form>
+  );
+}
+
+// Código de Google Maps del servicio, con validación y vista previa.
+function MapsEmbedField({ initial }: { initial: string }) {
+  const [input, setInput] = useState(initial);
+  const mapsUrl = extractMapsEmbedUrl(input);
+  const invalid = input.trim() !== "" && !mapsUrl;
+
+  return (
+    <section className="destination-block">
+      <h3>Mapa de Google</h3>
+      <p className="muted">
+        En Google Maps busca el lugar, pulsa <strong>Compartir → Insertar un mapa</strong> y
+        pega aquí el código completo (iframe) o solo la URL del atributo src.
+      </p>
+      <textarea
+        name="maps_embed"
+        value={input}
+        onChange={(event) => setInput(event.target.value)}
+        rows={3}
+        placeholder='<iframe src="https://www.google.com/maps/embed?..."></iframe>'
+        aria-invalid={invalid}
+      />
+      {invalid && (
+        <small role="alert" className="form-error">
+          Ese código no es un mapa de Google válido.
+        </small>
+      )}
+      {mapsUrl && (
+        <iframe
+          className="destination-map"
+          src={mapsUrl}
+          title="Vista previa del mapa"
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+        />
+      )}
+    </section>
   );
 }
 

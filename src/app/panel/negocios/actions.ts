@@ -89,3 +89,40 @@ export async function setBusinessActiveAction(formData: FormData): Promise<void>
 
   refreshBusinessViews(businessId);
 }
+
+// Permite al propietario editar nombre, ciudad y descripción de su negocio.
+// La función de la base vuelve a comprobar que el negocio es suyo.
+export async function updateOwnBusinessAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { supabase, role, businessIds } = await getPanelIdentity();
+  if (role !== "propietario") return { error: "Esta sección es para propietarios de negocio." };
+
+  const businessId = formText(formData, "business_id");
+  if (!businessIds.includes(businessId)) return { error: "No puedes editar este negocio." };
+
+  const name = formText(formData, "name");
+  const description = formText(formData, "description");
+  const cityId = formText(formData, "city_id");
+  if (name.length < 2 || name.length > 80) {
+    return { error: "El nombre debe tener entre 2 y 80 caracteres." };
+  }
+  if (description.length > 1200) {
+    return { error: "La descripción no puede pasar de 1200 caracteres." };
+  }
+  if (!cityId) return { error: "Selecciona la ciudad del negocio." };
+
+  const { error } = await supabase.rpc("owner_update_business", {
+    p_business_id: businessId,
+    p_name: name,
+    p_description: description,
+    p_city_id: cityId,
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath(`/panel/negocios/${businessId}`);
+  revalidatePath("/panel/negocios");
+  revalidatePath("/panel");
+  return { error: "" };
+}

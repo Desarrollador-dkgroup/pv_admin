@@ -25,10 +25,9 @@ const NAVIGATION: Record<PanelRole, PanelNavItem[]> = {
   owner: [
     { href: "/panel", label: "Resumen", icon: LayoutDashboard },
     { href: "/panel/revision", label: "Revisión", icon: ClipboardCheck },
-    { href: "/panel/servicios", label: "Servicios", icon: Layers },
     { href: "/panel/negocios", label: "Negocios", icon: Building2 },
     { href: "/panel/propietarios", label: "Propietarios", icon: UserRound },
-    { href: "/panel/sitios", label: "Sitios turísticos", icon: MapPin },
+    { href: "/panel/sitios", label: "Destinos", icon: MapPin },
     { href: "/panel/promociones", label: "Promociones", icon: Tag },
     { href: "/panel/notificaciones", label: "Notificaciones", icon: Bell },
     { href: "/panel/permisos", label: "Permisos", icon: KeyRound },
@@ -36,10 +35,9 @@ const NAVIGATION: Record<PanelRole, PanelNavItem[]> = {
   admin: [
     { href: "/panel", label: "Resumen", icon: LayoutDashboard },
     { href: "/panel/revision", label: "Revisión", icon: ClipboardCheck },
-    { href: "/panel/servicios", label: "Servicios", icon: Layers },
     { href: "/panel/negocios", label: "Negocios", icon: Building2 },
     { href: "/panel/propietarios", label: "Propietarios", icon: UserRound },
-    { href: "/panel/sitios", label: "Sitios turísticos", icon: MapPin },
+    { href: "/panel/sitios", label: "Destinos", icon: MapPin },
     { href: "/panel/promociones", label: "Promociones", icon: Tag },
     { href: "/panel/notificaciones", label: "Notificaciones", icon: Bell },
     { href: "/panel/permisos", label: "Permisos", icon: KeyRound },
