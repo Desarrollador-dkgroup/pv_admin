@@ -273,10 +273,25 @@ export async function OwnerOverview({
                   Ver establecimiento
                 </Link>
                 {assigned.map((service) => (
-                  <Link className="button quiet" href={`/panel/servicios/${service.id}`}
-                    key={service.id}>
-                    Editar {service.name}
-                  </Link>
+                  <div className="actions" key={service.id}>
+                    <Link className="button quiet" href={`/panel/servicios/${service.id}`}>
+                      Editar {service.name}
+                    </Link>
+                    <Link className="button quiet" href={`/panel/servicios/${service.id}/galeria`}>
+                      Fotos
+                    </Link>
+                    {service.category_id === "hospedaje" && (
+                      <Link className="button quiet"
+                        href={`/panel/servicios/${service.id}/unidades`}>
+                        Habitaciones
+                      </Link>
+                    )}
+                    {service.category_id === "restaurantes" && (
+                      <Link className="button quiet" href={`/panel/servicios/${service.id}/menu`}>
+                        Menú
+                      </Link>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>

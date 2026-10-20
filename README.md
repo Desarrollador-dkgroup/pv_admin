@@ -54,7 +54,12 @@ guarda información nueva, para que el catálogo compartido pueda mostrarla; los
 nuevos siguen siendo asignados y publicados por el equipo. El estado de activación del
 negocio y la asignación de cuentas siguen reservados a Panamá Viajero.
 
-La migración `202610200001_provider_assigned_services.sql` cierra INSERT directo de
+En una habitación ya creada se pueden corregir nombre, descripción, camas, dimensiones,
+atributos y precio base sin cambiar su identificador ni borrar sus fotos. Capacidad,
+unidad de reserva e inventario quedan fijos al editarla, porque pueden afectar reservas
+existentes. Las áreas comunes también se pueden modificar sin borrar su galería.
+
+La migración `202610200003_provider_assigned_services.sql` cierra INSERT directo de
 servicios para comerciantes en la base. **Debe aplicarse al proyecto compartido antes
 de usar esta versión del panel con comercios reales**; comprueba primero el esquema
 del proyecto y coordina la aplicación con el equipo móvil y web. La UI y la acción

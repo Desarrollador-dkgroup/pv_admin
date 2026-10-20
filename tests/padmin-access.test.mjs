@@ -171,7 +171,7 @@ test("Permisos de padmin y lectura pública de servicios publicados", async () =
 
     // Un comercio solo edita servicios que el equipo ya le asignó.
     const assignedServicesMigration = await readFile(
-      new URL("../supabase/migrations/202610200001_provider_assigned_services.sql", import.meta.url),
+      new URL("../supabase/migrations/202610200003_provider_assigned_services.sql", import.meta.url),
       "utf8",
     );
     await db.exec(assignedServicesMigration);
