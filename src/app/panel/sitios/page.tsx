@@ -59,7 +59,6 @@ export default async function TouristSitesPage() {
                 <div className="destination-tile-image">
                   {image ? (
                     // La imagen viene de Storage público; no requiere optimización del panel.
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={image} alt="" />
                   ) : (
                     <span>Sin imagen</span>

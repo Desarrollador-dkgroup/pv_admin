@@ -72,7 +72,6 @@ export default async function DestinationDetailPage({
                 <div className="site-card-image">
                   {photo ? (
                     // La foto viene de una URL pública; no requiere optimización en el panel.
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={photo} alt="" />
                   ) : (
                     <span>Sin foto</span>
