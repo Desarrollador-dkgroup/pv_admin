@@ -6,12 +6,11 @@ import { getPanelIdentity } from "@/lib/panel-access";
 import { formText, nullableText } from "@/lib/panel-form";
 import { extractMapsEmbedUrl } from "@/lib/panel-maps";
 import { isSitePhotoUrl } from "@/lib/panel-sites";
+import { slugCandidates, slugify } from "@/lib/panel-slug";
 import { canManageCatalog } from "@/types/panel";
 
 type FormState = { error: string };
 
-// Un identificador de URL solo admite minúsculas, números y guiones.
-const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 // Identificador de sitio en formato UUID, igual que el de Supabase.
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -30,7 +29,6 @@ export async function saveTouristSiteAction(
     : formText(formData, "site_id");
   if (!UUID_PATTERN.test(siteId)) return { error: "No se reconoce el sitio. Vuelve a abrirlo." };
   const name = formText(formData, "name");
-  const slug = formText(formData, "slug");
   const description = formText(formData, "description");
   const provinceId = formText(formData, "province_id");
   const sortOrder = Number(formText(formData, "sort_order") || "0");
@@ -44,9 +42,6 @@ export async function saveTouristSiteAction(
     return { error: "La foto no pertenece a este sitio. Vuelve a subirla." };
   }
   if (mapsRaw && !mapsUrl) return { error: "Ese código no es un mapa de Google válido." };
-  if (!SLUG_PATTERN.test(slug)) {
-    return { error: "El identificador solo puede tener minúsculas, números y guiones." };
-  }
   if (!provinceId) return { error: "Selecciona la provincia destino del sitio." };
   if (!Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 32767) {
     return { error: "El orden debe ser un número entero positivo." };
@@ -54,7 +49,6 @@ export async function saveTouristSiteAction(
 
   const values = {
     name,
-    slug,
     description,
     short_description: nullableText(formText(formData, "short_description")),
     province_id: provinceId,
@@ -64,14 +58,23 @@ export async function saveTouristSiteAction(
     updated_at: new Date().toISOString(),
   };
 
-  const result = isNew
-    ? await supabase.from("tourist_sites").insert({ id: siteId, ...values })
-    : await supabase.from("tourist_sites").update(values).eq("id", siteId);
-  if (result.error) {
-    const duplicated = result.error.message.includes("duplicate");
-    return {
-      error: duplicated ? "Ya existe un sitio con ese identificador." : result.error.message,
-    };
+  if (!isNew) {
+    const updated = await supabase.from("tourist_sites").update(values).eq("id", siteId);
+    if (updated.error) return { error: updated.error.message };
+  } else {
+    // El identificador sale del nombre; si ya existe, se prueba con un sufijo corto.
+    let inserted = false;
+    for (const slug of slugCandidates(slugify(name, "sitio"))) {
+      const created = await supabase
+        .from("tourist_sites")
+        .insert({ id: siteId, ...values, slug });
+      if (!created.error) {
+        inserted = true;
+        break;
+      }
+      if (!created.error.message.includes("duplicate")) return { error: created.error.message };
+    }
+    if (!inserted) return { error: "No se pudo crear el identificador del sitio." };
   }
 
   revalidatePath("/panel/sitios");

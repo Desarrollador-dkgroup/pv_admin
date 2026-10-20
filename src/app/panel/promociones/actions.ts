@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getPanelIdentity } from "@/lib/panel-access";
+import { slugCandidates, slugify } from "@/lib/panel-slug";
 import {
   dollarsToCents,
   formChecked,
@@ -17,8 +18,6 @@ import { validatePromotionPrices, type PromotionContent } from "@/types/content"
 
 type FormState = { error: string };
 
-// Un identificador de URL solo admite minúsculas, números y guiones.
-const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 // Traduce la selección "tipo:identificador" a las columnas de destino de la tabla.
 // Solo la columna del tipo elegido recibe valor; las demás quedan vacías.
@@ -28,7 +27,6 @@ function destinationColumns(ref: string) {
   return {
     destination_kind: kind,
     destination_service_id: kind === "service" ? id : null,
-    destination_city_id: kind === "city" ? id : null,
     destination_province_id: kind === "province" ? id : null,
     destination_category_id: kind === "category" ? id : null,
   };
@@ -43,7 +41,6 @@ export async function savePromotionAction(
   if (!canManageCatalog(role)) return { error: "Tu cuenta no puede administrar promociones." };
 
   const promotionId = formText(formData, "promotion_id");
-  const slug = formText(formData, "slug");
   const title = formText(formData, "title");
   const placeName = formText(formData, "place_name");
   const periodLabel = formText(formData, "period_label");
@@ -51,9 +48,6 @@ export async function savePromotionAction(
   const photoPath = formText(formData, "photo_storage_path");
   const destination = destinationColumns(formText(formData, "destination_ref"));
 
-  if (!SLUG_PATTERN.test(slug)) {
-    return { error: "El identificador solo puede tener minúsculas, números y guiones." };
-  }
   if (!title || !placeName || !periodLabel || !discountValue || !photoPath) {
     return { error: "Completa título, lugar, vigencia, descuento y la ruta de la imagen." };
   }
@@ -86,7 +80,6 @@ export async function savePromotionAction(
   const values = {
     ...content,
     ...destination,
-    slug,
     title,
     place_name: placeName,
     eyebrow: formText(formData, "eyebrow"),
@@ -104,9 +97,15 @@ export async function savePromotionAction(
     updated_at: new Date().toISOString(),
   };
 
-  const result = promotionId
+  // El identificador sale del título; si ya existe, se prueba con un sufijo corto.
+  const candidates = promotionId ? [] : slugCandidates(slugify(title, "promocion"));
+  let result = promotionId
     ? await supabase.from("promotions").update(values).eq("id", promotionId)
-    : await supabase.from("promotions").insert(values);
+    : await supabase.from("promotions").insert({ ...values, slug: candidates[0] });
+  for (const slug of candidates.slice(1)) {
+    if (!result.error || !result.error.message.includes("duplicate")) break;
+    result = await supabase.from("promotions").insert({ ...values, slug });
+  }
   if (result.error) {
     const duplicated = result.error.message.includes("duplicate");
     return {

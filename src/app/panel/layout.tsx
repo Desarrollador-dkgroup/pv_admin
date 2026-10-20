@@ -6,7 +6,7 @@ import { getPanelNotifications } from "@/lib/panel-notifications";
 
 // Protege cada pantalla real, valida el rol en Supabase y carga los avisos del alcance.
 export default async function PanelLayout({ children }: { children: ReactNode }) {
-  const { supabase, role, businessIds, suspended } = await getPanelIdentity();
+  const { supabase, role, businessIds, suspended, user } = await getPanelIdentity();
 
   // Una cuenta de propietario suspendida no puede usar el panel.
   if (suspended) {
@@ -25,5 +25,10 @@ export default async function PanelLayout({ children }: { children: ReactNode })
   }
 
   const notifications = await getPanelNotifications(supabase, role, businessIds);
-  return <PanelShell role={role} notifications={notifications}>{children}</PanelShell>;
+  const profileName = String(user.user_metadata?.display_name ?? user.email ?? "");
+  return (
+    <PanelShell role={role} notifications={notifications} profileName={profileName}>
+      {children}
+    </PanelShell>
+  );
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Badge, Panel } from "@/components/ui";
 import { getPanelIdentity } from "@/lib/panel-access";
+import { loadOwnerPlanUsage } from "@/lib/panel-service-plan";
 import { REVIEW_STATUS, SERVICE_STATUS, statusOf } from "@/lib/panel-labels";
 import { related } from "@/lib/panel-relations";
 import { canManageCatalog } from "@/types/panel";
@@ -22,9 +23,13 @@ export default async function ServicesPage() {
     );
   }
 
+  const planUsage = !isStaff && businessIds[0]
+    ? await loadOwnerPlanUsage(supabase, businessIds[0])
+    : [];
+
   let query = supabase
     .from("services")
-    .select("id, name, status, review_status, category_id, businesses(name), cities(name)")
+    .select("id, name, status, review_status, category_id, businesses(name)")
     .order("updated_at", { ascending: false });
   if (!isStaff) query = query.in("business_id", businessIds);
 
@@ -43,12 +48,24 @@ export default async function ServicesPage() {
           <h1>{isStaff ? "Servicios" : "Mis servicios"}</h1>
           <p>Los cambios se guardan en la base de datos compartida.</p>
         </div>
-        {isStaff && (
-          <Link href="/panel/servicios/nuevo" className="button primary">
-            + Crear servicio
-          </Link>
-        )}
+        <Link href="/panel/servicios/nuevo" className="button primary">
+          + Crear servicio
+        </Link>
       </header>
+      {!isStaff && (
+        <Panel>
+          <h2>Disponibles para añadir</h2>
+          {planUsage.map((item) => (
+            <div className="queue-item" key={`${item.category_id}-${item.hospedaje_type_id ?? ""}`}>
+              <b>{item.type_label ?? item.category_label}</b>
+              <small>
+                {item.remaining} disponibles de {item.quantity} · {item.used} creados
+              </small>
+            </div>
+          ))}
+          {!planUsage.length && <p className="muted">Tu plan aún no tiene servicios asignados.</p>}
+        </Panel>
+      )}
       <Panel className="table-panel">
         <div className="table-scroll">
           <table>
@@ -57,7 +74,6 @@ export default async function ServicesPage() {
                 <th>Servicio</th>
                 <th>Tipo</th>
                 {isStaff && <th>Negocio</th>}
-                <th>Ciudad</th>
                 <th>Estado</th>
                 <th>Revisión</th>
                 <th>Acciones</th>
@@ -72,7 +88,6 @@ export default async function ServicesPage() {
                     <td>{service.name}</td>
                     <td>{categoryLabels.get(service.category_id) ?? service.category_id}</td>
                     {isStaff && <td>{related(service.businesses)?.name ?? "—"}</td>}
-                    <td>{related(service.cities)?.name ?? "—"}</td>
                     <td><Badge tone={status.tone}>{status.label}</Badge></td>
                     <td><Badge tone={review.tone}>{review.label}</Badge></td>
                     <td>

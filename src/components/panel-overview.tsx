@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Badge, Panel } from "@/components/ui";
+import { OwnBusinessForm } from "@/components/panel-own-business-form";
 import { formatCents, formatDate, formatDateTime } from "@/lib/panel-format";
 import { REVIEW_STATUS, SERVICE_STATUS, statusOf } from "@/lib/panel-labels";
 import { related } from "@/lib/panel-relations";
@@ -211,15 +212,18 @@ export async function OwnerOverview({
   if (!businessIds.length) {
     return (
       <>
-        <Greeting role="propietario" title="Tu panel" text="Tu cuenta aún no tiene establecimientos." />
-        <p role="alert">La cuenta no tiene establecimientos asignados. Consulta con el equipo.</p>
+        <Greeting role="propietario" title="Tu panel" text="Tu cuenta aún no tiene un negocio." />
+        <p role="alert">La cuenta no tiene un negocio asignado. Consulta con el equipo.</p>
       </>
     );
   }
 
   const nowIso = new Date().toISOString();
   const [businesses, services, promotions] = await Promise.all([
-    supabase.from("businesses").select("id, name, is_active, cities(name)").in("id", businessIds),
+    supabase
+      .from("businesses")
+      .select("id, name, description, is_active")
+      .in("id", businessIds),
     supabase
       .from("services")
       .select("id, business_id, category_id, name, status, review_status, base_price_cents, updated_at")
@@ -244,8 +248,8 @@ export async function OwnerOverview({
     <>
       <Greeting
         role="propietario"
-        title="Tus establecimientos en Panamá Viajero"
-        text="Revisa el estado de tus servicios y mantén la información al día."
+        title="Tu negocio en Panamá Viajero"
+        text="Revisa el estado de tus servicios y mantén la información del negocio al día."
       />
       <div className="metrics three">
         <Metric label="Servicios publicados" value={published} hint="Visibles en la web"
@@ -256,47 +260,17 @@ export async function OwnerOverview({
           href="/panel/notificaciones" />
       </div>
       <Panel>
-        <div className="section-heading">
-          <h2>Establecimientos asignados</h2>
-          <Link className="text-link" href="/panel/negocios">Ver todos</Link>
-        </div>
-        {(businesses.data ?? []).map((business) => {
-          const assigned = list.filter((service) => service.business_id === business.id);
-          return (
-            <div className="queue-item" key={business.id}>
-              <b>{business.name}</b>
-              <small>
-                {related(business.cities)?.name ?? "Sin ciudad"} · {assigned.length} servicios
-              </small>
-              <div className="actions">
-                <Link className="button secondary" href={`/panel/negocios/${business.id}`}>
-                  Ver establecimiento
-                </Link>
-                {assigned.map((service) => (
-                  <div className="actions" key={service.id}>
-                    <Link className="button quiet" href={`/panel/servicios/${service.id}`}>
-                      Editar {service.name}
-                    </Link>
-                    <Link className="button quiet" href={`/panel/servicios/${service.id}/galeria`}>
-                      Fotos
-                    </Link>
-                    {service.category_id === "hospedaje" && (
-                      <Link className="button quiet"
-                        href={`/panel/servicios/${service.id}/unidades`}>
-                        Habitaciones
-                      </Link>
-                    )}
-                    {service.category_id === "restaurantes" && (
-                      <Link className="button quiet" href={`/panel/servicios/${service.id}/menu`}>
-                        Menú
-                      </Link>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
+        <h2>Tu negocio</h2>
+        {(businesses.data ?? []).map((business) => (
+          <div key={business.id}>
+            <p className="muted">{business.is_active ? "Activo" : "Inactivo"}</p>
+            <OwnBusinessForm
+              businessId={business.id}
+              name={business.name}
+              description={business.description ?? ""}
+            />
+          </div>
+        ))}
       </Panel>
       <div className="dashboard-grid">
         <Panel>
@@ -321,21 +295,9 @@ export async function OwnerOverview({
           {!list.length && <p className="muted">Aún no tienes servicios registrados.</p>}
         </Panel>
         <Panel>
-          <h2>Mis establecimientos</h2>
-          {(businesses.data ?? []).map((business) => (
-            <div className="queue-item" key={business.id}>
-              <b>{business.name}</b>
-              <small>
-                {business.is_active ? "Activo" : "Inactivo"} ·{" "}
-                {related(business.cities)?.name ?? "Sin ciudad"}
-              </small>
-            </div>
-          ))}
+          <h2>Promociones</h2>
           <p className="muted">
             Promociones vigentes publicadas: {promotions.count ?? 0}. Las gestiona el equipo.
-          </p>
-          <p className="muted">
-            Panamá Viajero asigna los establecimientos y servicios de esta cuenta.
           </p>
         </Panel>
       </div>

@@ -42,7 +42,6 @@ export const categoryFields: Record<string, FieldDefinition[]> = {
 
 export const entityFields: Partial<Record<EntityKind, FieldDefinition[]>> = {
   businesses: [
-    { key: "city", label: "Ciudad", required: true },
     { key: "description", label: "Descripción", type: "textarea" },
     { key: "owner", label: "Propietario" },
     { key: "email", label: "Correo", type: "email" },
@@ -50,7 +49,6 @@ export const entityFields: Partial<Record<EntityKind, FieldDefinition[]>> = {
   sites: [
     { key: "slug", label: "Identificador de URL", required: true },
     { key: "province", label: "Provincia", required: true },
-    { key: "city", label: "Ciudad", required: true },
     { key: "short_description", label: "Descripción breve" },
     { key: "description", label: "Descripción completa", type: "textarea" },
   ],

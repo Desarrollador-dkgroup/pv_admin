@@ -24,6 +24,7 @@ type Props = {
   sites: SiteOption[];
   destinations: DestinationOption[];
   destinationProvinceId: string;
+  presetLodgingTypeId?: string;
   amenities: Option[];
   restaurantFeatures: Option[];
   selectedSiteIds: string[];
@@ -40,8 +41,10 @@ export function ServiceEditorForm(props: Props) {
   const isPublished = service.status === "published";
   // La categoría elegida controla qué campos se muestran (tipo de hospedaje, ficha de
   // hospedaje o de restaurante), así que vive en el estado del formulario.
-  const [categoryId, setCategoryId] = useState(String(service.category_id ?? "hospedaje"));
-  const lodgingTypeId = String(service.hospedaje_type_id ?? "");
+  const [categoryId, setCategoryId] = useState(
+    String(service.category_id ?? props.categories[0]?.id ?? "hospedaje"),
+  );
+  const lodgingTypeId = String(service.hospedaje_type_id ?? props.presetLodgingTypeId ?? "");
   const detailFields = getLodgingDetailFields(lodgingTypeId);
   const details = (lodging.details ?? {}) as Record<string, string>;
   const selectedSites = props.selectedSiteIds.length
@@ -56,11 +59,6 @@ export function ServiceEditorForm(props: Props) {
         <label className="field">
           Nombre comercial
           <input name="name" required defaultValue={String(service.name ?? "")} />
-        </label>
-        <label className="field">
-          Identificador de la página
-          <input name="slug" required defaultValue={String(service.slug ?? "")}
-            readOnly={!isStaff} />
         </label>
         <label className="field">
           Negocio
@@ -91,7 +89,7 @@ export function ServiceEditorForm(props: Props) {
             value={categoryId}
             onChange={(event) => setCategoryId(event.target.value)}
             required
-            disabled={!isStaff}
+            disabled={!isStaff && !isNew}
           >
             {props.categories.map((category) => (
               <option key={category.id} value={category.id}>
@@ -99,7 +97,9 @@ export function ServiceEditorForm(props: Props) {
               </option>
             ))}
           </select>
-          {!isStaff && <input type="hidden" name="category_id" value={categoryId} />}
+          {!isStaff && !isNew && (
+            <input type="hidden" name="category_id" value={categoryId} />
+          )}
         </label>
         {categoryId === "hospedaje" && (
           <label className="field">
@@ -108,7 +108,7 @@ export function ServiceEditorForm(props: Props) {
               name="hospedaje_type_id"
               defaultValue={lodgingTypeId}
               required
-              disabled={!isStaff}
+              disabled={!isStaff && !isNew}
             >
               <option value="">Selecciona un tipo</option>
               {props.lodgingTypes.map((type) => (
@@ -117,7 +117,9 @@ export function ServiceEditorForm(props: Props) {
                 </option>
               ))}
             </select>
-            {!isStaff && <input type="hidden" name="hospedaje_type_id" value={lodgingTypeId} />}
+            {!isStaff && !isNew && (
+              <input type="hidden" name="hospedaje_type_id" value={lodgingTypeId} />
+            )}
           </label>
         )}
         <ServiceSitePicker
@@ -364,7 +366,9 @@ export function ServiceEditorForm(props: Props) {
           </Button>
         )}
         {!isStaff && isPublished && (
-          <small>Los cambios de esta ficha publicada se muestran en el catálogo al guardarlos.</small>
+          <small>
+            Los cambios de esta ficha publicada se muestran en el catálogo al guardarlos.
+          </small>
         )}
         {!isStaff && !isPublished && !isNew && (
           <small>

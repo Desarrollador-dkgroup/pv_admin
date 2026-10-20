@@ -3,14 +3,19 @@ import { notFound, redirect } from "next/navigation";
 import { Panel } from "@/components/ui";
 import { ServiceEditorForm } from "@/components/service-editor-form";
 import { getPanelIdentity } from "@/lib/panel-access";
+import { loadOwnerPlanUsage } from "@/lib/panel-service-plan";
 import { canManageCatalog } from "@/types/panel";
 
 // Carga catálogos y relaciones reales antes de mostrar el formulario.
-export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) {
+export async function PanelServiceEditor({
+  serviceId,
+  preset = {},
+}: {
+  serviceId?: string;
+  preset?: { categoryId?: string; lodgingTypeId?: string };
+}) {
   const { supabase, role, businessIds } = await getPanelIdentity();
   if (role === "collaborator") redirect("/panel/permisos");
-  // Los servicios y sus categorías los asigna el equipo de Panamá Viajero.
-  if (!serviceId && role === "propietario") redirect("/panel/servicios");
   const businessQuery = supabase
     .from("businesses")
     .select("id, name")
@@ -127,6 +132,66 @@ export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) 
     );
   }
 
+  // El propietario elige primero qué servicio añadir, según los cupos de su plan.
+  const isStaff = canManageCatalog(role);
+  let categories = categoryResult.data ?? [];
+  let lodgingTypes = typeResult.data ?? [];
+  let presetLodgingTypeId = "";
+  if (!serviceId && !isStaff) {
+    const usage = await loadOwnerPlanUsage(supabase, businesses[0].id);
+    const open = usage.filter((item) => item.remaining > 0);
+    if (!open.length) {
+      return (
+        <Panel>
+          <h1>Sin servicios disponibles</h1>
+          <p>
+            Tu plan no tiene servicios libres para añadir. Escribe al equipo de
+            Panamá Viajero para ampliarlo.
+          </p>
+          <Link className="button secondary" href="/panel/servicios">Volver a servicios</Link>
+        </Panel>
+      );
+    }
+    if (!preset.categoryId) {
+      return (
+        <>
+          <header className="page-heading">
+            <div>
+              <h1>¿Qué deseas añadir?</h1>
+              <p>Elige el tipo de servicio. Solo aparecen los que tu plan tiene disponibles.</p>
+            </div>
+            <Link className="button quiet" href="/panel/servicios">Volver a servicios</Link>
+          </header>
+          <div className="dashboard-grid">
+            {open.map((item) => {
+              const query = new URLSearchParams({ categoria: item.category_id });
+              if (item.hospedaje_type_id) query.set("tipo", item.hospedaje_type_id);
+              return (
+                <Panel key={`${item.category_id}-${item.hospedaje_type_id ?? ""}`}>
+                  <h2>{item.type_label ?? item.category_label}</h2>
+                  {item.type_label && <p className="muted">{item.category_label}</p>}
+                  <p>Disponibles: <b>{item.remaining}</b> de {item.quantity}</p>
+                  <Link className="button primary" href={`/panel/servicios/nuevo?${query}`}>
+                    Añadir
+                  </Link>
+                </Panel>
+              );
+            })}
+          </div>
+        </>
+      );
+    }
+    const chosenType = preset.lodgingTypeId ?? "";
+    const match = open.find((item) =>
+      item.category_id === preset.categoryId &&
+      (item.hospedaje_type_id ?? "") === chosenType
+    );
+    if (!match) redirect("/panel/servicios/nuevo");
+    categories = categories.filter((category) => String(category.id) === preset.categoryId);
+    lodgingTypes = lodgingTypes.filter((type) => String(type.id) === chosenType);
+    presetLodgingTypeId = chosenType;
+  }
+
   const selectedSiteIds = (siteLinks.data ?? []).map((item) => item.tourist_site_id);
   const serviceProvinceId = (service as { destination_province_id?: string | null })
     .destination_province_id;
@@ -152,8 +217,9 @@ export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) 
         lodging={(lodgingResult.data ?? {}) as Record<string, unknown>}
         restaurant={restaurant as Record<string, unknown>}
         businesses={businesses}
-        categories={categoryResult.data ?? []}
-        lodgingTypes={typeResult.data ?? []}
+        categories={categories}
+        lodgingTypes={lodgingTypes}
+        presetLodgingTypeId={presetLodgingTypeId}
         sites={siteResult.data ?? []}
         destinations={(destinationResult.data ?? []).map((row) => ({
           provinceId: row.province_id,

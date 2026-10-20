@@ -62,11 +62,6 @@ export function PromotionForm({
             Título
             <input name="title" required defaultValue={promotion?.title ?? ""} />
           </label>
-          <label className="field">
-            Identificador (URL)
-            <input name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*"
-              defaultValue={promotion?.slug ?? ""} placeholder="ruta-del-cafe" />
-          </label>
         </div>
         <div className="form-row">
           <label className="field">

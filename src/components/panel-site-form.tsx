@@ -91,20 +91,6 @@ export function SiteForm({
             Nombre del sitio
             <input name="name" required defaultValue={site?.name ?? ""} />
           </label>
-          <label className="field">
-            Identificador (URL)
-            <input
-              name="slug"
-              required
-              pattern="[a-z0-9]+(-[a-z0-9]+)*"
-              defaultValue={site?.slug ?? ""}
-              placeholder="casco-antiguo"
-            />
-            <small className="muted">
-              Es la última parte de la dirección de la página del sitio:
-              /sitios-turisticos/identificador. Usa solo minúsculas, números y guiones.
-            </small>
-          </label>
         </div>
         <div className="form-row">
           <label className="field">

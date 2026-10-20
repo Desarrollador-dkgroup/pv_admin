@@ -1,6 +1,7 @@
 "use server";
 
 import { extractMapsEmbedUrl } from "@/lib/panel-maps";
+import { slugCandidates, slugify } from "@/lib/panel-slug";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -47,16 +48,12 @@ export async function saveServiceAction(
   const categoryId = text(formData, "category_id");
   const businessId = text(formData, "business_id");
   const name = text(formData, "name");
-  const slug = text(formData, "slug");
 
-  if (!name || !slug || !categoryId || !text(formData, "destination_province_id")) {
-    return { error: "Completa nombre, identificador, categoría y destino." };
+  if (!name || !categoryId || !text(formData, "destination_province_id")) {
+    return { error: "Completa nombre, categoría y destino." };
   }
   if (!isStaff && !businessIds.includes(businessId)) {
     return { error: "Solo puedes guardar servicios de un negocio asignado." };
-  }
-  if (!isStaff && !serviceId) {
-    return { error: "El equipo de Panamá Viajero debe asignarte el servicio antes de editarlo." };
   }
 
   const { data: existing } = serviceId
@@ -76,9 +73,8 @@ export async function saveServiceAction(
   if (existing && !isStaff && !businessIds.includes(existing.business_id)) {
     return { error: "No tienes acceso a este servicio." };
   }
-  if (existing && !isStaff &&
-    (categoryId !== existing.category_id || slug !== existing.slug)) {
-    return { error: "Solo el equipo puede cambiar la categoría o el identificador del servicio." };
+  if (existing && !isStaff && categoryId !== existing.category_id) {
+    return { error: "Solo el equipo puede cambiar la categoría del servicio." };
   }
   if (existing && !isStaff &&
     (categoryId === "hospedaje"
@@ -91,6 +87,19 @@ export async function saveServiceAction(
     categoryId === "hospedaje" ? text(formData, "hospedaje_type_id") : "";
   if (categoryId === "hospedaje" && !lodgingTypeId) {
     return { error: "Selecciona el tipo de hospedaje." };
+  }
+
+  // El propietario solo crea servicios dentro del plan de su negocio.
+  if (!isStaff && !serviceId) {
+    const { data: allowed, error: planError } = await supabase.rpc("padmin_can_create_service", {
+      p_business_id: businessId,
+      p_category_id: categoryId,
+      p_hospedaje_type_id: lodgingTypeId || null,
+    });
+    if (planError) return { error: planError.message };
+    if (!allowed) {
+      return { error: "Tu plan no incluye más servicios de esta categoría o tipo." };
+    }
   }
 
   const weeklySchedule =
@@ -109,7 +118,6 @@ export async function saveServiceAction(
   const selectedStatus = text(formData, "status") || "draft";
   const serviceValues = {
     name,
-    slug: isStaff ? slug : existing?.slug ?? slug,
     business_id: isStaff ? businessId : existing?.business_id ?? businessId,
     category_id: isStaff ? categoryId : existing?.category_id ?? categoryId,
     destination_province_id: nullable(text(formData, "destination_province_id")),
@@ -120,7 +128,9 @@ export async function saveServiceAction(
     base_price_cents: numberValue(text(formData, "base_price")) === null
       ? null
       : Math.round(Number(text(formData, "base_price")) * 100),
-    hospedaje_type_id: isStaff ? nullable(lodgingTypeId) : existing?.hospedaje_type_id ?? null,
+    hospedaje_type_id: isStaff || !existing
+      ? nullable(lodgingTypeId)
+      : existing.hospedaje_type_id ?? null,
     review_status: !isStaff
       ? existing?.status === "published"
         ? undefined
@@ -150,13 +160,24 @@ export async function saveServiceAction(
       .eq("id", serviceId);
     if (error) return { error: error.message };
   } else {
-    const { data, error } = await supabase
-      .from("services")
-      .insert(writableValues)
-      .select("id")
-      .single();
-    if (error || !data) return { error: error?.message ?? "No se pudo crear el servicio." };
-    savedId = data.id;
+    // El identificador sale del nombre; si ya existe, se prueba con un sufijo corto.
+    let created: { id: string } | null = null;
+    let lastError = "No se pudo crear el servicio.";
+    for (const slug of slugCandidates(slugify(name, "servicio"))) {
+      const { data, error } = await supabase
+        .from("services")
+        .insert({ ...writableValues, slug })
+        .select("id")
+        .single();
+      if (data) {
+        created = data;
+        break;
+      }
+      lastError = error?.message ?? lastError;
+      if (!error?.message.includes("duplicate")) break;
+    }
+    if (!created) return { error: lastError };
+    savedId = created.id;
   }
 
   if (categoryId === "hospedaje") {

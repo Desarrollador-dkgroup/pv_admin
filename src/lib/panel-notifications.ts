@@ -24,9 +24,10 @@ export async function getPanelNotifications(
   const nowIso = new Date().toISOString();
   const soonIso = new Date(Date.now() + SEVEN_DAYS_MS).toISOString();
   const isStaff = role === "owner" || role === "admin";
+  const isTeam = isStaff || role === "collaborator";
 
-  // Servicios enviados por los negocios y promociones que vencen pronto.
-  if (isStaff) {
+  // Cada envío a revisión llega a todo el equipo: admin, owner y colaboradores.
+  if (isTeam) {
     const { data: pending } = await supabase
       .from("services")
       .select("id, name")
