@@ -48,3 +48,4 @@ next-env.d.ts
 
 # Entorno local para verificar migraciones
 /.validation/
+.tsc*.txt
