@@ -9,7 +9,6 @@ type SiteCard = {
   name: string;
   short_description: string | null;
   photo_storage_path: string | null;
-  cities: { name?: string } | null;
 };
 
 // Detalle de un destino: sus sitios turísticos en tarjetas y el botón para editar el destino.
@@ -33,7 +32,7 @@ export default async function DestinationDetailPage({
 
   const sites = await supabase
     .from("tourist_sites")
-    .select("id, name, short_description, photo_storage_path, cities(name)")
+    .select("id, name, short_description, photo_storage_path")
     .eq("province_id", item.province_id)
     .order("sort_order")
     .order("name");
@@ -72,7 +71,6 @@ export default async function DestinationDetailPage({
                 <div className="site-card-image">
                   {photo ? (
                     // La foto viene de una URL pública; no requiere optimización en el panel.
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={photo} alt="" />
                   ) : (
                     <span>Sin foto</span>
@@ -81,7 +79,6 @@ export default async function DestinationDetailPage({
                 <div className="site-card-body">
                   <h3>{site.name}</h3>
                   <p>{site.short_description || "Sin descripción breve"}</p>
-                  <small>{site.cities?.name ?? "Sin ciudad"}</small>
                 </div>
               </Link>
             );

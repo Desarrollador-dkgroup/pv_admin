@@ -93,7 +93,6 @@ function ImageField({
         <div className={`destination-image-preview ${previewClass ?? ""}`}>
           {url ? (
             // Vista previa de la imagen subida; la URL pública no necesita optimización.
-            // eslint-disable-next-line @next/next/no-img-element
             <img src={url} alt="" />
           ) : (
             <span className="muted">Sin imagen</span>

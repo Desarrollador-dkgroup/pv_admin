@@ -17,10 +17,7 @@ export default async function EditDestinationPage({
 
   const destination = await supabase
     .from("destinations")
-    .select(
-      "id, province_id, name, subtitle, description, card_image_storage_path, " +
-        "banner_image_storage_path, maps_embed_url",
-    )
+    .select("*")
     .eq("id", id)
     .maybeSingle();
   if (destination.error) throw new Error("No se pudo cargar el destino.");

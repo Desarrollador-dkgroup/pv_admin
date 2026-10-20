@@ -17,10 +17,7 @@ export default async function EditSitePage({
   const [{ data: site, error }, options] = await Promise.all([
     supabase
       .from("tourist_sites")
-      .select(
-        "id, name, slug, description, short_description, province_id, city_id, " +
-          "sort_order, latitude, longitude, photo_storage_path, maps_embed_url",
-      )
+      .select("*")
       .eq("id", id)
       .maybeSingle(),
     loadSiteOptions(supabase),
@@ -37,7 +34,7 @@ export default async function EditSitePage({
           <p>Cambia la información que muestra la web para este sitio.</p>
         </div>
       </header>
-      <SiteForm site={site} provinces={options.provinces} cities={options.cities} />
+      <SiteForm site={site} provinces={options.provinces} />
     </>
   );
 }

@@ -15,14 +15,6 @@ const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 // Identificador de sitio en formato UUID, igual que el de Supabase.
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
-// Convierte una coordenada opcional; undefined si el texto no es un número dentro del rango.
-function coordinate(value: string, limit: number): number | null | undefined {
-  if (!value) return null;
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || Math.abs(parsed) > limit) return undefined;
-  return parsed;
-}
-
 // Crea o actualiza un sitio turístico. Solo el propietario principal y los admins.
 export async function saveTouristSiteAction(
   _previous: FormState,
@@ -42,8 +34,6 @@ export async function saveTouristSiteAction(
   const description = formText(formData, "description");
   const provinceId = formText(formData, "province_id");
   const sortOrder = Number(formText(formData, "sort_order") || "0");
-  const latitude = coordinate(formText(formData, "latitude"), 90);
-  const longitude = coordinate(formText(formData, "longitude"), 180);
 
   const photo = formText(formData, "photo_storage_path");
   const mapsRaw = formText(formData, "maps_embed");
@@ -58,9 +48,6 @@ export async function saveTouristSiteAction(
     return { error: "El identificador solo puede tener minúsculas, números y guiones." };
   }
   if (!provinceId) return { error: "Selecciona la provincia destino del sitio." };
-  if (latitude === undefined || longitude === undefined) {
-    return { error: "La latitud debe estar entre -90 y 90, y la longitud entre -180 y 180." };
-  }
   if (!Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 32767) {
     return { error: "El orden debe ser un número entero positivo." };
   }
@@ -71,9 +58,6 @@ export async function saveTouristSiteAction(
     description,
     short_description: nullableText(formText(formData, "short_description")),
     province_id: provinceId,
-    city_id: nullableText(formText(formData, "city_id")),
-    latitude,
-    longitude,
     sort_order: sortOrder,
     photo_storage_path: photo || null,
     maps_embed_url: mapsUrl,

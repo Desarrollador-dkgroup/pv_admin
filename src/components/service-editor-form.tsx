@@ -38,7 +38,9 @@ export function ServiceEditorForm(props: Props) {
   const isStaff = canManageCatalog(role);
   const isNew = !service.id;
   const isPublished = service.status === "published";
-  const categoryId = String(service.category_id ?? "hospedaje");
+  // La categoría elegida controla qué campos se muestran (tipo de hospedaje, ficha de
+  // hospedaje o de restaurante), así que vive en el estado del formulario.
+  const [categoryId, setCategoryId] = useState(String(service.category_id ?? "hospedaje"));
   const lodgingTypeId = String(service.hospedaje_type_id ?? "");
   const detailFields = getLodgingDetailFields(lodgingTypeId);
   const details = (lodging.details ?? {}) as Record<string, string>;
@@ -84,7 +86,13 @@ export function ServiceEditorForm(props: Props) {
         </label>
         <label className="field">
           Categoría
-          <select name="category_id" defaultValue={categoryId} required disabled={!isStaff}>
+          <select
+            name="category_id"
+            value={categoryId}
+            onChange={(event) => setCategoryId(event.target.value)}
+            required
+            disabled={!isStaff}
+          >
             {props.categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.label ?? category.name ?? category.id}

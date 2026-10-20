@@ -48,7 +48,7 @@ export async function replaceServiceSiteIds(
 // Crea sitios turísticos mediante las políticas de acceso que tenga la sesión.
 export async function createTouristSite(
   supabase: SupabaseClient,
-  site: { name: string; slug: string; description: string; city_id: string; province_id: string },
+  site: { name: string; slug: string; description: string; province_id: string },
 ) {
   const { data, error } = await supabase.from("tourist_sites").insert(site).select("id").single();
 
