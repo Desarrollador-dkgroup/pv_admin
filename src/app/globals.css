@@ -435,6 +435,24 @@ form {
   color: var(--brand);
   text-decoration: underline;
 }
+.owner-plan-category {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.owner-plan-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 12px;
+}
+.prepare-draft-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 .notice {
   display: flex;
   flex-direction: column;

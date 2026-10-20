@@ -301,7 +301,7 @@ export function LodgingCatalogManager({
 
   return (
     <>
-      <Panel>
+      <Panel id="habitaciones">
         <h2>Habitaciones, unidades o parcelas</h2>
         {rooms.map((room) => (
           <article className="history-event" key={room.id}>
@@ -411,7 +411,7 @@ export function LodgingCatalogManager({
           <Button type="submit" disabled={busy}>Guardar unidad</Button>
         </form>
       </Panel>
-      <Panel>
+      <Panel id="areas">
         <h2>Áreas e instalaciones</h2>
         {areas.map((area) => (
           <div className="history-event" key={area.id}>

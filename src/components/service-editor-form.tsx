@@ -57,68 +57,88 @@ export function ServiceEditorForm(props: Props) {
           Nombre comercial
           <input name="name" required defaultValue={String(service.name ?? "")} />
         </label>
-        <label className="field">
-          Identificador de la página
-          <input name="slug" required defaultValue={String(service.slug ?? "")}
-            readOnly={!isStaff} />
-        </label>
-        <label className="field">
-          Negocio
-          <select
-            name="business_id"
-            required
-            defaultValue={String(service.business_id ?? props.businesses[0]?.id ?? "")}
-            disabled={!isStaff}
-          >
-            {props.businesses.map((business) => (
-              <option key={business.id} value={business.id}>
-                {business.name ?? business.id}
-              </option>
-            ))}
-          </select>
-          {!isStaff && (
-            <input
-              type="hidden"
-              name="business_id"
-              value={String(service.business_id ?? props.businesses[0]?.id ?? "")}
-            />
-          )}
-        </label>
-        <label className="field">
-          Categoría
-          <select
-            name="category_id"
-            value={categoryId}
-            onChange={(event) => setCategoryId(event.target.value)}
-            required
-            disabled={!isStaff}
-          >
-            {props.categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.label ?? category.name ?? category.id}
-              </option>
-            ))}
-          </select>
-          {!isStaff && <input type="hidden" name="category_id" value={categoryId} />}
-        </label>
-        {categoryId === "hospedaje" && (
+        {isStaff ? (
           <label className="field">
-            Tipo de hospedaje
+            Identificador de la página
+            <input name="slug" required defaultValue={String(service.slug ?? "")} />
+          </label>
+        ) : (
+          <div className="field">
+            Identificador de la página
+            <p>{String(service.slug ?? "")}</p>
+          </div>
+        )}
+        {isStaff ? (
+          <label className="field">
+            Negocio
             <select
-              name="hospedaje_type_id"
-              defaultValue={lodgingTypeId}
+              name="business_id"
               required
-              disabled={!isStaff}
+              defaultValue={String(service.business_id ?? props.businesses[0]?.id ?? "")}
             >
-              <option value="">Selecciona un tipo</option>
-              {props.lodgingTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.label ?? type.name ?? type.id}
+              {props.businesses.map((business) => (
+                <option key={business.id} value={business.id}>
+                  {business.name ?? business.id}
                 </option>
               ))}
             </select>
-            {!isStaff && <input type="hidden" name="hospedaje_type_id" value={lodgingTypeId} />}
           </label>
+        ) : (
+          <div className="field">
+            Negocio
+            <p>
+              {props.businesses.find((business) => business.id === service.business_id)?.name ??
+                String(service.business_id ?? "")}
+            </p>
+          </div>
+        )}
+        {isStaff ? (
+          <label className="field">
+            Categoría
+            <select
+              name="category_id"
+              value={categoryId}
+              onChange={(event) => setCategoryId(event.target.value)}
+              required
+            >
+              {props.categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.label ?? category.name ?? category.id}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <div className="field">
+            Categoría
+            <p>
+              {props.categories.find((category) => category.id === categoryId)?.label ??
+                categoryId}
+            </p>
+          </div>
+        )}
+        {categoryId === "hospedaje" && (
+          isStaff ? (
+            <label className="field">
+              Tipo de hospedaje
+              <select name="hospedaje_type_id" defaultValue={lodgingTypeId} required>
+                <option value="">Selecciona un tipo</option>
+                {props.lodgingTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.label ?? type.name ?? type.id}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <div className="field">
+              Tipo de hospedaje
+              <p>
+                {props.lodgingTypes.find((type) => type.id === lodgingTypeId)?.label ??
+                  lodgingTypeId}
+              </p>
+            </div>
+          )
         )}
         <ServiceSitePicker
           destinations={props.destinations}

@@ -1,10 +1,19 @@
 import Link from "next/link";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Badge, Panel } from "@/components/ui";
+import { PrepareDraftServiceButton } from "@/components/prepare-draft-service-button";
 import { formatCents, formatDate, formatDateTime } from "@/lib/panel-format";
 import { REVIEW_STATUS, SERVICE_STATUS, statusOf } from "@/lib/panel-labels";
 import { related } from "@/lib/panel-relations";
+import { groupServicePlans } from "@/lib/panel-service-plans";
 import { ROLE_LABELS, type PanelRole } from "@/types/panel";
+
+// Un servicio de hospedaje se administra desde su portada; el resto, desde su editor directo.
+function editHref(service: { id: string; category_id: string }) {
+  return service.category_id === "hospedaje"
+    ? `/panel/servicios/${service.id}/portada`
+    : `/panel/servicios/${service.id}`;
+}
 
 // Forma mínima del resultado de un conteo de Supabase.
 type CountResult = PromiseLike<{ count: number | null; error: { message: string } | null }>;
@@ -218,20 +227,26 @@ export async function OwnerOverview({
   }
 
   const nowIso = new Date().toISOString();
-  const [businesses, services, promotions] = await Promise.all([
+  const [businesses, services, plans, promotions] = await Promise.all([
     supabase.from("businesses").select("id, name, is_active, cities(name)").in("id", businessIds),
     supabase
       .from("services")
-      .select("id, business_id, category_id, name, status, review_status, base_price_cents, updated_at")
+      .select(
+        "id, business_id, category_id, hospedaje_type_id, name, status, review_status, base_price_cents, updated_at",
+      )
       .in("business_id", businessIds)
       .order("updated_at", { ascending: false }),
+    supabase
+      .from("business_service_plans")
+      .select("business_id, category_id, hospedaje_type_id, quantity, categories(label), hospedaje_types(label)")
+      .in("business_id", businessIds),
     supabase
       .from("promotions")
       .select("id", { count: "exact", head: true })
       .eq("is_published", true)
       .gte("valid_to", nowIso),
   ]);
-  if (businesses.error || services.error) {
+  if (businesses.error || services.error || plans.error) {
     throw new Error("No se pudo cargar la información de tus establecimientos.");
   }
 
@@ -239,6 +254,19 @@ export async function OwnerOverview({
   const published = list.filter((service) => service.status === "published").length;
   const inReview = list.filter((service) => service.review_status === "pending").length;
   const changes = list.filter((service) => service.review_status === "rejected").length;
+
+  const planGroups = groupServicePlans(
+    (plans.data ?? []).map((plan) => ({
+      business_id: plan.business_id,
+      category_id: plan.category_id,
+      category_label: related(plan.categories)?.label ?? null,
+      hospedaje_type_id: plan.hospedaje_type_id,
+      hospedaje_type_label: related(plan.hospedaje_types)?.label ?? null,
+      quantity: plan.quantity,
+    })),
+    list,
+  );
+  const groupsByBusiness = new Map(planGroups.map((group) => [group.businessId, group]));
 
   return (
     <>
@@ -261,39 +289,63 @@ export async function OwnerOverview({
           <Link className="text-link" href="/panel/negocios">Ver todos</Link>
         </div>
         {(businesses.data ?? []).map((business) => {
-          const assigned = list.filter((service) => service.business_id === business.id);
+          const group = groupsByBusiness.get(business.id);
           return (
             <div className="queue-item" key={business.id}>
               <b>{business.name}</b>
               <small>
-                {related(business.cities)?.name ?? "Sin ciudad"} · {assigned.length} servicios
+                {related(business.cities)?.name ?? "Sin ciudad"} ·{" "}
+                {list.filter((service) => service.business_id === business.id).length} servicios
               </small>
               <div className="actions">
                 <Link className="button secondary" href={`/panel/negocios/${business.id}`}>
                   Ver establecimiento
                 </Link>
-                {assigned.map((service) => (
-                  <div className="actions" key={service.id}>
-                    <Link className="button quiet" href={`/panel/servicios/${service.id}`}>
-                      Editar {service.name}
-                    </Link>
-                    <Link className="button quiet" href={`/panel/servicios/${service.id}/galeria`}>
-                      Fotos
-                    </Link>
-                    {service.category_id === "hospedaje" && (
-                      <Link className="button quiet"
-                        href={`/panel/servicios/${service.id}/unidades`}>
-                        Habitaciones
-                      </Link>
-                    )}
-                    {service.category_id === "restaurantes" && (
-                      <Link className="button quiet" href={`/panel/servicios/${service.id}/menu`}>
-                        Menú
-                      </Link>
-                    )}
-                  </div>
-                ))}
               </div>
+              {!group?.categories.length && (
+                <p className="muted">
+                  Este establecimiento aún no tiene un plan de servicios asignado.
+                </p>
+              )}
+              {group?.categories.map((category) => (
+                <div className="owner-plan-category" key={category.categoryId}>
+                  <small><b>{category.categoryLabel}</b></small>
+                  {category.slots.map((slot) => {
+                    const totalDisplay = slot.quota || slot.used;
+                    return (
+                    <div
+                      className="owner-plan-slot"
+                      key={`${category.categoryId}-${slot.hospedajeTypeId ?? "sin-tipo"}`}
+                    >
+                      <small>
+                        {slot.hospedajeTypeLabel && <>{slot.hospedajeTypeLabel} · </>}
+                        {slot.used} de {totalDisplay}{" "}
+                        {totalDisplay === 1 ? "cupo usado" : "cupos usados"}
+                      </small>
+                      <div className="actions">
+                        {slot.services.map((service) => (
+                          <Link
+                            className="button quiet"
+                            href={editHref(service)}
+                            key={service.id}
+                          >
+                            Editar {service.name}
+                          </Link>
+                        ))}
+                        {slot.remaining > 0 && (
+                          <PrepareDraftServiceButton
+                            businessId={business.id}
+                            categoryId={category.categoryId}
+                            hospedajeTypeId={slot.hospedajeTypeId}
+                            label={`Preparar (quedan ${slot.remaining})`}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
           );
         })}
@@ -308,7 +360,7 @@ export async function OwnerOverview({
             const status = statusOf(SERVICE_STATUS, service.status);
             const review = statusOf(REVIEW_STATUS, service.review_status);
             return (
-              <Link className="queue-item" href={`/panel/servicios/${service.id}`} key={service.id}>
+              <Link className="queue-item" href={editHref(service)} key={service.id}>
                 <b>{service.name}</b>
                 <small>
                   <Badge tone={status.tone}>{status.label}</Badge>{" "}
