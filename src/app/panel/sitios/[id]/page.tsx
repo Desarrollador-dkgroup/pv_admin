@@ -17,7 +17,7 @@ export default async function TouristSiteDetailPage({
   const [site, links] = await Promise.all([
     supabase
       .from("tourist_sites")
-      .select("*, cities(name)")
+      .select("*")
       .eq("id", id)
       .maybeSingle(),
     supabase.from("service_tourist_sites").select("services(id, name)").eq("tourist_site_id", id),
@@ -32,7 +32,6 @@ export default async function TouristSiteDetailPage({
     .eq("province_id", item.province_id)
     .maybeSingle();
 
-  const city = (item.cities as { name?: string } | null)?.name ?? "Sin ciudad";
   type ServiceLink = { services: { id: string; name: string } | null };
   const services = ((links.data ?? []) as unknown as ServiceLink[])
     .map((row) => row.services)
@@ -71,24 +70,12 @@ export default async function TouristSiteDetailPage({
               <dd>{item.province_id}</dd>
             </div>
             <div>
-              <dt>Ciudad de referencia</dt>
-              <dd>{city}</dd>
-            </div>
-            <div>
               <dt>Identificador (URL)</dt>
               <dd>{item.slug}</dd>
             </div>
             <div>
               <dt>Orden en la web</dt>
               <dd>{item.sort_order}</dd>
-            </div>
-            <div>
-              <dt>Ubicación</dt>
-              <dd>
-                {item.latitude != null && item.longitude != null
-                  ? `${item.latitude}, ${item.longitude}`
-                  : "Sin coordenadas"}
-              </dd>
             </div>
             <div className="site-fact-wide">
               <dt>Descripción breve</dt>

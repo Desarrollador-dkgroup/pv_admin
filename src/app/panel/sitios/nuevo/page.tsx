@@ -12,7 +12,7 @@ export default async function NewSitePage({
   const { provincia } = await searchParams;
   const { supabase, role } = await getPanelIdentity();
   requireRole(role, ["owner", "admin"]);
-  const { provinces, cities } = await loadSiteOptions(supabase);
+  const { provinces } = await loadSiteOptions(supabase);
 
   return (
     <>
@@ -25,7 +25,6 @@ export default async function NewSitePage({
       <SiteForm
         site={null}
         provinces={provinces}
-        cities={cities}
         defaultProvinceId={provincia ?? ""}
       />
     </>

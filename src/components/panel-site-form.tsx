@@ -21,10 +21,7 @@ type Site = {
   description: string;
   short_description: string | null;
   province_id: string | null;
-  city_id: string | null;
   sort_order: number;
-  latitude: number | null;
-  longitude: number | null;
   photo_storage_path: string | null;
   maps_embed_url: string | null;
 };
@@ -33,12 +30,10 @@ type Site = {
 export function SiteForm({
   site,
   provinces,
-  cities,
   defaultProvinceId = "",
 }: {
   site: Site | null;
   provinces: Option[];
-  cities: Option[];
   defaultProvinceId?: string;
 }) {
   const [state, action, pending] = useActionState(saveTouristSiteAction, { error: "" });
@@ -132,15 +127,6 @@ export function SiteForm({
         </div>
         <div className="form-row">
           <label className="field">
-            Ciudad de referencia (opcional)
-            <select name="city_id" defaultValue={site?.city_id ?? ""}>
-              <option value="">Sin ciudad</option>
-              {cities.map((city) => (
-                <option key={city.id} value={city.id}>{city.label}</option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
             Orden en la web
             <input
               name="sort_order"
@@ -196,31 +182,6 @@ export function SiteForm({
           </div>
         </section>
 
-        <div className="form-row">
-          <label className="field">
-            Latitud
-            <input
-              name="latitude"
-              type="number"
-              step="any"
-              min={-90}
-              max={90}
-              defaultValue={site?.latitude ?? ""}
-            />
-          </label>
-          <label className="field">
-            Longitud
-            <input
-              name="longitude"
-              type="number"
-              step="any"
-              min={-180}
-              max={180}
-              defaultValue={site?.longitude ?? ""}
-            />
-          </label>
-        </div>
-        <small>Sirve para elegir el sitio más cercano a cada servicio del destino.</small>
 
         <section className="destination-block">
           <h3>Mapa de Google</h3>

@@ -34,7 +34,7 @@ export default async function EditSitePage({
           <p>Cambia la información que muestra la web para este sitio.</p>
         </div>
       </header>
-      <SiteForm site={site} provinces={options.provinces} cities={options.cities} />
+      <SiteForm site={site} provinces={options.provinces} />
     </>
   );
 }
