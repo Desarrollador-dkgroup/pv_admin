@@ -35,6 +35,23 @@ export function PanelGalleryManager({
   const [message, setMessage] = useState("");
   const active = items.find((group) => group.id === activeId) ?? items[0];
 
+  async function refreshGroup(group: GalleryGroup) {
+    const supabase = getSupabaseBrowserClient();
+    let query = supabase.from(group.table)
+      .select("id, storage_path, is_cover, position");
+    if (group.table === "room_type_photos") {
+      query = query.eq("room_type_id", group.relationId ?? "");
+    } else if (group.relationId) {
+      query = query.eq("service_id", serviceId).eq("lodging_area_id", group.relationId);
+    } else {
+      query = query.eq("service_id", serviceId).is("lodging_area_id", null);
+    }
+    const { data, error } = await query.order("position");
+    if (error) throw new Error("No se pudo actualizar la galería. Recarga la página.");
+    setItems((current) => current.map((item) =>
+      item.id === group.id ? { ...item, photos: data ?? [] } : item));
+  }
+
   async function upload(files: FileList | null) {
     if (!files?.length || !active) return;
     const selected = [...files];
@@ -51,6 +68,7 @@ export function PanelGalleryManager({
     setMessage("");
     const supabase = getSupabaseBrowserClient();
     const uploaded: Photo[] = [];
+    let result = "Fotografías guardadas en la galería.";
 
     try {
       for (const [index, file] of selected.entries()) {
@@ -77,18 +95,23 @@ export function PanelGalleryManager({
         }
         uploaded.push(photo.data);
       }
-
-      setItems((current) =>
-        current.map((group) =>
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "No se pudieron subir las fotos.";
+      result = uploaded.length
+        ? `Se ${uploaded.length === 1 ? "guardó 1 foto" : `guardaron ${uploaded.length} fotos`}, pero las demás no: ${reason}`
+        : reason;
+    } finally {
+      try {
+        await refreshGroup(active);
+      } catch {
+        // Si la lectura falla, refleja al menos las filas confirmadas por esta operación.
+        if (uploaded.length) setItems((current) => current.map((group) =>
           group.id === active.id
             ? { ...group, photos: [...group.photos, ...uploaded] }
-            : group,
-        ),
-      );
-      setMessage("Fotografías guardadas en la galería.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "No se pudieron subir las fotos.");
-    } finally {
+            : group));
+        result += " Recarga la página para confirmar la galería.";
+      }
+      setMessage(result);
       setBusy(false);
     }
   }
@@ -96,7 +119,11 @@ export function PanelGalleryManager({
   async function chooseCover(photo: Photo) {
     if (!active) return;
     setBusy(true);
+    setMessage("");
     const supabase = getSupabaseBrowserClient();
+    const previous = active.photos.find((item) => item.is_cover);
+    let cleared = false;
+    let result = "Portada actualizada.";
     try {
       let coverQuery = supabase
         .from(active.table)
@@ -104,64 +131,82 @@ export function PanelGalleryManager({
       if (active.table === "room_type_photos") {
         coverQuery = coverQuery.eq("room_type_id", active.relationId ?? "");
       } else if (active.relationId) {
-        coverQuery = coverQuery.eq("lodging_area_id", active.relationId);
+        coverQuery = coverQuery.eq("service_id", serviceId)
+          .eq("lodging_area_id", active.relationId);
       } else {
         coverQuery = coverQuery
           .eq("service_id", serviceId)
           .is("lodging_area_id", null);
       }
-      const cleared = await coverQuery;
-      if (cleared.error) throw new Error(cleared.error.message);
+      const clearResult = await coverQuery;
+      if (clearResult.error) throw new Error(clearResult.error.message);
+      cleared = true;
 
       const selected = await supabase
         .from(active.table)
         .update({ is_cover: true })
-        .eq("id", photo.id);
-      if (selected.error) throw new Error(selected.error.message);
-
-      setItems((current) =>
-        current.map((group) =>
-          group.id === active.id
-            ? {
-                ...group,
-                photos: group.photos.map((item) => ({
-                  ...item,
-                  is_cover: item.id === photo.id,
-                })),
-              }
-            : group,
-        ),
-      );
-      setMessage("Portada actualizada.");
+        .eq("id", photo.id)
+        .select("id")
+        .maybeSingle();
+      if (selected.error || !selected.data) {
+        throw new Error(selected.error?.message ?? "No se encontró la foto seleccionada.");
+      }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "No se pudo cambiar la portada.");
+      result = error instanceof Error ? error.message : "No se pudo cambiar la portada.";
+      if (cleared && previous) {
+        const restored = await supabase.from(active.table)
+          .update({ is_cover: true }).eq("id", previous.id);
+        if (restored.error) result += " No se pudo restaurar la portada anterior.";
+      }
     } finally {
+      try {
+        await refreshGroup(active);
+      } catch {
+        result += " Recarga la página para comprobar la portada.";
+      }
+      setMessage(result);
       setBusy(false);
     }
   }
 
   async function removePhoto(photo: Photo) {
     if (!active) return;
+    if (!window.confirm("¿Eliminar esta foto de la galería?")) return;
     setBusy(true);
+    setMessage("");
     const supabase = getSupabaseBrowserClient();
+    let deletedFromCatalog = false;
+    let result = photo.is_cover
+      ? "Fotografía eliminada. Si quedan fotos, selecciona una nueva portada."
+      : "Fotografía eliminada.";
     try {
-      const deleted = await supabase.from(active.table).delete().eq("id", photo.id);
-      if (deleted.error) throw new Error(deleted.error.message);
+      const deleted = await supabase.from(active.table)
+        .delete().eq("id", photo.id).select("id").maybeSingle();
+      if (deleted.error || !deleted.data) {
+        throw new Error(deleted.error?.message ?? "No se encontró la foto para eliminar.");
+      }
+      deletedFromCatalog = true;
+      setItems((current) => current.map((group) =>
+        group.id === active.id
+          ? { ...group, photos: group.photos.filter((item) => item.id !== photo.id) }
+          : group));
       const removed = await supabase.storage
         .from("service-media")
         .remove([photo.storage_path]);
-      if (removed.error) throw new Error(removed.error.message);
-      setItems((current) =>
-        current.map((group) =>
-          group.id === active.id
-            ? { ...group, photos: group.photos.filter((item) => item.id !== photo.id) }
-            : group,
-        ),
-      );
-      setMessage("Fotografía eliminada.");
+      if (removed.error) {
+        result = "La foto ya no aparece en la ficha, pero no se pudo limpiar el archivo. Avísanos.";
+      }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "No se pudo eliminar la foto.");
+      result = deletedFromCatalog
+        ? "La foto ya no aparece en la ficha, pero no se pudo limpiar el archivo. Avísanos."
+        : error instanceof Error ? error.message : "No se pudo eliminar la foto.";
     } finally {
+      try {
+        await refreshGroup(active);
+      } catch {
+        result += " Recarga la página para confirmar la galería.";
+      }
+      setMessage(result);
       setBusy(false);
     }
   }
@@ -172,7 +217,8 @@ export function PanelGalleryManager({
         <h2>Galerías del servicio</h2>
         <label className="field">
           Sección de imágenes
-          <select value={active?.id ?? ""} onChange={(event) => setActiveId(event.target.value)}>
+          <select value={active?.id ?? ""} disabled={busy}
+            onChange={(event) => setActiveId(event.target.value)}>
             {items.map((group) => (
               <option key={group.id} value={group.id}>
                 {group.label} · {group.photos.length}/{group.limit}
