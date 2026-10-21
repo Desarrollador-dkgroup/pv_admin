@@ -365,20 +365,26 @@ export function LodgingCatalogManager({
         </form>
         <h3>Tipos agregados</h3>
         {rooms.map((room) => (
-          <article className="history-event" key={room.id}>
-            <b>{room.name}</b>
-            <span>{room.capacity} personas · ${dollars(room.price_cents)} por noche</span>
+          <article className="lodging-item-card" key={room.id}>
+            <div className="lodging-item-heading">
+              <div className="lodging-item-summary">
+                <h4>{room.name}</h4>
+                <p>{room.capacity} personas · ${dollars(room.price_cents)} por noche</p>
+              </div>
+              <div className="lodging-item-actions">
+                <a className="text-link" href={`/panel/servicios/${serviceId}/galeria`}>Administrar fotos</a>
+                <Button tone="secondary" disabled={busy}
+                  onClick={() => setEditingRoomId(editingRoomId === room.id ? null : room.id)}>
+                  {editingRoomId === room.id ? "Cerrar edición" : `Editar ${room.name}`}
+                </Button>
+              </div>
+            </div>
             {roomErrorId === room.id && error && <p className="form-error" role="alert">{error}</p>}
             {!isOwner && Object.entries(room.details ?? {}).map(([key, detail]) => (
               <small key={key}>{labelFor(key)}: {detail}</small>
             ))}
-            <a href={`/panel/servicios/${serviceId}/galeria`}>Administrar fotos</a>
-            <Button tone="secondary" disabled={busy}
-              onClick={() => setEditingRoomId(editingRoomId === room.id ? null : room.id)}>
-              {editingRoomId === room.id ? "Cerrar edición" : `Editar ${room.name}`}
-            </Button>
             {editingRoomId === room.id && (
-              <form action={(formData) => updateRoom(room.id, formData)}>
+              <form className="lodging-item-form" action={(formData) => updateRoom(room.id, formData)}>
                 <h4>Datos de {room.name}</h4>
                 <p className="muted">
                   Capacidad: {room.capacity} · Cantidad: {room.total_units}. Si la habitación
@@ -408,21 +414,17 @@ export function LodgingCatalogManager({
                 <Button type="submit" disabled={busy}>Guardar cambios de habitación</Button>
               </form>
             )}
-            {rates.filter((rate) => rate.room_type_id === room.id).map((rate) => (
-              <div className="history-event" key={rate.id}>
-                <span>
-                  {rate.valid_from} al {rate.valid_to} · ${dollars(rate.price_cents)}
-                </span>
-                <Button
-                  tone="quiet"
-                  disabled={busy}
-                  onClick={() => void deleteRate(rate.id)}
-                >
-                  Eliminar tarifa
-                </Button>
-              </div>
-            ))}
-            <form action={saveRate}>
+            <div className="lodging-rates">
+              {rates.filter((rate) => rate.room_type_id === room.id).map((rate) => (
+                <div className="lodging-rate-row" key={rate.id}>
+                  <span>{rate.valid_from} al {rate.valid_to} · ${dollars(rate.price_cents)}</span>
+                  <Button tone="quiet" disabled={busy} onClick={() => void deleteRate(rate.id)}>
+                    Eliminar tarifa
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <form className="lodging-item-form" action={saveRate}>
               <input type="hidden" name="room_type_id" value={room.id} />
               <h4>Tarifa de temporada</h4>
               <Field label="Válida desde" name="valid_from" type="date" required />
@@ -437,32 +439,36 @@ export function LodgingCatalogManager({
               <Field label="Cancelación para esta tarifa" name="rate_cancellation" multiline /></>}
               <Button type="submit" disabled={busy}>Guardar tarifa</Button>
             </form>
-            <Button
-              tone="quiet"
-              disabled={busy}
-              onClick={() => void deleteRoom(room)}
-            >
-              Eliminar {room.name}
-            </Button>
+            <div className="lodging-item-footer">
+              <Button tone="quiet" disabled={busy} onClick={() => void deleteRoom(room)}>
+                Eliminar {room.name}
+              </Button>
+            </div>
           </article>
         ))}
       </Panel>
       <Panel id="areas">
         <h2>Áreas e instalaciones</h2>
         {areas.map((area) => (
-          <div className="history-event" key={area.id}>
-            <b>{area.name}</b>
-            <span>{area.description ?? "Sin descripción"}</span>
+          <div className="lodging-item-card" key={area.id}>
+            <div className="lodging-item-heading">
+              <div className="lodging-item-summary">
+                <h3>{area.name}</h3>
+                <p>{area.description ?? "Sin descripción"}</p>
+              </div>
+              <div className="lodging-item-actions">
+                <a className="text-link" href={`/panel/servicios/${serviceId}/galeria`}>Administrar fotos</a>
+                <Button tone="secondary" disabled={busy}
+                  onClick={() => setEditingAreaId(editingAreaId === area.id ? null : area.id)}>
+                  {editingAreaId === area.id ? "Cerrar edición" : "Editar área"}
+                </Button>
+              </div>
+            </div>
             {!isOwner && Object.entries(area.details ?? {}).map(([key, detail]) => (
               <small key={key}>{labelFor(key)}: {detail}</small>
             ))}
-            <a href={`/panel/servicios/${serviceId}/galeria`}>Administrar fotos</a>
-            <Button tone="secondary" disabled={busy}
-              onClick={() => setEditingAreaId(editingAreaId === area.id ? null : area.id)}>
-              {editingAreaId === area.id ? "Cerrar edición" : "Editar área"}
-            </Button>
             {editingAreaId === area.id && (
-              <form action={(formData) => updateArea(area.id, formData)}>
+              <form className="lodging-item-form" action={(formData) => updateArea(area.id, formData)}>
                 <Field label="Nombre del área" name="area_name"
                   defaultValue={area.name} required />
                 <Field label="Descripción y servicios" name="area_description" multiline
@@ -492,13 +498,12 @@ export function LodgingCatalogManager({
                 <Button type="submit" disabled={busy}>Guardar cambios del área</Button>
               </form>
             )}
-            <Button
-              tone="quiet"
-              disabled={busy}
-              onClick={() => void deleteRecord("lodging_areas", area.id)}
-            >
-              Eliminar
-            </Button>
+            <div className="lodging-item-footer">
+              <Button tone="quiet" disabled={busy}
+                onClick={() => void deleteRecord("lodging_areas", area.id)}>
+                Eliminar
+              </Button>
+            </div>
           </div>
         ))}
         <form action={saveArea}>
