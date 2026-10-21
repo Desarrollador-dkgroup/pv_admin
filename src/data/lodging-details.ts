@@ -1,7 +1,11 @@
+// Idiomas que se pueden marcar en el hospedaje. Se ampliará con más idiomas después.
+export const LANGUAGE_OPTIONS = ["Español", "Inglés"];
+
 export type LodgingDetailField = {
   key: string;
   label: string;
   multiline?: boolean;
+  kind?: "text" | "apartment_types";
 };
 
 // Expone campos específicos de las plantillas para cada tipo de hospedaje.
@@ -48,15 +52,12 @@ const detailsByType: Record<string, LodgingDetailField[]> = {
     { key: "rate_rules", label: "Temporadas, tarifas y reglas", multiline: true },
   ],
   apartamento: [
-    { key: "legal_operator", label: "Nombre legal del operador" },
-    { key: "apartment_type", label: "Tipo de apartamento" },
-    { key: "unit_count", label: "Cantidad de apartamentos" },
-    { key: "arrival_instructions", label: "Instrucciones para llegar", multiline: true },
-    { key: "assistance_contact", label: "Persona de asistencia" },
-    { key: "building_services", label: "Servicios del edificio", multiline: true },
-    { key: "building_rules", label: "Reglamento del edificio", multiline: true },
-    { key: "accessibility", label: "Accesibilidad del edificio", multiline: true },
-    { key: "rate_rules", label: "Temporadas, cargos y reglas", multiline: true },
+    {
+      key: "apartment_types",
+      label: "Tipos de apartamento e inclusiones",
+      kind: "apartment_types",
+    },
+    { key: "building_rules", label: "Reglas de la casa", multiline: true },
   ],
   casa: [
     { key: "legal_operator", label: "Nombre legal del operador" },

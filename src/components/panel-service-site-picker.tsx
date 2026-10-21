@@ -52,7 +52,6 @@ export function ServiceSitePicker({
         Destino
         <select
           name="destination_province_id"
-          required
           value={provinceId}
           onChange={(event) => handleProvinceChange(event.target.value)}
         >

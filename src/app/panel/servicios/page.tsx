@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { Badge, Panel } from "@/components/ui";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { loadOwnerPlanUsage } from "@/lib/panel-service-plan";
-import { REVIEW_STATUS, SERVICE_STATUS, statusOf } from "@/lib/panel-labels";
+import { REVIEW_STATUS, SERVICE_STATUS, ownerStateOf, statusOf } from "@/lib/panel-labels";
+import { publishOwnServiceAction } from "@/app/panel/actions";
 import { related } from "@/lib/panel-relations";
 import { canManageCatalog } from "@/types/panel";
 
@@ -74,8 +75,14 @@ export default async function ServicesPage() {
                 <th>Servicio</th>
                 <th>Tipo</th>
                 {isStaff && <th>Negocio</th>}
-                <th>Estado</th>
-                <th>Revisión</th>
+                {isStaff ? (
+                  <>
+                    <th>Estado</th>
+                    <th>Revisión</th>
+                  </>
+                ) : (
+                  <th>Estado</th>
+                )}
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -83,17 +90,31 @@ export default async function ServicesPage() {
               {(data ?? []).map((service) => {
                 const status = statusOf(SERVICE_STATUS, service.status);
                 const review = statusOf(REVIEW_STATUS, service.review_status);
+                const ownerState = ownerStateOf(service);
                 return (
                   <tr key={service.id}>
                     <td>{service.name}</td>
                     <td>{categoryLabels.get(service.category_id) ?? service.category_id}</td>
                     {isStaff && <td>{related(service.businesses)?.name ?? "—"}</td>}
-                    <td><Badge tone={status.tone}>{status.label}</Badge></td>
-                    <td><Badge tone={review.tone}>{review.label}</Badge></td>
+                    {isStaff ? (
+                      <>
+                        <td><Badge tone={status.tone}>{status.label}</Badge></td>
+                        <td><Badge tone={review.tone}>{review.label}</Badge></td>
+                      </>
+                    ) : (
+                      <td><Badge tone={ownerState.tone}>{ownerState.label}</Badge></td>
+                    )}
                     <td>
                       <Link className="button secondary" href={`/panel/servicios/${service.id}`}>
                         Editar
                       </Link>
+                      {!isStaff && service.review_status === "approved" &&
+                        service.status !== "published" && (
+                        <form action={publishOwnServiceAction} style={{ display: "inline" }}>
+                          <input type="hidden" name="service_id" value={service.id} />
+                          <button className="button primary" type="submit">Publicar</button>
+                        </form>
+                      )}
                     </td>
                   </tr>
                 );

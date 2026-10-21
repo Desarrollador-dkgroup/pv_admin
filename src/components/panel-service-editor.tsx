@@ -14,7 +14,8 @@ export async function PanelServiceEditor({
   serviceId?: string;
   preset?: { categoryId?: string; lodgingTypeId?: string };
 }) {
-  const { supabase, role, businessIds } = await getPanelIdentity();
+  const { supabase, role, businessIds, user } = await getPanelIdentity();
+  const ownerName = String(user.user_metadata?.display_name ?? user.email ?? "");
   if (role === "collaborator") redirect("/panel/permisos");
   const businessQuery = supabase
     .from("businesses")
@@ -25,7 +26,7 @@ export async function PanelServiceEditor({
     : businessQuery.in("id", businessIds);
 
   const [businessResult, categoryResult, typeResult, siteResult, destinationResult,
-    amenityResult, featureResult, serviceResult] =
+    amenityResult, featureResult, mealPlanResult, serviceResult] =
     await Promise.all([
       scopedBusinessQuery,
       supabase.from("categories").select("id, label").order("sort_order"),
@@ -40,6 +41,7 @@ export async function PanelServiceEditor({
         .from("restaurant_feature_catalog")
         .select("id, label")
         .order("sort_order"),
+      supabase.from("meal_plans").select("id, label").order("sort_order"),
       serviceId
         ? supabase.from("services").select("*").eq("id", serviceId).maybeSingle()
         : Promise.resolve({ data: null, error: null }),
@@ -53,6 +55,7 @@ export async function PanelServiceEditor({
     destinationResult.error ||
     amenityResult.error ||
     featureResult.error ||
+    mealPlanResult.error ||
     serviceResult.error
   ) {
     throw new Error("No se pudieron cargar los catálogos de Supabase.");
@@ -220,6 +223,7 @@ export async function PanelServiceEditor({
         categories={categories}
         lodgingTypes={lodgingTypes}
         presetLodgingTypeId={presetLodgingTypeId}
+        ownerName={ownerName}
         sites={siteResult.data ?? []}
         destinations={(destinationResult.data ?? []).map((row) => ({
           provinceId: row.province_id,
@@ -227,6 +231,7 @@ export async function PanelServiceEditor({
         }))}
         destinationProvinceId={destinationProvinceId}
         amenities={amenityResult.data ?? []}
+        mealPlans={mealPlanResult.data ?? []}
         restaurantFeatures={featureResult.data ?? []}
         selectedSiteIds={selectedSiteIds}
         selectedAmenityIds={(amenityLinks.data ?? []).map((item) => item.amenity_id)}
