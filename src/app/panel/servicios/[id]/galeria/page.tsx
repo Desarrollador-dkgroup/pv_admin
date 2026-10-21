@@ -115,9 +115,14 @@ export default async function ServiceGalleryPage({
           <h1>Galería de {service.name}</h1>
           <p>Las imágenes se guardan en el almacenamiento de Supabase.</p>
         </div>
-        <Link className="button quiet" href={`/panel/servicios/${id}`}>
-          Volver al servicio
-        </Link>
+        <div className="actions">
+          <Link className="button secondary" href={`/panel/servicios/${id}/vista-previa`}>
+            Ver vista previa
+          </Link>
+          <Link className="button quiet" href={`/panel/servicios/${id}`}>
+            Volver al servicio
+          </Link>
+        </div>
       </header>
       <PanelGalleryManager serviceId={id} groups={groups} />
     </>

@@ -59,6 +59,15 @@ export default async function LodgingCoverPage({
         </div>
         <span className={`badge tone-${status.tone}`}>{status.label}</span>
       </header>
+      <div className="merchant-preview-callout">
+        <div>
+          <strong>Así va quedando tu ficha</strong>
+          <p>Revisa los datos y las fotos guardadas antes de enviarla a revisión.</p>
+        </div>
+        <Link className="button primary" href={`/panel/servicios/${id}/vista-previa`}>
+          Ver vista previa
+        </Link>
+      </div>
       <div className="owner-grid">
         {sections.map((section) => (
           <Panel key={section.href}>

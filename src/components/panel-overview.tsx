@@ -2,9 +2,8 @@ import Link from "next/link";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Badge, Panel } from "@/components/ui";
 import { PrepareDraftServiceButton } from "@/components/prepare-draft-service-button";
-import { OwnBusinessForm } from "@/components/panel-own-business-form";
-import { formatCents, formatDate, formatDateTime } from "@/lib/panel-format";
-import { REVIEW_STATUS, SERVICE_STATUS, statusOf } from "@/lib/panel-labels";
+import { formatDate, formatDateTime } from "@/lib/panel-format";
+import { ownerStateOf } from "@/lib/panel-labels";
 import { related } from "@/lib/panel-relations";
 import { groupServicePlans } from "@/lib/panel-service-plans";
 import { ROLE_LABELS, type PanelRole } from "@/types/panel";
@@ -227,11 +226,10 @@ export async function OwnerOverview({
     );
   }
 
-  const nowIso = new Date().toISOString();
-  const [businesses, services, plans, promotions] = await Promise.all([
+  const [businesses, services, plans] = await Promise.all([
     supabase
       .from("businesses")
-      .select("id, name, description, is_active")
+      .select("id, name, is_active")
       .in("id", businessIds),
     supabase
       .from("services")
@@ -244,11 +242,6 @@ export async function OwnerOverview({
       .from("business_service_plans")
       .select("business_id, category_id, hospedaje_type_id, quantity, categories(label), hospedaje_types(label)")
       .in("business_id", businessIds),
-    supabase
-      .from("promotions")
-      .select("id", { count: "exact", head: true })
-      .eq("is_published", true)
-      .gte("valid_to", nowIso),
   ]);
   if (businesses.error || services.error || plans.error) {
     throw new Error("No se pudo cargar la información de tus establecimientos.");
@@ -270,14 +263,25 @@ export async function OwnerOverview({
     })),
     list,
   );
-  const groupsByBusiness = new Map(planGroups.map((group) => [group.businessId, group]));
+  const businessStates = new Map((businesses.data ?? []).map((row) => [row.id, row.is_active]));
+  const cards = planGroups.flatMap((group) => group.categories.flatMap((category) =>
+    category.slots.flatMap((slot) => [
+      ...slot.services.map((service) => ({
+        key: service.id, businessId: group.businessId, category, slot, service,
+      })),
+      ...Array.from({ length: slot.remaining }, (_, index) => ({
+        key: `${group.businessId}-${category.categoryId}-${slot.hospedajeTypeId ?? "none"}-${index}`,
+        businessId: group.businessId, category, slot, service: null,
+      })),
+    ]),
+  ));
 
   return (
     <>
       <Greeting
         role="propietario"
-        title="Tus establecimientos en Panamá Viajero"
-        text="Revisa el estado de tus servicios y mantén la información al día."
+        title="Tu espacio en Panamá Viajero"
+        text="Prepara tus fichas, agrega fotos y revisa cómo se verán para los viajeros."
       />
       <div className="metrics three">
         <Metric label="Servicios publicados" value={published} hint="Visibles en la web"
@@ -287,107 +291,58 @@ export async function OwnerOverview({
         <Metric label="Con cambios solicitados" value={changes} hint="Revisa el comentario"
           href="/panel/notificaciones" />
       </div>
-      <Panel>
-        <div className="section-heading">
-          <h2>Establecimientos asignados</h2>
-          <Link className="text-link" href="/panel/negocios">Ver todos</Link>
-        </div>
-        {(businesses.data ?? []).map((business) => {
-          const group = groupsByBusiness.get(business.id);
-          return (
-            <div className="queue-item" key={business.id}>
-              <b>{business.name}</b>
-              <small>
-                {business.is_active ? "Activo" : "Inactivo"} ·{" "}
-                {list.filter((service) => service.business_id === business.id).length} servicios
-              </small>
-              <OwnBusinessForm
-                businessId={business.id}
-                name={business.name}
-                description={business.description ?? ""}
-              />
-              <div className="actions">
-                <Link className="button secondary" href={`/panel/negocios/${business.id}`}>
-                  Ver establecimiento
-                </Link>
-              </div>
-              {!group?.categories.length && (
-                <p className="muted">
-                  Este establecimiento aún no tiene un plan de servicios asignado.
-                </p>
-              )}
-              {group?.categories.map((category) => (
-                <div className="owner-plan-category" key={category.categoryId}>
-                  <small><b>{category.categoryLabel}</b></small>
-                  {category.slots.map((slot) => {
-                    const totalDisplay = slot.quota || slot.used;
-                    return (
-                    <div
-                      className="owner-plan-slot"
-                      key={`${category.categoryId}-${slot.hospedajeTypeId ?? "sin-tipo"}`}
-                    >
-                      <small>
-                        {slot.hospedajeTypeLabel && <>{slot.hospedajeTypeLabel} · </>}
-                        {slot.used} de {totalDisplay}{" "}
-                        {totalDisplay === 1 ? "cupo usado" : "cupos usados"}
-                      </small>
-                      <div className="actions">
-                        {slot.services.map((service) => (
-                          <Link
-                            className="button quiet"
-                            href={editHref(service)}
-                            key={service.id}
-                          >
-                            Editar {service.name}
-                          </Link>
-                        ))}
-                        {slot.remaining > 0 && (
-                          <PrepareDraftServiceButton
-                            businessId={business.id}
-                            categoryId={category.categoryId}
-                            hospedajeTypeId={slot.hospedajeTypeId}
-                            label={`Preparar (quedan ${slot.remaining})`}
-                          />
-                        )}
-                      </div>
-                    </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          );
-        })}
-      </Panel>
-      <div className="dashboard-grid">
-        <Panel>
-          <div className="section-heading">
-            <h2>Mis servicios recientes</h2>
-            <Link className="text-link" href="/panel/servicios">Ver todos</Link>
+      <section aria-labelledby="my-listings-heading">
+        <div className="section-heading merchant-section-heading">
+          <div>
+            <h2 id="my-listings-heading">Tus fichas</h2>
+            <p className="muted">Cada tarjeta corresponde a un servicio que puedes administrar.</p>
           </div>
-          {list.slice(0, 5).map((service) => {
-            const status = statusOf(SERVICE_STATUS, service.status);
-            const review = statusOf(REVIEW_STATUS, service.review_status);
+        </div>
+        <div className="merchant-listing-grid">
+          {cards.map(({ key, businessId, category, slot, service }) => {
+            const suspended = businessStates.get(businessId) === false;
+            const state = service ? ownerStateOf(service) : null;
             return (
-              <Link className="queue-item" href={editHref(service)} key={service.id}>
-                <b>{service.name}</b>
-                <small>
-                  <Badge tone={status.tone}>{status.label}</Badge>{" "}
-                  <Badge tone={review.tone}>{review.label}</Badge>
-                  {" · desde "}{formatCents(service.base_price_cents)}
-                </small>
-              </Link>
+              <Panel key={key} className="merchant-listing-card">
+                <span className="merchant-listing-type">
+                  {category.categoryLabel}{slot.hospedajeTypeLabel ? ` · ${slot.hospedajeTypeLabel}` : ""}
+                </span>
+                <h3>{service ? service.name : `Tu ${category.categoryLabel.toLowerCase()} por preparar`}</h3>
+                <div className="merchant-listing-meta">
+                  {suspended ? <Badge tone="danger">Acceso suspendido</Badge> :
+                    state ? <Badge tone={state.tone}>{state.label}</Badge> :
+                    <Badge tone="info">Disponible para crear</Badge>}
+                </div>
+                <p className="muted">
+                  {service
+                    ? "Completa los datos, imágenes y detalles que verá el viajero."
+                    : "Empieza la ficha y guarda tus avances antes de enviarla a revisión."}
+                </p>
+                <div className="actions merchant-listing-actions">
+                  {service ? (
+                    <>
+                      <Link className="button primary" href={editHref(service)}>Editar ficha</Link>
+                      <Link className="button secondary" href={`/panel/servicios/${service.id}/vista-previa`}>
+                        Vista previa
+                      </Link>
+                    </>
+                  ) : !suspended ? (
+                    <PrepareDraftServiceButton
+                      businessId={businessId}
+                      categoryId={category.categoryId}
+                      hospedajeTypeId={slot.hospedajeTypeId}
+                      label="Comenzar ficha"
+                    />
+                  ) : null}
+                </div>
+              </Panel>
             );
           })}
-          {!list.length && <p className="muted">Aún no tienes servicios registrados.</p>}
-        </Panel>
-        <Panel>
-          <h2>Promociones</h2>
-          <p className="muted">
-            Promociones vigentes publicadas: {promotions.count ?? 0}. Las gestiona el equipo.
-          </p>
-        </Panel>
-      </div>
+        </div>
+        {!cards.length && (
+          <Panel><p>El equipo todavía no ha asignado servicios a esta cuenta.</p></Panel>
+        )}
+      </section>
     </>
   );
 }
