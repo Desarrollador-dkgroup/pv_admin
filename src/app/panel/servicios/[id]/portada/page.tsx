@@ -31,7 +31,7 @@ export default async function LodgingCoverPage({
     {
       href: `/panel/servicios/${id}`,
       title: "Datos y ubicación",
-      description: "Nombre, dirección, mapa, comodidades y precio desde.",
+      description: "Nombre, descripción, destino, ubicación y comodidades.",
     },
     {
       href: `/panel/servicios/${id}/galeria`,

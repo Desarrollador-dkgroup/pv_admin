@@ -53,12 +53,14 @@ export type RatePeriod = {
 export function LodgingCatalogManager({
   serviceId,
   lodgingTypeId,
+  isOwner = false,
   rooms: initialRooms,
   areas: initialAreas,
   rates: initialRates,
 }: {
   serviceId: string;
   lodgingTypeId: string;
+  isOwner?: boolean;
   rooms: Room[];
   areas: Area[];
   rates: RatePeriod[];
@@ -124,14 +126,16 @@ export function LodgingCatalogManager({
       description: value(formData, "room_description"),
       beds_label: value(formData, "beds_label"),
       price_cents: priceOrNull(value(formData, "price")),
-      bedroom_count: numberOrNull(value(formData, "bedroom_count")),
-      bathroom_count: numberOrNull(value(formData, "bathroom_count")),
-      area_m2: numberOrNull(value(formData, "area_m2")),
-      details: Object.fromEntries(
+      ...(!isOwner ? {
+        bedroom_count: numberOrNull(value(formData, "bedroom_count")),
+        bathroom_count: numberOrNull(value(formData, "bathroom_count")),
+        area_m2: numberOrNull(value(formData, "area_m2")),
+        details: Object.fromEntries(
         [...formData.entries()]
           .filter(([key]) => key.startsWith("unit__"))
           .map(([key, item]) => [key.slice(6), String(item).trim()]),
-      ),
+        ),
+      } : {}),
     };
     if (!changes.name || !changes.description || !changes.beds_label ||
       changes.price_cents === null || !Number.isFinite(changes.price_cents) ||
@@ -201,17 +205,19 @@ export function LodgingCatalogManager({
     const changes = {
       name: value(formData, "area_name"),
       description: nullable(value(formData, "area_description")),
-      opening_hours: nullable(value(formData, "opening_hours")),
-      capacity: numberOrNull(value(formData, "area_capacity")),
       is_available: formData.get("is_available") === "on",
-      included_in_rate: formData.get("included_in_rate") === "on",
-      additional_price_cents: priceOrNull(value(formData, "additional_price")),
-      access_details: nullable(value(formData, "access_details")),
-      details: Object.fromEntries(
+      ...(!isOwner ? {
+        opening_hours: nullable(value(formData, "opening_hours")),
+        capacity: numberOrNull(value(formData, "area_capacity")),
+        included_in_rate: formData.get("included_in_rate") === "on",
+        additional_price_cents: priceOrNull(value(formData, "additional_price")),
+        access_details: nullable(value(formData, "access_details")),
+        details: Object.fromEntries(
         [...formData.entries()]
           .filter(([key]) => key.startsWith("area__"))
           .map(([key, item]) => [key.slice(6), String(item).trim()]),
-      ),
+        ),
+      } : {}),
     };
     if (!changes.name) {
       setError("Escribe el nombre del área.");
@@ -307,7 +313,7 @@ export function LodgingCatalogManager({
           <article className="history-event" key={room.id}>
             <b>{room.name}</b>
             <span>{room.capacity} personas · ${dollars(room.price_cents)} por noche</span>
-            {Object.entries(room.details ?? {}).map(([key, detail]) => (
+            {!isOwner && Object.entries(room.details ?? {}).map(([key, detail]) => (
               <small key={key}>{labelFor(key)}: {detail}</small>
             ))}
             <a href={`/panel/servicios/${serviceId}/galeria`}>Administrar fotos</a>
@@ -329,7 +335,7 @@ export function LodgingCatalogManager({
                   defaultValue={room.beds_label} required />
                 <Field label="Precio base por noche (USD)" name="price" type="number"
                   defaultValue={dollars(room.price_cents)} required />
-                <Field label="Dormitorios" name="bedroom_count" type="number"
+                {!isOwner && <><Field label="Dormitorios" name="bedroom_count" type="number"
                   defaultValue={room.bedroom_count} />
                 <Field label="Baños" name="bathroom_count" type="number"
                   defaultValue={room.bathroom_count} />
@@ -338,7 +344,7 @@ export function LodgingCatalogManager({
                 {unitFields.map((field) => (
                   <Field key={field.key} label={field.label} name={`unit__${field.key}`}
                     multiline={field.multiline} defaultValue={room.details?.[field.key] ?? ""} />
-                ))}
+                ))}</>}
                 <Button type="submit" disabled={busy}>Guardar cambios de habitación</Button>
               </form>
             )}
@@ -362,13 +368,13 @@ export function LodgingCatalogManager({
               <Field label="Válida desde" name="valid_from" type="date" required />
               <Field label="Válida hasta" name="valid_to" type="date" required />
               <Field label="Precio por noche (USD)" name="season_price" type="number" required />
-              <Field label="Estancia mínima (noches)" name="minimum_nights" type="number" />
+              {!isOwner && <><Field label="Estancia mínima (noches)" name="minimum_nights" type="number" />
               <Field label="Huéspedes incluidos" name="included_guests" type="number" />
               <Field label="Cargo por huésped extra (USD)" name="extra_guest_price" type="number" />
               <Field label="Limpieza (USD)" name="cleaning_fee" type="number" />
               <Field label="Depósito (USD)" name="deposit" type="number" />
               <Field label="Impuestos y cargos" name="taxes_details" multiline />
-              <Field label="Cancelación para esta tarifa" name="rate_cancellation" multiline />
+              <Field label="Cancelación para esta tarifa" name="rate_cancellation" multiline /></>}
               <Button type="submit" disabled={busy}>Guardar tarifa</Button>
             </form>
             <Button
@@ -397,7 +403,7 @@ export function LodgingCatalogManager({
           <Field label="Camas y distribución" name="beds_label" required />
           <Field label="Precio base por noche (USD)" name="price" type="number" required />
           <Field label="Cantidad disponible" name="total_units" type="number" required />
-          <Field label="Dormitorios" name="bedroom_count" type="number" />
+          {!isOwner && <><Field label="Dormitorios" name="bedroom_count" type="number" />
           <Field label="Baños" name="bathroom_count" type="number" />
           <Field label="Área (m²)" name="area_m2" type="number" />
           {unitFields.map((field) => (
@@ -407,7 +413,7 @@ export function LodgingCatalogManager({
               name={`unit__${field.key}`}
               multiline={field.multiline}
             />
-          ))}
+          ))}</>}
           <Button type="submit" disabled={busy}>Guardar unidad</Button>
         </form>
       </Panel>
@@ -417,7 +423,7 @@ export function LodgingCatalogManager({
           <div className="history-event" key={area.id}>
             <b>{area.name}</b>
             <span>{area.description ?? "Sin descripción"}</span>
-            {Object.entries(area.details ?? {}).map(([key, detail]) => (
+            {!isOwner && Object.entries(area.details ?? {}).map(([key, detail]) => (
               <small key={key}>{labelFor(key)}: {detail}</small>
             ))}
             <a href={`/panel/servicios/${serviceId}/galeria`}>Administrar fotos</a>
@@ -431,7 +437,7 @@ export function LodgingCatalogManager({
                   defaultValue={area.name} required />
                 <Field label="Descripción y servicios" name="area_description" multiline
                   defaultValue={area.description} />
-                <Field label="Horario de uso" name="opening_hours"
+                {!isOwner && <><Field label="Horario de uso" name="opening_hours"
                   defaultValue={area.opening_hours} />
                 <Field label="Capacidad" name="area_capacity" type="number"
                   defaultValue={area.capacity} />
@@ -452,7 +458,7 @@ export function LodgingCatalogManager({
                 {AREA_DETAIL_FIELDS.map(([key, label, multiline]) => (
                   <Field key={key} label={label} name={`area__${key}`}
                     multiline={multiline} defaultValue={area.details?.[key] ?? ""} />
-                ))}
+                ))}</>}
                 <Button type="submit" disabled={busy}>Guardar cambios del área</Button>
               </form>
             )}
@@ -469,7 +475,7 @@ export function LodgingCatalogManager({
           <h3>Añadir área</h3>
           <Field label="Nombre del área" name="area_name" required />
           <Field label="Descripción y servicios" name="area_description" multiline />
-          <Field label="Horario de uso" name="opening_hours" />
+          {!isOwner && <><Field label="Horario de uso" name="opening_hours" />
           <Field label="Capacidad" name="area_capacity" type="number" />
           <label className="checkbox-option">
             <input type="checkbox" name="included_in_rate" defaultChecked />
@@ -479,7 +485,7 @@ export function LodgingCatalogManager({
           <Field label="Acceso y restricciones" name="access_details" multiline />
           {AREA_DETAIL_FIELDS.map(([key, label, multiline]) => (
             <Field key={key} label={label} name={`area__${key}`} multiline={multiline} />
-          ))}
+          ))}</>}
           <Button type="submit" disabled={busy}>Guardar área</Button>
         </form>
       </Panel>

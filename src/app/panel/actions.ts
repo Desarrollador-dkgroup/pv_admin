@@ -34,6 +34,145 @@ function numberValue(value: string) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+// El formulario del comercio edita solo contenido que utiliza el catálogo público.
+// Una actualización parcial conserva las opciones internas y operativas ya guardadas.
+export async function saveMerchantServiceAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { supabase, role, businessIds } = await getPanelIdentity();
+  if (role !== "propietario") return { error: "Solo el propietario puede editar esta ficha." };
+
+  const serviceId = text(formData, "service_id");
+  if (!serviceId) return { error: "No encontramos la ficha para editar." };
+  const { data: service, error: readError } = await supabase
+    .from("services")
+    .select("id, business_id, category_id, status, meal_plan_id")
+    .eq("id", serviceId)
+    .maybeSingle();
+  if (readError || !service || !businessIds.includes(service.business_id)) {
+    return { error: "No tienes acceso a esta ficha." };
+  }
+
+  const name = text(formData, "name");
+  const destinationId = text(formData, "destination_province_id");
+  if (!name || !destinationId) return { error: "Completa el nombre y el destino." };
+  const mapsRaw = text(formData, "maps_embed");
+  const mapsUrl = mapsRaw ? extractMapsEmbedUrl(mapsRaw) : null;
+  if (mapsRaw && !mapsUrl) return { error: "Ese enlace de Google Maps no es válido." };
+
+  const intent = text(formData, "intent");
+  const description = text(formData, "description");
+  const searchDescription = text(formData, "search_description");
+  if (intent === "submit" && (!description || !searchDescription)) {
+    return { error: "Agrega la descripción y el resumen antes de enviar a revisión." };
+  }
+
+  const values: Record<string, unknown> = {
+    name,
+    destination_province_id: destinationId,
+    address: nullable(text(formData, "address")),
+    maps_embed_url: mapsUrl,
+    description,
+    search_description: searchDescription,
+  };
+  if (service.category_id === "hospedaje") {
+    const mealPlanId = text(formData, "meal_plan_id");
+    if (intent === "submit" && !mealPlanId) {
+      return { error: "Selecciona el plan de comidas antes de enviar a revisión." };
+    }
+    values.meal_plan_id = nullable(mealPlanId);
+  } else {
+    const priceRaw = text(formData, "base_price");
+    const price = Number(priceRaw);
+    if (priceRaw && (!Number.isFinite(price) || price < 0)) {
+      return { error: "Indica un precio válido." };
+    }
+    if (intent === "submit" && !priceRaw) {
+      return { error: "Indica el precio desde antes de enviar a revisión." };
+    }
+    values.base_price_cents = priceRaw ? Math.round(price * 100) : null;
+  }
+
+  const hasHours = Array.from({ length: 7 }, (_, day) => text(formData, `hours_${day}`))
+    .some(Boolean);
+  const weeklySchedule = service.category_id === "restaurantes"
+    ? parseWeeklySchedule(formData)
+    : [];
+  if (hasHours && !weeklySchedule.length) {
+    return { error: "Revisa los horarios. Usa el formato 12:00-21:00." };
+  }
+  if (service.category_id === "restaurantes" && !weeklySchedule.length) {
+    return { error: "Configura al menos un horario para guardar el restaurante." };
+  }
+
+  if (service.status !== "published") {
+    values.status = "draft";
+    if (intent === "submit") values.review_status = "pending";
+  }
+  const { error: updateError } = await supabase.from("services").update(values).eq("id", serviceId);
+  if (updateError) return { error: updateError.message };
+
+  if (service.category_id === "restaurantes" && weeklySchedule.length) {
+    const firstPeriod = weeklySchedule[0];
+    const { data: profile, error: profileReadError } = await supabase
+      .from("restaurant_profiles").select("service_id").eq("service_id", serviceId).maybeSingle();
+    if (profileReadError) return { error: profileReadError.message };
+    // El perfil existente solo cambia su horario resumido; conserva estilo,
+    // métodos de pago y todas las reglas de reservas que no aparecen aquí.
+    const profileResult = profile
+      ? await supabase.from("restaurant_profiles").update({
+          hours_from: firstPeriod.opens_at,
+          hours_to: firstPeriod.closes_at,
+          cuisine_type: nullable(text(formData, "cuisine_type")),
+          ambience: nullable(text(formData, "ambience")),
+        }).eq("service_id", serviceId)
+      : await supabase.from("restaurant_profiles").insert({
+          service_id: serviceId,
+          tag: "casual",
+          payment_methods: [],
+          hours_from: firstPeriod.opens_at,
+          hours_to: firstPeriod.closes_at,
+          cuisine_type: nullable(text(formData, "cuisine_type")),
+          ambience: nullable(text(formData, "ambience")),
+        });
+    const profileError = profileResult.error;
+    if (profileError) return { error: profileError.message };
+    const { error: clearError } = await supabase
+      .from("restaurant_hours").delete().eq("service_id", serviceId);
+    if (clearError) return { error: clearError.message };
+    const { error: scheduleError } = await supabase.from("restaurant_hours").insert(
+      weeklySchedule.map((period) => ({ ...period, service_id: serviceId })),
+    );
+    if (scheduleError) return { error: scheduleError.message };
+  }
+
+  const siteIds = formData.getAll("tourist_site_ids").map(String).filter(Boolean);
+  const { error: siteError } = await supabase.rpc("set_service_tourist_sites", {
+    p_service_id: serviceId,
+    p_tourist_site_ids: siteIds,
+  });
+  if (siteError) return { error: siteError.message };
+
+  const amenityIds = formData.getAll("amenity_ids").map(String).filter(Boolean);
+  const { error: amenityError } = await supabase
+    .from("service_amenities")
+    .delete()
+    .eq("service_id", serviceId);
+  if (amenityError) return { error: amenityError.message };
+  if (amenityIds.length) {
+    const { error } = await supabase.from("service_amenities").insert(
+      amenityIds.map((amenity_id) => ({ service_id: serviceId, amenity_id })),
+    );
+    if (error) return { error: error.message };
+  }
+
+  revalidatePath("/panel");
+  revalidatePath("/panel/servicios");
+  revalidatePath(`/panel/servicios/${serviceId}/vista-previa`);
+  redirect(`/panel/servicios/${serviceId}`);
+}
+
 // Guarda el servicio y su ficha específica con la sesión y permisos de Supabase.
 export async function saveServiceAction(
   _previous: FormState,

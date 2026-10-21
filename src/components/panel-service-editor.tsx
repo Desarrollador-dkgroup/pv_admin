@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Panel } from "@/components/ui";
 import { ServiceEditorForm } from "@/components/service-editor-form";
+import { MerchantServiceForm } from "@/components/merchant-service-form";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { loadOwnerPlanUsage } from "@/lib/panel-service-plan";
 import { canManageCatalog } from "@/types/panel";
@@ -214,6 +215,36 @@ export async function PanelServiceEditor({
     serviceProvinceId ??
     (siteResult.data ?? []).find((site) => selectedSiteIds.includes(site.id))?.province_id ??
     "";
+
+  // El equipo conserva el editor completo. El propietario trabaja únicamente
+  // sobre lo que alimenta la ficha pública y los horarios necesarios para reservar.
+  if (role === "propietario" && serviceId) {
+    return (
+      <>
+        <header className="page-heading">
+          <div>
+            <h1>Editar {String(service.name ?? "servicio")}</h1>
+            <p>Completa la información que verá el viajero en Panamá Viajero.</p>
+          </div>
+          <Link className="button quiet" href="/panel/servicios">Volver a servicios</Link>
+        </header>
+        <MerchantServiceForm
+          service={service as Record<string, unknown>}
+          restaurant={restaurant as Record<string, unknown>}
+          amenities={amenityResult.data ?? []}
+          mealPlans={mealPlanResult.data ?? []}
+          sites={siteResult.data ?? []}
+          destinations={(destinationResult.data ?? []).map((row) => ({
+            provinceId: row.province_id, name: row.name,
+          }))}
+          destinationProvinceId={destinationProvinceId}
+          selectedSiteIds={selectedSiteIds}
+          selectedAmenityIds={(amenityLinks.data ?? []).map((item) => item.amenity_id)}
+          weeklyHours={weeklyHours}
+        />
+      </>
+    );
+  }
 
   return (
     <>
