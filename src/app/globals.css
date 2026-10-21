@@ -833,6 +833,28 @@ td:first-child a:hover {
   border-top: 1px solid var(--border);
   padding-top: 12px;
 }
+.menu-section-editor {
+  width: 100%;
+  max-width: 520px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--canvas);
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.menu-item > div {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.menu-item > div small {
+  display: block;
+}
 @media (max-width: 720px) {
   .lodging-item-heading,
   .lodging-rate-row {
