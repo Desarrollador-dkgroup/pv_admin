@@ -4,10 +4,19 @@ import { AuthScreen } from "@/components/auth-screen";
 export default async function AccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ modo?: string }>;
+  searchParams: Promise<{ modo?: string; motivo?: string }>;
 }) {
   const query = await searchParams;
   const initialMode =
     query.modo === "cambiar" ? "change" : query.modo === "temporal" ? "temporary" : "login";
-  return <AuthScreen initialMode={initialMode} />;
+  const initialReason = query.motivo === "sin-negocio"
+    ? "unassigned"
+    : query.motivo === "sesion" ? "session" : null;
+  return (
+    <AuthScreen
+      key={`${initialMode}-${initialReason ?? "normal"}`}
+      initialMode={initialMode}
+      initialReason={initialReason}
+    />
+  );
 }

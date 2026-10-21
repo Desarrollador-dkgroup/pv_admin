@@ -10,7 +10,7 @@ export async function getPanelIdentity() {
     error: authError,
   } = await supabase.auth.getUser();
 
-  if (authError || !user) redirect("/acceso");
+  if (authError || !user) redirect("/acceso?motivo=sesion");
 
   // Una contraseña temporal debe cambiarse antes de usar cualquier pantalla del panel.
   if (user.user_metadata?.must_change_password === true) redirect("/acceso?modo=temporal");
@@ -43,7 +43,7 @@ export async function getPanelIdentity() {
     : membershipResult.data.length
       ? "propietario"
       : null;
-  if (!role) redirect("/acceso");
+  if (!role) redirect("/acceso?motivo=sin-negocio");
 
   return {
     supabase,
