@@ -308,7 +308,43 @@ export function LodgingCatalogManager({
   return (
     <>
       <Panel id="habitaciones">
-        <h2>Habitaciones, unidades o parcelas</h2>
+        <h2>Habitaciones y unidades del hospedaje</h2>
+        <p>
+          Agrega cada tipo por separado (por ejemplo, doble y triple) y señala
+          cuántas habitaciones o unidades iguales tienes de cada tipo.
+        </p>
+        <p role="status">{rooms.length} {rooms.length === 1 ? "tipo agregado" : "tipos agregados"}</p>
+        <form action={saveRoom} id="agregar-habitacion">
+          <h3>{rooms.length ? "Agregar otro tipo" : "Agregar la primera habitación o unidad"}</h3>
+          <Field label="Nombre del tipo de habitación o unidad" name="room_name" required />
+          <Field label="Descripción" name="room_description" multiline required />
+          <label className="field">
+            Unidad que reserva el cliente
+            <select name="booking_unit" defaultValue="room">
+              <option value="room">Habitación completa</option>
+              <option value="bed">Cama individual</option>
+              <option value="unit">Unidad completa</option>
+              <option value="site">Parcela o sitio</option>
+            </select>
+          </label>
+          <Field label="Capacidad de huéspedes por unidad" name="capacity" type="number" required />
+          <Field label="Camas y distribución" name="beds_label" required />
+          <Field label="Precio base por noche (USD)" name="price" type="number" required />
+          <Field label="Cuántas unidades hay de este tipo" name="total_units" type="number" required />
+          {!isOwner && <><Field label="Dormitorios" name="bedroom_count" type="number" />
+          <Field label="Baños" name="bathroom_count" type="number" />
+          <Field label="Área (m²)" name="area_m2" type="number" />
+          {unitFields.map((field) => (
+            <Field
+              key={field.key}
+              label={field.label}
+              name={`unit__${field.key}`}
+              multiline={field.multiline}
+            />
+          ))}</>}
+          <Button type="submit" disabled={busy}>Agregar tipo</Button>
+        </form>
+        <h3>Tipos agregados</h3>
         {rooms.map((room) => (
           <article className="history-event" key={room.id}>
             <b>{room.name}</b>
@@ -386,36 +422,6 @@ export function LodgingCatalogManager({
             </Button>
           </article>
         ))}
-        <form action={saveRoom}>
-          <h3>Añadir unidad reservable</h3>
-          <Field label="Nombre o tipo" name="room_name" required />
-          <Field label="Descripción" name="room_description" multiline required />
-          <label className="field">
-            Unidad que reserva el cliente
-            <select name="booking_unit" defaultValue="room">
-              <option value="room">Habitación completa</option>
-              <option value="bed">Cama individual</option>
-              <option value="unit">Unidad completa</option>
-              <option value="site">Parcela o sitio</option>
-            </select>
-          </label>
-          <Field label="Capacidad de huéspedes" name="capacity" type="number" required />
-          <Field label="Camas y distribución" name="beds_label" required />
-          <Field label="Precio base por noche (USD)" name="price" type="number" required />
-          <Field label="Cantidad disponible" name="total_units" type="number" required />
-          {!isOwner && <><Field label="Dormitorios" name="bedroom_count" type="number" />
-          <Field label="Baños" name="bathroom_count" type="number" />
-          <Field label="Área (m²)" name="area_m2" type="number" />
-          {unitFields.map((field) => (
-            <Field
-              key={field.key}
-              label={field.label}
-              name={`unit__${field.key}`}
-              multiline={field.multiline}
-            />
-          ))}</>}
-          <Button type="submit" disabled={busy}>Guardar unidad</Button>
-        </form>
       </Panel>
       <Panel id="areas">
         <h2>Áreas e instalaciones</h2>
