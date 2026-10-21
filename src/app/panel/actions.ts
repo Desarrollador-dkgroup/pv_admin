@@ -44,17 +44,7 @@ export async function saveServiceAction(
   }
   const isStaff = canManageCatalog(role);
   const serviceId = text(formData, "service_id");
-  const categoryId = text(formData, "category_id");
-  const businessId = text(formData, "business_id");
   const name = text(formData, "name");
-  const slug = text(formData, "slug");
-
-  if (!name || !slug || !categoryId || !text(formData, "destination_province_id")) {
-    return { error: "Completa nombre, identificador, categoría y destino." };
-  }
-  if (!isStaff && !businessIds.includes(businessId)) {
-    return { error: "Solo puedes guardar servicios de un negocio asignado." };
-  }
   if (!isStaff && !serviceId) {
     return { error: "El equipo de Panamá Viajero debe asignarte el servicio antes de editarlo." };
   }
@@ -70,25 +60,22 @@ export async function saveServiceAction(
   if (serviceId && !existing) {
     return { error: "No encontramos ese servicio o no tienes permiso para editarlo." };
   }
-  if (existing && !isStaff && existing.business_id !== businessId) {
-    return { error: "No puedes mover un servicio a otro negocio." };
-  }
   if (existing && !isStaff && !businessIds.includes(existing.business_id)) {
     return { error: "No tienes acceso a este servicio." };
   }
-  if (existing && !isStaff &&
-    (categoryId !== existing.category_id || slug !== existing.slug)) {
-    return { error: "Solo el equipo puede cambiar la categoría o el identificador del servicio." };
-  }
-  if (existing && !isStaff &&
-    (categoryId === "hospedaje"
-      ? text(formData, "hospedaje_type_id") !== (existing.hospedaje_type_id ?? "")
-      : Boolean(existing.hospedaje_type_id))) {
-    return { error: "Solo el equipo puede cambiar el tipo de hospedaje." };
-  }
 
-  const lodgingTypeId =
-    categoryId === "hospedaje" ? text(formData, "hospedaje_type_id") : "";
+  // El propietario no recibe estos campos técnicos en el formulario: toma siempre
+  // los valores existentes de Supabase y descarta cualquier valor enviado a mano.
+  const categoryId = isStaff ? text(formData, "category_id") : existing?.category_id ?? "";
+  const businessId = isStaff ? text(formData, "business_id") : existing?.business_id ?? "";
+  const slug = isStaff ? text(formData, "slug") : existing?.slug ?? "";
+  const lodgingTypeId = categoryId === "hospedaje"
+    ? isStaff ? text(formData, "hospedaje_type_id") : existing?.hospedaje_type_id ?? ""
+    : "";
+
+  if (!name || !slug || !categoryId || !text(formData, "destination_province_id")) {
+    return { error: "Completa nombre, identificador, categoría y destino." };
+  }
   if (categoryId === "hospedaje" && !lodgingTypeId) {
     return { error: "Selecciona el tipo de hospedaje." };
   }

@@ -49,3 +49,6 @@ next-env.d.ts
 
 # Entorno local para verificar migraciones
 /.validation/
+
+# Estado local del CLI de Supabase (vínculo y archivos temporales)
+/supabase/.temp/

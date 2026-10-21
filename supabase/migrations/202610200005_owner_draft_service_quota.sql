@@ -77,7 +77,8 @@ BEGIN
   v_slug := p_category_id || '-' || substr(gen_random_uuid()::text, 1, 8);
 
   INSERT INTO public.services (
-    business_id, category_id, hospedaje_type_id, slug, name, status, review_status
+    business_id, category_id, hospedaje_type_id, slug, name,
+    search_description, description, status, review_status
   )
   VALUES (
     p_business_id,
@@ -85,6 +86,8 @@ BEGIN
     p_hospedaje_type_id,
     v_slug,
     coalesce(v_category_label, 'Servicio') || ' sin publicar',
+    '',
+    '',
     'draft',
     'not_submitted'
   )
