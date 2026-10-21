@@ -18,7 +18,7 @@ function entity(
     category,
     business,
     status,
-    sites: ["casco", "ciudad"],
+    sites: ["casco"],
     photos: [],
   };
 }
@@ -30,7 +30,6 @@ export const previewSeed: PreviewData = {
       "services",
       "Hotel Casa Casco",
       {
-        city: "Ciudad de Panamá",
         short_description: "Una experiencia para descubrir Panamá.",
         description: "Un hospedaje en el corazón histórico de Panamá.",
         lodging_type: "Hotel",
@@ -44,7 +43,6 @@ export const previewSeed: PreviewData = {
       "services",
       "Sabores del Istmo",
       {
-        city: "Ciudad de Panamá",
         cuisine: "Panameña",
         schedule: "12:00–22:00",
         payment_methods: "Efectivo, Tarjeta",
@@ -59,7 +57,6 @@ export const previewSeed: PreviewData = {
       "services",
       "Sendero del Café",
       {
-        city: "Boquete",
         duration: "3 horas",
         requirements: "Calzado cómodo",
         meeting_point: "Entrada principal del sendero",
@@ -74,8 +71,7 @@ export const previewSeed: PreviewData = {
       "services",
       "Traslado a Taboga",
       {
-        city: "Ciudad de Panamá",
-        route: "Ciudad de Panamá → Taboga",
+        route: "Panamá → Taboga",
         capacity: "12",
         departures: "08:00, 11:00, 15:00",
         price: "25.00",
@@ -88,7 +84,6 @@ export const previewSeed: PreviewData = {
       "services",
       "Tour Casco Antiguo",
       {
-        city: "Ciudad de Panamá",
         duration: "4 horas",
         price: "50.00",
         itinerary: "Plaza Herrera → Catedral → Paseo Esteban Huertas",
@@ -103,7 +98,6 @@ export const previewSeed: PreviewData = {
       "businesses",
       "Hotel Casa Casco",
       {
-        city: "Ciudad de Panamá",
         owner: "María López",
         email: "maria@ejemplo.com",
         description: "Una estadía para descubrir el corazón histórico de Panamá.",
@@ -117,7 +111,6 @@ export const previewSeed: PreviewData = {
       "businesses",
       "Sabores del Istmo",
       {
-        city: "Ciudad de Panamá",
         owner: "Carlos Rivera",
         email: "carlos@ejemplo.com",
       },
@@ -130,7 +123,6 @@ export const previewSeed: PreviewData = {
       "businesses",
       "Aventura Verde",
       {
-        city: "Boquete",
         owner: "Ana González",
         email: "ana@ejemplo.com",
       },
@@ -166,18 +158,12 @@ export const previewSeed: PreviewData = {
       "Suspendido",
     ),
     entity("casco", "sites", "Casco Antiguo", {
-      city: "Ciudad de Panamá",
       province: "Panamá",
       slug: "casco-antiguo",
       short_description: "Historia, cultura y arquitectura junto al mar.",
     }),
-    entity("ciudad", "sites", "Ciudad de Panamá", {
-      city: "Ciudad de Panamá",
-      province: "Panamá",
-      slug: "ciudad-de-panama",
-    }),
-    entity("cebaco", "sites", "Isla Cébaco", { city: "Soná", province: "Veraguas" }),
-    entity("pedasi", "sites", "Pedasí", { city: "Pedasí", province: "Los Santos" }),
+    entity("cebaco", "sites", "Isla Cébaco", { province: "Veraguas" }),
+    entity("pedasi", "sites", "Pedasí", { province: "Los Santos" }),
     entity(
       "oferta",
       "promotions",

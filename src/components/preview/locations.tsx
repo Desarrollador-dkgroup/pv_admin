@@ -22,10 +22,6 @@ export function Locations({ record }: { record: PreviewEntity }) {
         <h2>¿Dónde pueden encontrar tu servicio?</h2>
         <p>Selecciona todos los sitios turísticos relacionados.</p>
         <label className="field">
-          Ciudad
-          <input readOnly value={record.fields.city ?? ""} />
-        </label>
-        <label className="field">
           Buscar sitio
           <input
             value={query}
@@ -91,7 +87,7 @@ export function Locations({ record }: { record: PreviewEntity }) {
               <input required />
             </label>
             <label className="field">
-              Ciudad y provincia
+              Provincia
               <input required />
             </label>
             <label className="field">

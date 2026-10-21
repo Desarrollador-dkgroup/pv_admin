@@ -27,13 +27,13 @@ export default async function BusinessDetailPage({
 
   const { data: business, error } = await supabase
     .from("businesses")
-    .select("id, name, description, city_id, is_active, cities(name)")
+    .select("id, name, description, is_active")
     .eq("id", id)
     .maybeSingle();
   if (error) throw new Error("No se pudo cargar el negocio.");
   if (!business) notFound();
 
-  const [membersResult, servicesResult, accountsResult, plansResult, citiesResult] =
+  const [membersResult, servicesResult, accountsResult, plansResult] =
     await Promise.all([
     supabase
       .from("business_members")
@@ -53,11 +53,10 @@ export default async function BusinessDetailPage({
       .select("id, quantity, categories(label), hospedaje_types(label)")
       .eq("business_id", id)
       .order("created_at"),
-    supabase.from("cities").select("id, name").order("name"),
   ]);
   if (
     membersResult.error || servicesResult.error || accountsResult.error ||
-    plansResult.error || citiesResult.error
+    plansResult.error
   ) {
     throw new Error("No se pudo cargar la información del negocio.");
   }
@@ -78,7 +77,6 @@ export default async function BusinessDetailPage({
           <Link className="text-link" href="/panel/negocios">← Negocios</Link>
           <h1>{business.name}</h1>
           <p>
-            {related(business.cities)?.name ?? "Sin ciudad"} ·{" "}
             {business.description ?? "Sin descripción"}
           </p>
         </div>
@@ -93,8 +91,6 @@ export default async function BusinessDetailPage({
             businessId={id}
             name={business.name}
             description={business.description ?? ""}
-            cityId={business.city_id}
-            cities={citiesResult.data ?? []}
           />
         </Panel>
       )}

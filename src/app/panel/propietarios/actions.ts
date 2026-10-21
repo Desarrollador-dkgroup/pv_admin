@@ -180,7 +180,7 @@ export async function createOwnerAccountAction(
   const taken = await emailProblem(admin, email);
   if (taken) return { error: taken };
 
-  // Negocio base: el propietario define su nombre, ciudad y descripción desde su cuenta.
+  // Negocio base: el propietario define su nombre y descripción desde su cuenta.
   const business = await admin
     .from("businesses")
     .insert({
@@ -242,4 +242,39 @@ export async function createOwnerAccountAction(
   revalidatePath(`/panel/negocios/${businessId}`);
   revalidatePath("/panel");
   return { error: "", email };
+}
+
+// Borra la cuenta de un propietario y sus vínculos con negocios. Nunca borra cuentas del
+// equipo ni la cuenta de quien ejecuta la acción. Los negocios que queden sin propietario
+// siguen existiendo y se ven como "Sin propietario".
+export async function deleteOwnerAccountAction(formData: FormData): Promise<void> {
+  const { user, role } = await getPanelIdentity();
+  if (!canManageProviders(role)) throw new Error("Tu cuenta no puede borrar propietarios.");
+
+  const userId = String(formData.get("user_id") ?? "");
+  if (!userId) throw new Error("Falta la cuenta a borrar.");
+  if (userId === user.id) throw new Error("No puedes borrar tu propia cuenta.");
+
+  const admin = getSupabaseAdminClient();
+  const { data: teamAccount, error: teamError } = await admin
+    .from("platform_admins")
+    .select("user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (teamError) throw new Error("No se pudo verificar la cuenta.");
+  if (teamAccount) throw new Error("Las cuentas del equipo no se borran desde aquí.");
+
+  const links = await Promise.all([
+    admin.from("business_members").delete().eq("user_id", userId),
+    admin.from("blocked_users").delete().eq("user_id", userId),
+    admin.from("profiles").delete().eq("id", userId),
+  ]);
+  if (links.some((result) => result.error)) {
+    throw new Error("No se pudieron quitar los vínculos de la cuenta.");
+  }
+
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) throw new Error("No se pudo borrar la cuenta.");
+
+  refreshOwnerViews();
 }

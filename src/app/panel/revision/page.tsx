@@ -4,24 +4,27 @@ import { ReviewRejectForm } from "@/components/panel-review-form";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { formatDateTime } from "@/lib/panel-format";
 import { related } from "@/lib/panel-relations";
+import { canManageCatalog } from "@/types/panel";
 import { approveServiceAction } from "./actions";
 
 // Lista los servicios enviados por los negocios que esperan aprobación del equipo.
 export default async function ReviewPage() {
   const { supabase, role } = await getPanelIdentity();
-  requireRole(role, ["owner", "admin"]);
+  requireRole(role, ["owner", "admin", "collaborator"]);
 
   // Los más antiguos aparecen primero para atender primero los envíos más esperados.
   const { data, error } = await supabase
     .from("services")
     .select(
-      "id, name, description, updated_at, businesses(name), categories(label), cities(name)",
+      "id, name, description, updated_at, businesses(name), categories(label)",
     )
     .eq("review_status", "pending")
     .order("updated_at", { ascending: true });
   if (error) throw new Error("No se pudo cargar la cola de revisión.");
 
   const items = data ?? [];
+  // El colaborador ve la cola, pero solo el equipo principal aprueba o pide cambios.
+  const canReview = canManageCatalog(role);
 
   return (
     <>
@@ -40,23 +43,30 @@ export default async function ReviewPage() {
               <h2>{service.name}</h2>
               <small>
                 {related(service.businesses)?.name ?? "Negocio sin nombre"} ·{" "}
-                {related(service.categories)?.label ?? "Sin categoría"} ·{" "}
-                {related(service.cities)?.name ?? "Sin ciudad"}
+                {related(service.categories)?.label ?? "Sin categoría"}
               </small>
             </div>
             <small>Enviado {formatDateTime(service.updated_at)}</small>
           </div>
           <p className="review-excerpt">{service.description}</p>
-          <div className="actions">
-            <Link className="button secondary" href={`/panel/servicios/${service.id}`}>
-              Revisar ficha
-            </Link>
-            <form action={approveServiceAction}>
-              <input type="hidden" name="service_id" value={service.id} />
-              <Button type="submit">Aprobar y publicar</Button>
-            </form>
-          </div>
-          <ReviewRejectForm serviceId={service.id} />
+          {canReview ? (
+            <>
+              <div className="actions">
+                <Link className="button secondary" href={`/panel/servicios/${service.id}`}>
+                  Revisar ficha
+                </Link>
+                <form action={approveServiceAction}>
+                  <input type="hidden" name="service_id" value={service.id} />
+                  <Button type="submit">Aprobar y publicar</Button>
+                </form>
+              </div>
+              <ReviewRejectForm serviceId={service.id} />
+            </>
+          ) : (
+            <p className="muted">
+              Solo el administrador o el propietario principal aprueba o pide cambios.
+            </p>
+          )}
         </Panel>
       ))}
 

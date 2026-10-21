@@ -156,12 +156,12 @@ FROM PUBLIC, anon, authenticated;
 
 NOTIFY pgrst, 'reload schema';
 
--- Amplía la ubicación exacta del servicio sin reemplazar ciudad ni coordenadas.
+-- Amplía la ubicación exacta del servicio sin reemplazar el destino ni los sitios turísticos.
 ALTER TABLE public.services
   ADD COLUMN address text;
 
 COMMENT ON COLUMN public.services.address IS
-  'Dirección física exacta del servicio; no sustituye ciudad ni sitios turísticos.';
+  'Dirección física exacta del servicio; no sustituye el destino ni los sitios turísticos.';
 
 -- Guarda los datos operativos comunes de los hospedajes.
 CREATE TABLE public.lodging_profiles (
@@ -1078,7 +1078,7 @@ DECLARE
   table_name text;
 BEGIN
   FOREACH table_name IN ARRAY ARRAY[
-    'businesses', 'categories', 'cities', 'provinces', 'tourist_sites',
+    'businesses', 'categories', 'provinces', 'tourist_sites',
     'amenities', 'hospedaje_types', 'meal_plans', 'restaurant_feature_catalog'
   ]
   LOOP

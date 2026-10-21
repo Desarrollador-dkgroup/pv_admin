@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Badge, Panel } from "@/components/ui";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { getAccountNames } from "@/lib/panel-people";
-import { related } from "@/lib/panel-relations";
 
 type SearchParams = Promise<{ categoria?: string }>;
 
@@ -19,7 +18,7 @@ export default async function BusinessesPage({ searchParams }: { searchParams: S
   let query = supabase
     .from("businesses")
     .select(
-      "id, name, is_active, cities(name), business_members(user_id, role), services(category_id)",
+      "id, name, is_active, business_members(user_id, role), services(category_id)",
     )
     .order("name");
   if (!isStaff) query = query.in("id", businessIds);
@@ -78,7 +77,6 @@ export default async function BusinessesPage({ searchParams }: { searchParams: S
                 <th>Negocio</th>
                 <th>Propietario</th>
                 <th>Categorías</th>
-                <th>Ciudad</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
@@ -94,7 +92,6 @@ export default async function BusinessesPage({ searchParams }: { searchParams: S
                     <td>{business.name}</td>
                     <td>{owner ? names.get(owner.user_id) ?? "Sin nombre" : "Sin propietario"}</td>
                     <td>{categoriesOfBusiness.join(", ") || "Sin servicios"}</td>
-                    <td>{related(business.cities)?.name ?? "—"}</td>
                     <td>
                       <Badge>{business.is_active ? "Activo" : "Inactivo"}</Badge>
                     </td>

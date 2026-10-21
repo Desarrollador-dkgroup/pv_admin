@@ -14,11 +14,12 @@ import { ROLE_LABELS, type PanelRole } from "@/types/panel";
 type Props = {
   role: PanelRole;
   notifications: PanelNotification[];
+  profileName?: string;
   children: ReactNode;
 };
 
 // Estructura del panel: barra lateral por rol, avisos y área de contenido.
-export function PanelShell({ role, notifications, children }: Props) {
+export function PanelShell({ role, notifications, profileName, children }: Props) {
   // Controla si el menú lateral está abierto en pantallas pequeñas.
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -42,6 +43,9 @@ export function PanelShell({ role, notifications, children }: Props) {
           />
         </Link>
         <span className="role-chip">{ROLE_LABELS[role]}</span>
+        {profileName && (
+          <p style={{ margin: "8px 0 0 4px", fontWeight: 600 }}>{profileName}</p>
+        )}
         <nav className="navigation">
           {links.map(({ href, label, icon: Icon }) => (
             <Link

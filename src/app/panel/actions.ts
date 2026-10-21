@@ -1,6 +1,7 @@
 "use server";
 
 import { extractMapsEmbedUrl } from "@/lib/panel-maps";
+import { slugCandidates, slugify } from "@/lib/panel-slug";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -44,9 +45,15 @@ export async function saveServiceAction(
   }
   const isStaff = canManageCatalog(role);
   const serviceId = text(formData, "service_id");
+  const categoryId = text(formData, "category_id");
+  const businessId = text(formData, "business_id");
   const name = text(formData, "name");
-  if (!isStaff && !serviceId) {
-    return { error: "El equipo de Panamá Viajero debe asignarte el servicio antes de editarlo." };
+
+  if (!name || !categoryId || !text(formData, "destination_province_id")) {
+    return { error: "Completa nombre, categoría y destino." };
+  }
+  if (!isStaff && !businessIds.includes(businessId)) {
+    return { error: "Solo puedes guardar servicios de un negocio asignado." };
   }
 
   const { data: existing } = serviceId
@@ -60,24 +67,44 @@ export async function saveServiceAction(
   if (serviceId && !existing) {
     return { error: "No encontramos ese servicio o no tienes permiso para editarlo." };
   }
+  if (existing && !isStaff && existing.business_id !== businessId) {
+    return { error: "No puedes mover un servicio a otro negocio." };
+  }
   if (existing && !isStaff && !businessIds.includes(existing.business_id)) {
     return { error: "No tienes acceso a este servicio." };
   }
-
-  // El propietario no recibe estos campos técnicos en el formulario: toma siempre
-  // los valores existentes de Supabase y descarta cualquier valor enviado a mano.
-  const categoryId = isStaff ? text(formData, "category_id") : existing?.category_id ?? "";
-  const businessId = isStaff ? text(formData, "business_id") : existing?.business_id ?? "";
-  const slug = isStaff ? text(formData, "slug") : existing?.slug ?? "";
-  const lodgingTypeId = categoryId === "hospedaje"
-    ? isStaff ? text(formData, "hospedaje_type_id") : existing?.hospedaje_type_id ?? ""
-    : "";
-
-  if (!name || !slug || !categoryId || !text(formData, "destination_province_id")) {
-    return { error: "Completa nombre, identificador, categoría y destino." };
+  if (existing && !isStaff && categoryId !== existing.category_id) {
+    return { error: "Solo el equipo puede cambiar la categoría del servicio." };
   }
+  if (existing && !isStaff &&
+    (categoryId === "hospedaje"
+      ? text(formData, "hospedaje_type_id") !== (existing.hospedaje_type_id ?? "")
+      : Boolean(existing.hospedaje_type_id))) {
+    return { error: "Solo el equipo puede cambiar el tipo de hospedaje." };
+  }
+
+  const lodgingTypeId =
+    categoryId === "hospedaje" ? text(formData, "hospedaje_type_id") : "";
   if (categoryId === "hospedaje" && !lodgingTypeId) {
     return { error: "Selecciona el tipo de hospedaje." };
+  }
+
+  const mealPlanId = categoryId === "hospedaje" ? text(formData, "meal_plan_id") : "";
+  if (categoryId === "hospedaje" && !mealPlanId) {
+    return { error: "Selecciona el plan de comidas." };
+  }
+
+  // El propietario solo crea servicios dentro del plan de su negocio.
+  if (!isStaff && !serviceId) {
+    const { data: allowed, error: planError } = await supabase.rpc("padmin_can_create_service", {
+      p_business_id: businessId,
+      p_category_id: categoryId,
+      p_hospedaje_type_id: lodgingTypeId || null,
+    });
+    if (planError) return { error: planError.message };
+    if (!allowed) {
+      return { error: "Tu plan no incluye más servicios de esta categoría o tipo." };
+    }
   }
 
   const weeklySchedule =
@@ -94,9 +121,17 @@ export async function saveServiceAction(
 
   const intent = text(formData, "intent");
   const selectedStatus = text(formData, "status") || "draft";
+  // Un hospedaje no guarda precio base; las demás categorías lo exigen.
+  const hasPrice = numberValue(text(formData, "base_price")) !== null;
+  if (categoryId !== "hospedaje" && !hasPrice) {
+    return { error: "Indica el precio desde del servicio." };
+  }
+  const basePriceCents = categoryId !== "hospedaje" && hasPrice
+    ? Math.round(Number(text(formData, "base_price")) * 100)
+    : null;
+
   const serviceValues = {
     name,
-    slug: isStaff ? slug : existing?.slug ?? slug,
     business_id: isStaff ? businessId : existing?.business_id ?? businessId,
     category_id: isStaff ? categoryId : existing?.category_id ?? categoryId,
     destination_province_id: nullable(text(formData, "destination_province_id")),
@@ -104,14 +139,15 @@ export async function saveServiceAction(
     description: text(formData, "description"),
     address: nullable(text(formData, "address")),
     maps_embed_url: mapsUrl,
-    base_price_cents: numberValue(text(formData, "base_price")) === null
-      ? null
-      : Math.round(Number(text(formData, "base_price")) * 100),
-    hospedaje_type_id: isStaff ? nullable(lodgingTypeId) : existing?.hospedaje_type_id ?? null,
+    base_price_cents: basePriceCents,
+    hospedaje_type_id: isStaff || !existing
+      ? nullable(lodgingTypeId)
+      : existing.hospedaje_type_id ?? null,
+    meal_plan_id: nullable(mealPlanId),
     review_status: !isStaff
       ? existing?.status === "published"
         ? undefined
-        : intent === "submit" ? "pending" : "not_submitted"
+        : intent === "submit" ? "pending" : existing ? undefined : "not_submitted"
       : selectedStatus === "published"
         ? "approved"
         : selectedStatus === "suspended"
@@ -137,13 +173,24 @@ export async function saveServiceAction(
       .eq("id", serviceId);
     if (error) return { error: error.message };
   } else {
-    const { data, error } = await supabase
-      .from("services")
-      .insert(writableValues)
-      .select("id")
-      .single();
-    if (error || !data) return { error: error?.message ?? "No se pudo crear el servicio." };
-    savedId = data.id;
+    // El identificador sale del nombre; si ya existe, se prueba con un sufijo corto.
+    let created: { id: string } | null = null;
+    let lastError = "No se pudo crear el servicio.";
+    for (const slug of slugCandidates(slugify(name, "servicio"))) {
+      const { data, error } = await supabase
+        .from("services")
+        .insert({ ...writableValues, slug })
+        .select("id")
+        .single();
+      if (data) {
+        created = data;
+        break;
+      }
+      lastError = error?.message ?? lastError;
+      if (!error?.message.includes("duplicate")) break;
+    }
+    if (!created) return { error: lastError };
+    savedId = created.id;
   }
 
   if (categoryId === "hospedaje") {
@@ -153,30 +200,25 @@ export async function saveServiceAction(
       contact_email: nullable(text(formData, "contact_email")),
       website_url: nullable(text(formData, "website_url")),
       check_in_from: nullable(text(formData, "check_in_from")),
-      check_in_to: nullable(text(formData, "check_in_to")),
+      check_in_to: null,
       check_out_time: nullable(text(formData, "check_out_time")),
-      reception_hours: nullable(text(formData, "reception_hours")),
-      arrival_method: nullable(text(formData, "arrival_method")),
-      arrival_instructions: nullable(text(formData, "arrival_instructions")),
-      languages: text(formData, "languages")
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
-      meal_service_details: nullable(text(formData, "meal_service_details")),
+      reception_hours: receptionHours(formData),
+      arrival_method: null,
+      arrival_instructions: null,
+      languages: formData.getAll("languages").map(String).filter(Boolean),
+      meal_service_details: null,
       parking_details: nullable(text(formData, "parking_details")),
-      accessibility_details: nullable(text(formData, "accessibility_details")),
-      wifi_details: nullable(text(formData, "wifi_details")),
-      water_details: nullable(text(formData, "water_details")),
-      energy_details: nullable(text(formData, "energy_details")),
-      seasonal_conditions: nullable(text(formData, "seasonal_conditions")),
-      guest_rules: nullable(text(formData, "guest_rules")),
+      accessibility_details: null,
+      wifi_details: null,
+      water_details: null,
+      energy_details: null,
+      seasonal_conditions: null,
+      guest_rules: null,
       pet_policy: nullable(text(formData, "pet_policy")),
       smoking_policy: nullable(text(formData, "smoking_policy")),
       events_policy: nullable(text(formData, "events_policy")),
       cancellation_policy: nullable(text(formData, "cancellation_policy")),
-      tourism_registration_number: nullable(
-        text(formData, "tourism_registration_number"),
-      ),
+      tourism_registration_number: null,
       details: parseDetails(formData),
     };
     const savedProfile = await supabase
@@ -298,12 +340,47 @@ function priceCents(value: string) {
   return amount === null ? null : Math.round(amount * 100);
 }
 
+// Une desde y hasta del horario de recepción solo cuando el hospedaje lo mantiene.
+function receptionHours(formData: FormData) {
+  const mode = text(formData, "reception_mode");
+  if (mode === "24") return "24 horas";
+  if (mode !== "horario") return null;
+  const from = text(formData, "reception_from");
+  const to = text(formData, "reception_to");
+  return from && to ? `${from} a ${to}` : null;
+}
+
 // Mantiene los campos variables por tipo de hospedaje dentro del objeto JSON.
 function parseDetails(formData: FormData) {
   const entries = [...formData.entries()].filter(([key]) => key.startsWith("detail__"));
   return Object.fromEntries(
-    entries.map(([key, value]) => [key.slice("detail__".length), String(value).trim()]),
+    entries.map(([key, value]) => {
+      const name = key.slice("detail__".length);
+      const raw = String(value).trim();
+      return [name, name === "apartment_types" ? parseApartmentTypes(raw) : raw];
+    }),
   );
+}
+
+// Valida la lista de tipos de apartamento enviada como JSON desde el formulario.
+function parseApartmentTypes(raw: string) {
+  try {
+    const list = JSON.parse(raw) as Array<Record<string, unknown>>;
+    if (!Array.isArray(list)) return [];
+    return list
+      .map((item) => ({
+        name: String(item.name ?? "").trim(),
+        quantity: Math.max(0, Math.floor(Number(item.quantity) || 0)),
+        includes: Array.isArray(item.includes)
+          ? item.includes.map((entry) => String(entry).trim()).filter(Boolean)
+          : [],
+        minibar_included:
+          typeof item.minibar_included === "boolean" ? item.minibar_included : null,
+      }))
+      .filter((item) => item.name);
+  } catch {
+    return [];
+  }
 }
 
 // Convierte los turnos por día al formato relacional de restaurant_hours.
@@ -334,4 +411,29 @@ function parseWeeklySchedule(formData: FormData) {
   }
 
   return periods;
+}
+
+// El propietario publica un servicio que el equipo ya aprobó, cuando él quiera.
+export async function publishOwnServiceAction(formData: FormData): Promise<void> {
+  const { supabase, role, businessIds } = await getPanelIdentity();
+  if (role !== "propietario") throw new Error("Solo el propietario puede publicar sus servicios.");
+  const serviceId = text(formData, "service_id");
+  const { data: service } = await supabase
+    .from("services")
+    .select("id, business_id, review_status")
+    .eq("id", serviceId)
+    .maybeSingle();
+  if (!service || !businessIds.includes(service.business_id)) {
+    throw new Error("No tienes acceso a este servicio.");
+  }
+  if (service.review_status !== "approved") {
+    throw new Error("El servicio debe estar aprobado para publicarlo.");
+  }
+  const { error } = await supabase
+    .from("services")
+    .update({ status: "published" })
+    .eq("id", serviceId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/panel");
+  revalidatePath("/panel/servicios");
 }

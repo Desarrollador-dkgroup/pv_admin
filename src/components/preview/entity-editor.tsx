@@ -122,7 +122,6 @@ export function EntityEditor({ kind, record, category = "hospedaje", parentId }:
                 </label>
               )}
               {[
-                { key: "city", label: "Ciudad", required: true },
                 { key: "short_description", label: "Descripción breve" },
                 { key: "description", label: "Descripción completa", type: "textarea" as const },
               ].map((definition) => (

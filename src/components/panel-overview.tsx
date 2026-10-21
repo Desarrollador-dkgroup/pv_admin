@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Badge, Panel } from "@/components/ui";
 import { PrepareDraftServiceButton } from "@/components/prepare-draft-service-button";
+import { OwnBusinessForm } from "@/components/panel-own-business-form";
 import { formatCents, formatDate, formatDateTime } from "@/lib/panel-format";
 import { REVIEW_STATUS, SERVICE_STATUS, statusOf } from "@/lib/panel-labels";
 import { related } from "@/lib/panel-relations";
@@ -228,7 +229,10 @@ export async function OwnerOverview({
 
   const nowIso = new Date().toISOString();
   const [businesses, services, plans, promotions] = await Promise.all([
-    supabase.from("businesses").select("id, name, is_active, cities(name)").in("id", businessIds),
+    supabase
+      .from("businesses")
+      .select("id, name, description, is_active")
+      .in("id", businessIds),
     supabase
       .from("services")
       .select(
@@ -294,9 +298,14 @@ export async function OwnerOverview({
             <div className="queue-item" key={business.id}>
               <b>{business.name}</b>
               <small>
-                {related(business.cities)?.name ?? "Sin ciudad"} ·{" "}
+                {business.is_active ? "Activo" : "Inactivo"} ·{" "}
                 {list.filter((service) => service.business_id === business.id).length} servicios
               </small>
+              <OwnBusinessForm
+                businessId={business.id}
+                name={business.name}
+                description={business.description ?? ""}
+              />
               <div className="actions">
                 <Link className="button secondary" href={`/panel/negocios/${business.id}`}>
                   Ver establecimiento
@@ -373,21 +382,9 @@ export async function OwnerOverview({
           {!list.length && <p className="muted">Aún no tienes servicios registrados.</p>}
         </Panel>
         <Panel>
-          <h2>Mis establecimientos</h2>
-          {(businesses.data ?? []).map((business) => (
-            <div className="queue-item" key={business.id}>
-              <b>{business.name}</b>
-              <small>
-                {business.is_active ? "Activo" : "Inactivo"} ·{" "}
-                {related(business.cities)?.name ?? "Sin ciudad"}
-              </small>
-            </div>
-          ))}
+          <h2>Promociones</h2>
           <p className="muted">
             Promociones vigentes publicadas: {promotions.count ?? 0}. Las gestiona el equipo.
-          </p>
-          <p className="muted">
-            Panamá Viajero asigna los establecimientos y servicios de esta cuenta.
           </p>
         </Panel>
       </div>

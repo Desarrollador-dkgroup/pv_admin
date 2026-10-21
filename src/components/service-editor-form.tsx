@@ -1,8 +1,15 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { type FormEvent, startTransition, useActionState, useState } from "react";
 import { Button, Panel } from "@/components/ui";
-import { getLodgingDetailFields } from "@/data/lodging-details";
+import { LANGUAGE_OPTIONS, getLodgingDetailFields } from "@/data/lodging-details";
+import {
+  ApartmentTypesField,
+  ChoiceField,
+  EventsPolicyField,
+  ReceptionHoursField,
+  readApartmentTypes,
+} from "@/components/lodging-form-fields";
 import {
   ServiceSitePicker,
   type DestinationOption,
@@ -24,7 +31,10 @@ type Props = {
   sites: SiteOption[];
   destinations: DestinationOption[];
   destinationProvinceId: string;
+  presetLodgingTypeId?: string;
+  ownerName?: string;
   amenities: Option[];
+  mealPlans: Option[];
   restaurantFeatures: Option[];
   selectedSiteIds: string[];
   selectedAmenityIds: string[];
@@ -35,13 +45,26 @@ type Props = {
 export function ServiceEditorForm(props: Props) {
   const [state, action, pending] = useActionState(saveServiceAction, { error: "" });
   const { role, service, lodging, restaurant } = props;
+
+  // Envía sin que React limpie los campos: si el guardado falla, lo escrito se mantiene.
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    const formData = new FormData(event.currentTarget, submitter);
+    startTransition(() => action(formData));
+  }
   const isStaff = canManageCatalog(role);
   const isNew = !service.id;
   const isPublished = service.status === "published";
   // La categoría elegida controla qué campos se muestran (tipo de hospedaje, ficha de
   // hospedaje o de restaurante), así que vive en el estado del formulario.
-  const [categoryId, setCategoryId] = useState(String(service.category_id ?? "hospedaje"));
-  const lodgingTypeId = String(service.hospedaje_type_id ?? "");
+  const [categoryId, setCategoryId] = useState(
+    String(service.category_id ?? props.categories[0]?.id ?? "hospedaje"),
+  );
+  const lodgingTypeId = String(service.hospedaje_type_id ?? props.presetLodgingTypeId ?? "");
+  const selectedLanguages = Array.isArray(lodging.languages)
+    ? lodging.languages.map(String)
+    : [];
   const detailFields = getLodgingDetailFields(lodgingTypeId);
   const details = (lodging.details ?? {}) as Record<string, string>;
   const selectedSites = props.selectedSiteIds.length
@@ -49,7 +72,7 @@ export function ServiceEditorForm(props: Props) {
     : service.tourist_site_id ? [String(service.tourist_site_id)] : [];
 
   return (
-    <form action={action}>
+    <form onSubmit={handleSubmit}>
       <input type="hidden" name="service_id" value={String(service.id ?? "")} />
       <Panel>
         <h2>Información general</h2>
@@ -57,17 +80,6 @@ export function ServiceEditorForm(props: Props) {
           Nombre comercial
           <input name="name" required defaultValue={String(service.name ?? "")} />
         </label>
-        {isStaff ? (
-          <label className="field">
-            Identificador de la página
-            <input name="slug" required defaultValue={String(service.slug ?? "")} />
-          </label>
-        ) : (
-          <div className="field">
-            Identificador de la página
-            <p>{String(service.slug ?? "")}</p>
-          </div>
-        )}
         {isStaff ? (
           <label className="field">
             Negocio
@@ -84,61 +96,57 @@ export function ServiceEditorForm(props: Props) {
             </select>
           </label>
         ) : (
-          <div className="field">
-            Negocio
-            <p>
-              {props.businesses.find((business) => business.id === service.business_id)?.name ??
-                String(service.business_id ?? "")}
-            </p>
-          </div>
+          <>
+            <label className="field">
+              Propietario
+              <input value={props.ownerName ?? ""} readOnly />
+            </label>
+            <input
+              type="hidden"
+              name="business_id"
+              value={String(service.business_id ?? props.businesses[0]?.id ?? "")}
+            />
+          </>
         )}
-        {isStaff ? (
+        <label className="field">
+          Categoría
+          <select
+            name="category_id"
+            value={categoryId}
+            onChange={(event) => setCategoryId(event.target.value)}
+            required
+            disabled={!isStaff && !isNew}
+          >
+            {props.categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.label ?? category.name ?? category.id}
+              </option>
+            ))}
+          </select>
+          {!isStaff && !isNew && (
+            <input type="hidden" name="category_id" value={categoryId} />
+          )}
+        </label>
+        {categoryId === "hospedaje" && (
           <label className="field">
-            Categoría
+            Tipo de hospedaje
             <select
-              name="category_id"
-              value={categoryId}
-              onChange={(event) => setCategoryId(event.target.value)}
+              name="hospedaje_type_id"
+              defaultValue={lodgingTypeId}
               required
+              disabled={!isStaff && !isNew}
             >
-              {props.categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.label ?? category.name ?? category.id}
+              <option value="">Selecciona un tipo</option>
+              {props.lodgingTypes.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.label ?? type.name ?? type.id}
                 </option>
               ))}
             </select>
+            {!isStaff && !isNew && (
+              <input type="hidden" name="hospedaje_type_id" value={lodgingTypeId} />
+            )}
           </label>
-        ) : (
-          <div className="field">
-            Categoría
-            <p>
-              {props.categories.find((category) => category.id === categoryId)?.label ??
-                categoryId}
-            </p>
-          </div>
-        )}
-        {categoryId === "hospedaje" && (
-          isStaff ? (
-            <label className="field">
-              Tipo de hospedaje
-              <select name="hospedaje_type_id" defaultValue={lodgingTypeId} required>
-                <option value="">Selecciona un tipo</option>
-                {props.lodgingTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.label ?? type.name ?? type.id}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <div className="field">
-              Tipo de hospedaje
-              <p>
-                {props.lodgingTypes.find((type) => type.id === lodgingTypeId)?.label ??
-                  lodgingTypeId}
-              </p>
-            </div>
-          )
         )}
         <ServiceSitePicker
           destinations={props.destinations}
@@ -177,12 +185,14 @@ export function ServiceEditorForm(props: Props) {
             </label>
           ))}
         </fieldset>
-        <TextField
-          label="Precio desde (USD)"
-          name="base_price"
-          value={dollars(service.base_price_cents)}
-          type="number"
-        />
+                {categoryId !== "hospedaje" && (
+  <TextField
+            label="Precio desde (USD)"
+            name="base_price"
+            value={dollars(service.base_price_cents)}
+            type="number"
+          />
+        )}
         {isStaff && (
           <>
             <label className="field">
@@ -225,32 +235,11 @@ export function ServiceEditorForm(props: Props) {
             value={lodging.contact_email}
           />
           <TextField label="Sitio web" name="website_url" value={lodging.website_url} />
+          <ReceptionHoursField initial={lodging.reception_hours} />
           <TextField
-            label="Recepción"
-            name="reception_hours"
-            value={lodging.reception_hours}
-          />
-          <TextField
-            label="Método de llegada"
-            name="arrival_method"
-            value={lodging.arrival_method}
-          />
-          <TextField
-            label="Instrucciones de llegada"
-            name="arrival_instructions"
-            value={lodging.arrival_instructions}
-            multiline
-          />
-          <TextField
-            label="Check-in desde"
+            label="Hora de check-in"
             name="check_in_from"
             value={lodging.check_in_from}
-            type="time"
-          />
-          <TextField
-            label="Check-in hasta"
-            name="check_in_to"
-            value={lodging.check_in_to}
             type="time"
           />
           <TextField
@@ -259,97 +248,75 @@ export function ServiceEditorForm(props: Props) {
             value={lodging.check_out_time}
             type="time"
           />
-          <TextField
-            label="Idiomas"
-            name="languages"
-            value={arrayText(lodging.languages)}
-          />
-          <TextField
-            label="Comidas y planes"
-            name="meal_service_details"
-            value={lodging.meal_service_details}
-            multiline
-          />
-          <TextField
+          <fieldset className="field">
+            <legend>Idiomas</legend>
+            {LANGUAGE_OPTIONS.map((language) => (
+              <label key={language} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="checkbox"
+                  name="languages"
+                  value={language}
+                  defaultChecked={selectedLanguages.includes(language)}
+                />
+                {language}
+              </label>
+            ))}
+          </fieldset>
+          <label className="field">
+            Plan de comidas
+            <select
+              name="meal_plan_id"
+              defaultValue={String(service.meal_plan_id ?? "")}
+            >
+              <option value="">Selecciona un plan</option>
+              {props.mealPlans.map((plan) => (
+                <option key={plan.id} value={plan.id}>
+                  {plan.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <ChoiceField
             label="Estacionamiento"
             name="parking_details"
             value={lodging.parking_details}
-            multiline
+            options={PARKING_OPTIONS}
           />
-          <TextField
-            label="Accesibilidad"
-            name="accessibility_details"
-            value={lodging.accessibility_details}
-            multiline
-          />
-          <TextField
-            label="Wi-Fi y conectividad"
-            name="wifi_details"
-            value={lodging.wifi_details}
-            multiline
-          />
-          <TextField
-            label="Agua y potabilidad"
-            name="water_details"
-            value={lodging.water_details}
-            multiline
-          />
-          <TextField
-            label="Energía"
-            name="energy_details"
-            value={lodging.energy_details}
-            multiline
-          />
-          <TextField
-            label="Temporadas y clima"
-            name="seasonal_conditions"
-            value={lodging.seasonal_conditions}
-            multiline
-          />
-          <TextField
-            label="Reglas para huéspedes"
-            name="guest_rules"
-            value={lodging.guest_rules}
-            multiline
-          />
-          <TextField
-            label="Política de mascotas"
+          <ChoiceField
+            label="¿Se aceptan mascotas?"
             name="pet_policy"
             value={lodging.pet_policy}
-            multiline
+            options={YES_NO_OPTIONS}
           />
-          <TextField
-            label="Política de fumar"
+          <ChoiceField
+            label="¿Se permite fumar?"
             name="smoking_policy"
             value={lodging.smoking_policy}
-            multiline
+            options={YES_NO_OPTIONS}
           />
-          <TextField
-            label="Política de eventos"
-            name="events_policy"
-            value={lodging.events_policy}
-            multiline
-          />
+          <EventsPolicyField policy={lodging.events_policy} rules={details.events_rules} />
           <TextField
             label="Cancelación"
             name="cancellation_policy"
             value={lodging.cancellation_policy}
             multiline
           />
-          <TextField
-            label="Registro turístico"
-            name="tourism_registration_number"
-            value={lodging.tourism_registration_number}
-          />
-          {detailFields.map((field) => (
-            <TextField
-              key={field.key}
-              label={field.label}
-              name={`detail__${field.key}`}
-              value={details[field.key]}
-              multiline={field.multiline}
-            />
-          ))}
+          {detailFields.map((field) =>
+            field.kind === "apartment_types" ? (
+              <ApartmentTypesField
+                key={field.key}
+                initial={readApartmentTypes(details.apartment_types)}
+              />
+            ) : (
+              <TextField
+                key={field.key}
+                label={field.label}
+                name={`detail__${field.key}`}
+                value={details[field.key]}
+                multiline={field.multiline}
+              />
+            ),
+          )}
         </Panel>
       )}
 
@@ -361,12 +328,12 @@ export function ServiceEditorForm(props: Props) {
         />
       )}
 
-      {state.error && (
-        <p className="form-error" role="alert">
-          {state.error}
-        </p>
-      )}
       <footer className="sticky-actions">
+        {state.error && (
+          <p className="form-error" role="alert">
+            {state.error}
+          </p>
+        )}
         <Button type="submit" name="intent" value="save" disabled={pending}>
           {pending
             ? "Guardando..."
@@ -384,7 +351,9 @@ export function ServiceEditorForm(props: Props) {
           </Button>
         )}
         {!isStaff && isPublished && (
-          <small>Los cambios de esta ficha publicada se muestran en el catálogo al guardarlos.</small>
+          <small>
+            Los cambios de esta ficha publicada se muestran en el catálogo al guardarlos.
+          </small>
         )}
         {!isStaff && !isPublished && !isNew && (
           <small>
@@ -628,6 +597,9 @@ function RestaurantFields({
 }
 
 // Mantiene etiquetas y valores consistentes entre todos los formularios.
+const PARKING_OPTIONS = ["Privado", "Público", "Ambos", "No cuenta con estacionamiento"];
+const YES_NO_OPTIONS = ["Sí", "No"];
+
 function TextField({
   label,
   name,

@@ -3,14 +3,20 @@ import { notFound, redirect } from "next/navigation";
 import { Panel } from "@/components/ui";
 import { ServiceEditorForm } from "@/components/service-editor-form";
 import { getPanelIdentity } from "@/lib/panel-access";
+import { loadOwnerPlanUsage } from "@/lib/panel-service-plan";
 import { canManageCatalog } from "@/types/panel";
 
 // Carga catálogos y relaciones reales antes de mostrar el formulario.
-export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) {
-  const { supabase, role, businessIds } = await getPanelIdentity();
+export async function PanelServiceEditor({
+  serviceId,
+  preset = {},
+}: {
+  serviceId?: string;
+  preset?: { categoryId?: string; lodgingTypeId?: string; businessId?: string };
+}) {
+  const { supabase, role, businessIds, user } = await getPanelIdentity();
+  const ownerName = String(user.user_metadata?.display_name ?? user.email ?? "");
   if (role === "collaborator") redirect("/panel/permisos");
-  // Los servicios y sus categorías los asigna el equipo de Panamá Viajero.
-  if (!serviceId && role === "propietario") redirect("/panel/servicios");
   const businessQuery = supabase
     .from("businesses")
     .select("id, name")
@@ -20,7 +26,7 @@ export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) 
     : businessQuery.in("id", businessIds);
 
   const [businessResult, categoryResult, typeResult, siteResult, destinationResult,
-    amenityResult, featureResult, serviceResult] =
+    amenityResult, featureResult, mealPlanResult, serviceResult] =
     await Promise.all([
       scopedBusinessQuery,
       supabase.from("categories").select("id, label").order("sort_order"),
@@ -35,6 +41,7 @@ export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) 
         .from("restaurant_feature_catalog")
         .select("id, label")
         .order("sort_order"),
+      supabase.from("meal_plans").select("id, label").order("sort_order"),
       serviceId
         ? supabase.from("services").select("*").eq("id", serviceId).maybeSingle()
         : Promise.resolve({ data: null, error: null }),
@@ -48,6 +55,7 @@ export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) 
     destinationResult.error ||
     amenityResult.error ||
     featureResult.error ||
+    mealPlanResult.error ||
     serviceResult.error
   ) {
     throw new Error("No se pudieron cargar los catálogos de Supabase.");
@@ -117,7 +125,7 @@ export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) 
     weekly_hours: weeklyHours,
   };
 
-  const businesses = businessResult.data ?? [];
+  let businesses = businessResult.data ?? [];
   if (!businesses.length) {
     return (
       <Panel>
@@ -125,6 +133,78 @@ export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) 
         <p>Un administrador debe asociar esta cuenta con un negocio antes de crear servicios.</p>
       </Panel>
     );
+  }
+
+  // El propietario elige primero qué servicio añadir, según los cupos de su plan.
+  const isStaff = canManageCatalog(role);
+  let categories = categoryResult.data ?? [];
+  let lodgingTypes = typeResult.data ?? [];
+  let presetLodgingTypeId = "";
+  if (!serviceId && !isStaff) {
+    const usage = await Promise.all(businesses.map(async (business) => ({
+      business,
+      slots: await loadOwnerPlanUsage(supabase, business.id),
+    })));
+    const open = usage.flatMap(({ business, slots }) =>
+      slots.filter((item) => item.remaining > 0).map((item) => ({
+        ...item, businessId: business.id, businessName: business.name,
+      })),
+    );
+    if (!open.length) {
+      return (
+        <Panel>
+          <h1>Sin servicios disponibles</h1>
+          <p>
+            Tu plan no tiene servicios libres para añadir. Escribe al equipo de
+            Panamá Viajero para ampliarlo.
+          </p>
+          <Link className="button secondary" href="/panel/servicios">Volver a servicios</Link>
+        </Panel>
+      );
+    }
+    if (!preset.categoryId) {
+      return (
+        <>
+          <header className="page-heading">
+            <div>
+              <h1>¿Qué deseas añadir?</h1>
+              <p>Elige el tipo de servicio. Solo aparecen los que tu plan tiene disponibles.</p>
+            </div>
+            <Link className="button quiet" href="/panel/servicios">Volver a servicios</Link>
+          </header>
+          <div className="dashboard-grid">
+            {open.map((item) => {
+              const query = new URLSearchParams({
+                categoria: item.category_id, negocio: item.businessId,
+              });
+              if (item.hospedaje_type_id) query.set("tipo", item.hospedaje_type_id);
+              return (
+                <Panel key={`${item.businessId}-${item.category_id}-${item.hospedaje_type_id ?? ""}`}>
+                  <h2>{item.type_label ?? item.category_label}</h2>
+                  <p className="muted">{item.businessName}</p>
+                  {item.type_label && <p className="muted">{item.category_label}</p>}
+                  <p>Disponibles: <b>{item.remaining}</b> de {item.quantity}</p>
+                  <Link className="button primary" href={`/panel/servicios/nuevo?${query}`}>
+                    Añadir
+                  </Link>
+                </Panel>
+              );
+            })}
+          </div>
+        </>
+      );
+    }
+    const chosenType = preset.lodgingTypeId ?? "";
+    const match = open.find((item) =>
+      item.businessId === preset.businessId &&
+      item.category_id === preset.categoryId &&
+      (item.hospedaje_type_id ?? "") === chosenType
+    );
+    if (!match) redirect("/panel/servicios/nuevo");
+    businesses = businesses.filter((business) => business.id === match.businessId);
+    categories = categories.filter((category) => String(category.id) === preset.categoryId);
+    lodgingTypes = lodgingTypes.filter((type) => String(type.id) === chosenType);
+    presetLodgingTypeId = chosenType;
   }
 
   const selectedSiteIds = (siteLinks.data ?? []).map((item) => item.tourist_site_id);
@@ -152,8 +232,10 @@ export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) 
         lodging={(lodgingResult.data ?? {}) as Record<string, unknown>}
         restaurant={restaurant as Record<string, unknown>}
         businesses={businesses}
-        categories={categoryResult.data ?? []}
-        lodgingTypes={typeResult.data ?? []}
+        categories={categories}
+        lodgingTypes={lodgingTypes}
+        presetLodgingTypeId={presetLodgingTypeId}
+        ownerName={ownerName}
         sites={siteResult.data ?? []}
         destinations={(destinationResult.data ?? []).map((row) => ({
           provinceId: row.province_id,
@@ -161,6 +243,7 @@ export async function PanelServiceEditor({ serviceId }: { serviceId?: string }) 
         }))}
         destinationProvinceId={destinationProvinceId}
         amenities={amenityResult.data ?? []}
+        mealPlans={mealPlanResult.data ?? []}
         restaurantFeatures={featureResult.data ?? []}
         selectedSiteIds={selectedSiteIds}
         selectedAmenityIds={(amenityLinks.data ?? []).map((item) => item.amenity_id)}

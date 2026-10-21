@@ -9,7 +9,6 @@ import {
   MapPin,
   Tag,
   UserRound,
-  Briefcase,
   type LucideIcon,
 } from "lucide-react";
 import type { PanelRole } from "@/types/panel";
@@ -43,6 +42,7 @@ const NAVIGATION: Record<PanelRole, PanelNavItem[]> = {
     { href: "/panel/permisos", label: "Permisos", icon: KeyRound },
   ],
   collaborator: [
+    { href: "/panel/revision", label: "Revisión", icon: ClipboardCheck },
     { href: "/panel", label: "Inicio", icon: Home },
     { href: "/panel/negocios", label: "Negocios", icon: Building2 },
     { href: "/panel/propietarios", label: "Propietarios", icon: UserRound },
@@ -51,8 +51,8 @@ const NAVIGATION: Record<PanelRole, PanelNavItem[]> = {
   ],
   propietario: [
     { href: "/panel", label: "Mi panel", icon: LayoutDashboard },
-    { href: "/panel/negocios", label: "Mis establecimientos", icon: Briefcase },
     { href: "/panel/servicios", label: "Mis servicios", icon: Layers },
+    { href: "/panel/cuenta", label: "Mi cuenta", icon: UserRound },
     { href: "/panel/promociones", label: "Mis promociones", icon: Tag },
     { href: "/panel/notificaciones", label: "Notificaciones", icon: Bell },
   ],
