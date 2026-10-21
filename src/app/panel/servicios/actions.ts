@@ -35,7 +35,14 @@ export async function prepareDraftServiceAction(
     p_hospedaje_type_id: hospedajeTypeId,
   });
   if (error || !newId) {
-    return { error: error?.message ?? "No se pudo preparar la ficha." };
+    if (error?.code === "23514" &&
+      error.message.includes("services_hospedaje_fields_match_category")) {
+      return {
+        error: "No se creó la ficha. Falta aplicar la actualización de borradores de hospedaje en Supabase.",
+      };
+    }
+    return { error: error?.code === "P0001"
+      ? error.message : "No se pudo preparar la ficha. Inténtalo de nuevo o avisa al equipo." };
   }
 
   revalidatePath("/panel/servicios");
