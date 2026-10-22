@@ -11,7 +11,7 @@ const NOTICES: Record<string, string> = {
   draft: "Borrador. Cuando esté listo, envíalo a revisión.",
 };
 
-// Muestra el estado del servicio y permite eliminarlo o retirarlo de revisión con confirmación.
+// Muestra el estado del servicio y permite eliminarlo o cancelar su revisión con confirmación.
 export function OwnServiceStatusPanel({
   serviceId,
   name,
@@ -39,13 +39,13 @@ export function OwnServiceStatusPanel({
             type="submit"
             onClick={(event) => {
               if (!window.confirm(
-                "¿Seguro que quieres eliminar la revisión? El servicio volverá a borrador."
+                "¿Seguro que quieres cancelar la revisión? El servicio volverá a borrador."
               )) {
                 event.preventDefault();
               }
             }}
           >
-            Eliminar revisión
+            Cancelar revisión
           </button>
         </form>
       ) : (

@@ -602,7 +602,7 @@ export async function deleteOwnServiceAction(formData: FormData): Promise<void> 
 // El propietario retira su servicio de la revisión; vuelve a borrador y conserva la ficha.
 export async function withdrawReviewAction(formData: FormData): Promise<void> {
   const { supabase, role, businessIds } = await getPanelIdentity();
-  if (role !== "propietario") throw new Error("Solo el propietario puede retirar la revisión.");
+  if (role !== "propietario") throw new Error("Solo el propietario puede cancelar la revisión.");
   const serviceId = text(formData, "service_id");
   const { data: service } = await supabase
     .from("services")

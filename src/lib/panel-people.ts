@@ -14,6 +14,22 @@ export async function getAccountNames(supabase: SupabaseClient, ids: string[]) {
   return names;
 }
 
+// Igual que getAccountNames, pero con la sesión del usuario: usa public_profile_for, que
+// solo expone el nombre visible. No depende de la clave de servicio.
+export async function getPublicNames(supabase: SupabaseClient, ids: string[]) {
+  const names = new Map<string, string>();
+  const results = await Promise.all(
+    [...new Set(ids)].map((id) => supabase.rpc("public_profile_for", { p_user_id: id })),
+  );
+  for (const { data, error } of results) {
+    if (error) throw new Error("No se pudieron leer los nombres de las cuentas.");
+    for (const profile of (data ?? []) as { id: string; display_name: string }[]) {
+      names.set(profile.id, profile.display_name);
+    }
+  }
+  return names;
+}
+
 // Datos visibles de una cuenta: nombre y correo guardados en su perfil.
 export type AccountProfile = { name: string; email: string | null };
 

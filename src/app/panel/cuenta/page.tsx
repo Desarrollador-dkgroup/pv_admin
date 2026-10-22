@@ -1,8 +1,7 @@
 import { Panel } from "@/components/ui";
 import { CoOwnerForm, RemoveCoOwnerButton } from "@/components/panel-co-owner-form";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
-import { getAccountNames } from "@/lib/panel-people";
-import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { getPublicNames } from "@/lib/panel-people";
 
 // Mi cuenta: personas que administran el negocio y alta de otro perfil con los mismos permisos.
 export default async function AccountPage() {
@@ -30,10 +29,8 @@ export default async function AccountPage() {
   const viewerIsPrincipal = members.some(
     (member) => member.user_id === user.id && member.added_by === null,
   );
-  const names = await getAccountNames(
-    getSupabaseAdminClient(),
-    members.map((member) => member.user_id),
-  );
+  // Los nombres se leen con la sesión del propietario, sin la clave de servicio.
+  const names = await getPublicNames(supabase, members.map((member) => member.user_id));
 
   return (
     <>

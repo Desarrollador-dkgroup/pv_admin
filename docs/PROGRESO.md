@@ -76,16 +76,24 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 6. Decidir si se agrega un límite total de hospedajes además del límite por tipo.
 7. Decidir si los tipos de apartamento se quedan o se usa la pantalla de unidades
    (`/panel/servicios/[id]/unidades`).
-8. Borrar el archivo sin uso `src/components/panel-delete-owner-form.tsx`.
-   `panel-delete-service-button.tsx` sí se usa en "Mis servicios".
+8. Sin uso tras volver al flujo del usuario (son de `feat/merchant-dashboard`; decidir si
+   se borran): `merchant-service-form.tsx`, `prepare-draft-service-button.tsx`,
+   `servicios/[id]/portada`, `saveMerchantServiceAction` y `src/lib/panel-service-plans.ts`.
+   `vista-previa` sigue enlazada desde la edición del servicio.
+12. "Agregar otra persona" en Mi cuenta usa `SUPABASE_SERVICE_ROLE_KEY`. Mi cuenta fallaba
+    porque el worker no la encuentra: revisar el secreto en Cloudflare (ver pendiente 9).
 9. Rotar la clave `service_role` de Supabase y actualizar el secreto en Cloudflare.
 10. Ajustar textos del panel de revisión y notificaciones a los nuevos estados.
-11. Decisión del usuario: el propietario usa su editor (`ServiceEditorForm`), no
-    `MerchantServiceForm`. Ese archivo y `saveMerchantServiceAction` quedan sin uso.
+11. Decisión del usuario: el propietario usa su flujo (lista "Mis servicios", "Mi panel",
+    crear desde `/panel/servicios/nuevo` y `ServiceEditorForm`), no el de
+    `feat/merchant-dashboard`. No combinar ambos.
     `202610200005_owner_draft_service_quota.sql` es copia idéntica de `202610200008`.
 
 ## Historial
 
+- 2026-10-22 (nube): flujo del propietario restaurado al del usuario. "Cancelar revisión"
+  en vez de "Eliminar revisión", sin "Eliminar" en la lista, Mi cuenta lee nombres sin la
+  clave de servicio y se corrige el número de la campana. Pendiente de pasar a `main`.
 - 2026-10-22 (nube): revisión de la base con el conector de Supabase (solo lectura).
   `fusion` pasa a `main` con `feat/merchant-dashboard` y el editor del propietario.
 - 2026-10-22 (nube): se integra `feat/merchant-dashboard` en `fusion` (no en `main`).

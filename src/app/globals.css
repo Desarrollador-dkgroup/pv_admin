@@ -877,15 +877,6 @@ td:first-child a:hover {
 .notification-trigger {
   position: relative;
 }
-.notification-dot {
-  position: absolute;
-  top: 7px;
-  right: 7px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-}
 .notification-popover {
   inset: 76px 24px auto auto;
   width: min(380px, calc(100vw - 32px));
@@ -1319,9 +1310,10 @@ td:first-child a:hover {
 }
 .notification-dot {
   position: absolute;
-  top: 4px;
+  top: 2px;
   right: 2px;
   min-width: 18px;
+  height: 18px;
   padding: 0 5px;
   border-radius: 10px;
   background: var(--accent);
