@@ -91,6 +91,9 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Historial
 
+- 2026-10-22 (nube): "Borrar cuenta" muestra el motivo si falla (hoy: falta la clave de
+  servicio en el worker). Regla de la base: solo se pregunta por cambios en `auth`.
+
 - 2026-10-22 (nube): Propietarios lee con la sesión del equipo (profiles con correo), sin la
   clave de servicio. Crear, suspender y borrar cuentas sí la siguen necesitando.
 

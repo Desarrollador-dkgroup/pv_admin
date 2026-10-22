@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import {
   deleteOwnerAccountAction,
   reactivateOwnerAction,
@@ -20,6 +20,11 @@ export function OwnerActions({
   suspended: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  // Si el borrado falla, el motivo se muestra aquí en vez de romper la página.
+  const [deleteState, deleteAction, deleting] = useActionState(
+    deleteOwnerAccountAction,
+    { error: "" },
+  );
   const confirmText = suspended
     ? `¿Reactivar el acceso de ${name}?`
     : `¿Suspender a ${name}? Perderá el acceso al panel.`;
@@ -43,20 +48,24 @@ export function OwnerActions({
               {suspended ? "Reactivar" : "Suspender"}
             </Button>
           </form>
-          <form action={deleteOwnerAccountAction}>
+          <form action={deleteAction}>
             <input type="hidden" name="user_id" value={userId} />
             <Button
               tone="quiet"
               type="submit"
+              disabled={deleting}
               onClick={(event) => {
                 if (!window.confirm(`¿Borrar la cuenta de ${name}? No se puede deshacer.`)) {
                   event.preventDefault();
                 }
               }}
             >
-              Borrar cuenta
+              {deleting ? "Borrando..." : "Borrar cuenta"}
             </Button>
           </form>
+          {deleteState.error && (
+            <p role="alert" className="form-error">{deleteState.error}</p>
+          )}
         </div>
       )}
     </div>

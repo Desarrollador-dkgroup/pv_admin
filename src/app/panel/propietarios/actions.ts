@@ -247,22 +247,33 @@ export async function createOwnerAccountAction(
 // Borra la cuenta de un propietario y sus vínculos con negocios. Nunca borra cuentas del
 // equipo ni la cuenta de quien ejecuta la acción. Los negocios que queden sin propietario
 // siguen existiendo y se ven como "Sin propietario".
-export async function deleteOwnerAccountAction(formData: FormData): Promise<void> {
+export async function deleteOwnerAccountAction(
+  _previous: { error: string },
+  formData: FormData,
+): Promise<{ error: string }> {
   const { user, role } = await getPanelIdentity();
-  if (!canManageProviders(role)) throw new Error("Tu cuenta no puede borrar propietarios.");
+  if (!canManageProviders(role)) return { error: "Tu cuenta no puede borrar propietarios." };
 
   const userId = String(formData.get("user_id") ?? "");
-  if (!userId) throw new Error("Falta la cuenta a borrar.");
-  if (userId === user.id) throw new Error("No puedes borrar tu propia cuenta.");
+  if (!userId) return { error: "Falta la cuenta a borrar." };
+  if (userId === user.id) return { error: "No puedes borrar tu propia cuenta." };
 
-  const admin = getSupabaseAdminClient();
+  // Borrar una cuenta de Auth exige la clave de servicio configurada en Cloudflare.
+  let admin: AdminClient;
+  try {
+    admin = getSupabaseAdminClient();
+  } catch {
+    return {
+      error: "Falta el secreto SUPABASE_SERVICE_ROLE_KEY en Cloudflare para borrar cuentas.",
+    };
+  }
   const { data: teamAccount, error: teamError } = await admin
     .from("platform_admins")
     .select("user_id")
     .eq("user_id", userId)
     .maybeSingle();
-  if (teamError) throw new Error("No se pudo verificar la cuenta.");
-  if (teamAccount) throw new Error("Las cuentas del equipo no se borran desde aquí.");
+  if (teamError) return { error: "No se pudo verificar la cuenta." };
+  if (teamAccount) return { error: "Las cuentas del equipo no se borran desde aquí." };
 
   const links = await Promise.all([
     admin.from("business_members").delete().eq("user_id", userId),
@@ -270,11 +281,12 @@ export async function deleteOwnerAccountAction(formData: FormData): Promise<void
     admin.from("profiles").delete().eq("id", userId),
   ]);
   if (links.some((result) => result.error)) {
-    throw new Error("No se pudieron quitar los vínculos de la cuenta.");
+    return { error: "No se pudieron quitar los vínculos de la cuenta." };
   }
 
   const { error } = await admin.auth.admin.deleteUser(userId);
-  if (error) throw new Error("No se pudo borrar la cuenta.");
+  if (error) return { error: "No se pudo borrar la cuenta." };
 
   refreshOwnerViews();
+  return { error: "" };
 }
