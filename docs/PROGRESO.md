@@ -64,24 +64,20 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Pendientes
 
-1. **Sitio público usa `cities` y `area_label`, que ya no existen en producción**
-   (el usuario pidió verlo después: recordárselo). Fallan el catálogo, el detalle de
-   servicio y los sitios turísticos (`api/services/route.ts`, `service-details.ts`,
-   `tourist-sites.ts`, `tourist-site-services.ts`, `sitios-turisticos/[slug]/page.tsx`).
-2. Corregir los acentos de `owner_create_draft_service` en producción.
-3. Revisar los avisos de seguridad de Supabase (ver arriba).
-4. Pasar a migraciones del repo los cambios manuales listados arriba.
-5. Probar en navegador: guardar restaurante con confirmación, eliminar, retirar revisión,
+1. Corregir los acentos de `owner_create_draft_service` en producción.
+2. Revisar los avisos de seguridad de Supabase (ver arriba).
+3. Pasar a migraciones del repo los cambios manuales listados arriba.
+4. Probar en navegador: guardar restaurante con confirmación, eliminar, retirar revisión,
    publicar aprobado.
-6. Decidir si se agrega un límite total de hospedajes además del límite por tipo.
-7. Decidir si los tipos de apartamento se quedan o se usa la pantalla de unidades
+5. Decidir si se agrega un límite total de hospedajes además del límite por tipo.
+6. Decidir si los tipos de apartamento se quedan o se usa la pantalla de unidades
    (`/panel/servicios/[id]/unidades`).
-8. Sin uso tras volver al flujo del usuario (son de `feat/merchant-dashboard`; decidir si
+7. Sin uso tras volver al flujo del usuario (son de `feat/merchant-dashboard`; decidir si
    se borran): `merchant-service-form.tsx`, `prepare-draft-service-button.tsx`,
    `servicios/[id]/portada`, `saveMerchantServiceAction` y `src/lib/panel-service-plans.ts`.
    `vista-previa` sigue enlazada desde la edición del servicio.
-12. "Agregar otra persona" en Mi cuenta usa `SUPABASE_SERVICE_ROLE_KEY`. Mi cuenta fallaba
-    porque el worker no la encuentra: revisar el secreto en Cloudflare (ver pendiente 9).
+8. "Agregar otra persona" en Mi cuenta usa `SUPABASE_SERVICE_ROLE_KEY`. Mi cuenta fallaba
+    porque el worker no la encuentra: revisar el secreto en Cloudflare (ver el pendiente de rotar la clave).
 9. Rotar la clave `service_role` de Supabase y actualizar el secreto en Cloudflare.
 10. Ajustar textos del panel de revisión y notificaciones a los nuevos estados.
 11. Decisión del usuario: el propietario usa su flujo (lista "Mis servicios", "Mi panel",
@@ -90,6 +86,10 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
     `202610200005_owner_draft_service_quota.sql` es copia idéntica de `202610200008`.
 
 ## Historial
+
+- 2026-10-22 (nube): `panama-viajero` conectado al panel: sin `cities`/`area_label`, fotos
+  de `service-media`, ficha con horarios, normas, contacto, plan de comidas y mapa;
+  filtros por provincia y tipo de hospedaje. Probado contra producción con la clave pública.
 
 - 2026-10-22 (nube): "Borrar cuenta" muestra el motivo si falla (hoy: falta la clave de
   servicio en el worker). Regla de la base: solo se pregunta por cambios en `auth`.
