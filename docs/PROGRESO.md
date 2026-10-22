@@ -41,7 +41,7 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 - Aplicadas: `202610200002` (sin `area_label` ni coordenadas, con `maps_embed_url`),
   `202610200005` (ya no existe `cities` ni `services.city_id`), `202610200006`,
   `202610200007` (`business_members.added_by`), `202610200008`
-  (`owner_create_draft_service`), `202610210001` y `202610210002`.
+  (`owner_create_draft_service`), `202610210001`, `202610210002` y `202610220001`.
 - `quote_stay` no usa `cities` (el aviso anterior era un falso positivo).
 - `owner_create_draft_service` tiene los acentos dañados en producción ("estÃ¡"):
   se aplicó con una codificación incorrecta. Volver a aplicarla en UTF-8.
@@ -80,7 +80,6 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
    se borran): `merchant-service-form.tsx`, `prepare-draft-service-button.tsx`,
    `servicios/[id]/portada`, `saveMerchantServiceAction` y `src/lib/panel-service-plans.ts`.
    `vista-previa` sigue enlazada desde la edición del servicio.
-13. Aplicar en producción `202610220001_collaborator_reviews.sql` (pendiente de confirmar).
 12. "Agregar otra persona" en Mi cuenta usa `SUPABASE_SERVICE_ROLE_KEY`. Mi cuenta fallaba
     porque el worker no la encuentra: revisar el secreto en Cloudflare (ver pendiente 9).
 9. Rotar la clave `service_role` de Supabase y actualizar el secreto en Cloudflare.
@@ -93,7 +92,7 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 ## Historial
 
 - 2026-10-22 (nube): el colaborador revisa servicios (vista previa, aprobar, pedir cambios)
-  y deja de tener Permisos. Requiere aplicar `202610220001_collaborator_reviews.sql`.
+  y deja de tener Permisos. `202610220001_collaborator_reviews.sql` aplicada y probada.
   Propietarios y Mi cuenta fallan por falta de `SUPABASE_SERVICE_ROLE_KEY` en el worker.
 
 - 2026-10-22 (nube): el panel de estado muestra las correcciones del equipo; "Eliminar
