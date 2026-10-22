@@ -17,7 +17,7 @@ export async function PanelServiceEditor({
 }) {
   const { supabase, role, businessIds, user } = await getPanelIdentity();
   const ownerName = String(user.user_metadata?.display_name ?? user.email ?? "");
-  if (role === "collaborator") redirect("/panel/permisos");
+  if (role === "collaborator") redirect("/panel/revision");
   const businessQuery = supabase
     .from("businesses")
     .select("id, name")

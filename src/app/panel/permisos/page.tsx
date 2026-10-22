@@ -30,32 +30,8 @@ type Row = {
 // Equipo interno: búsqueda por nombre o correo, filtro por rol y gestión según la matriz.
 export default async function PermissionsPage({ searchParams }: { searchParams: SearchParams }) {
   const { supabase, role, user } = await getPanelIdentity();
-  requireRole(role, ["owner", "admin", "collaborator"]);
-
-  // El colaborador no administra el equipo; solo ve sus alcances.
-  if (role === "collaborator") {
-    return (
-      <>
-        <header className="page-heading">
-          <div>
-            <h1>Permisos</h1>
-            <p>Lo que puedes hacer con tu rol de colaborador.</p>
-          </div>
-        </header>
-        <Panel>
-          <h2>Tus permisos</h2>
-          <ul className="permission-list">
-            <li>Asignar y quitar propietarios y colaboradores de cada negocio.</li>
-            <li>Suspender o reactivar el acceso de propietarios de negocio.</li>
-            <li>Ver negocios y estados. No administras cuentas internas ni el catálogo.</li>
-          </ul>
-          <Link className="button secondary" href="/panel/propietarios">
-            Administrar propietarios
-          </Link>
-        </Panel>
-      </>
-    );
-  }
+  // El colaborador no tiene esta sección: el equipo interno lo administran los admins.
+  requireRole(role, ["owner", "admin"]);
 
   // Lee el filtro y la búsqueda de la URL; valores desconocidos vuelven al inicial.
   const { q = "", rol = "todos" } = await searchParams;

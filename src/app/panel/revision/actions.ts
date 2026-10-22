@@ -2,14 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { getPanelIdentity } from "@/lib/panel-access";
+import { canManageProviders } from "@/lib/panel-permissions";
 import { canManageCatalog } from "@/types/panel";
 
 type FormState = { error: string };
 
-// Solo el propietario principal y los admins pueden aprobar o rechazar servicios.
-async function requireCatalogAccess() {
+// El propietario principal, los admins y los colaboradores aprueban o rechazan servicios.
+async function requireReviewAccess() {
   const identity = await getPanelIdentity();
-  if (!canManageCatalog(identity.role)) {
+  if (!canManageProviders(identity.role)) {
     throw new Error("Tu cuenta no tiene permiso para revisar servicios.");
   }
   return identity;
@@ -25,8 +26,19 @@ function refreshReviewViews() {
 
 // Aprueba un servicio pendiente: el propietario decide cuándo publicarlo.
 export async function approveServiceAction(formData: FormData): Promise<void> {
-  const { supabase } = await requireCatalogAccess();
+  const { supabase, role } = await requireReviewAccess();
   const serviceId = String(formData.get("service_id") ?? "");
+
+  // El colaborador no edita servicios: revisa mediante una función de la base.
+  if (!canManageCatalog(role)) {
+    const { error } = await supabase.rpc("padmin_review_service", {
+      p_service_id: serviceId,
+      p_decision: "approved",
+    });
+    if (error) throw new Error(error.message);
+    refreshReviewViews();
+    return;
+  }
 
   // Solo cambia servicios que siguen pendientes, para no pisar una revisión ya hecha.
   const { error } = await supabase
@@ -44,12 +56,23 @@ export async function requestChangesAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const { supabase } = await requireCatalogAccess();
+  const { supabase, role } = await requireReviewAccess();
   const serviceId = String(formData.get("service_id") ?? "");
   const comment = String(formData.get("review_comment") ?? "").trim();
 
   if (!comment) {
     return { error: "Escribe el motivo para que el negocio pueda corregirlo." };
+  }
+
+  if (!canManageCatalog(role)) {
+    const { error } = await supabase.rpc("padmin_review_service", {
+      p_service_id: serviceId,
+      p_decision: "rejected",
+      p_comment: comment,
+    });
+    if (error) return { error: error.message };
+    refreshReviewViews();
+    return { error: "" };
   }
 
   // El servicio regresa a borrador para que el negocio lo edite y vuelva a enviarlo.

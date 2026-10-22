@@ -19,7 +19,8 @@ export default async function ServicePreviewPage({
     .select("id, business_id, category_id, name, address, search_description, description, status, review_status, base_price_cents")
     .eq("id", id)
     .maybeSingle();
-  if (error || !service || role === "collaborator" ||
+  // El colaborador la usa para revisar fichas; el propietario solo ve las suyas.
+  if (error || !service ||
     (role === "propietario" && !businessIds.includes(service.business_id))) notFound();
 
   const [category, photos, amenityLinks, rooms, sections, restaurant] = await Promise.all([

@@ -80,6 +80,7 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
    se borran): `merchant-service-form.tsx`, `prepare-draft-service-button.tsx`,
    `servicios/[id]/portada`, `saveMerchantServiceAction` y `src/lib/panel-service-plans.ts`.
    `vista-previa` sigue enlazada desde la edición del servicio.
+13. Aplicar en producción `202610220001_collaborator_reviews.sql` (pendiente de confirmar).
 12. "Agregar otra persona" en Mi cuenta usa `SUPABASE_SERVICE_ROLE_KEY`. Mi cuenta fallaba
     porque el worker no la encuentra: revisar el secreto en Cloudflare (ver pendiente 9).
 9. Rotar la clave `service_role` de Supabase y actualizar el secreto en Cloudflare.
@@ -90,6 +91,10 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
     `202610200005_owner_draft_service_quota.sql` es copia idéntica de `202610200008`.
 
 ## Historial
+
+- 2026-10-22 (nube): el colaborador revisa servicios (vista previa, aprobar, pedir cambios)
+  y deja de tener Permisos. Requiere aplicar `202610220001_collaborator_reviews.sql`.
+  Propietarios y Mi cuenta fallan por falta de `SUPABASE_SERVICE_ROLE_KEY` en el worker.
 
 - 2026-10-22 (nube): el panel de estado muestra las correcciones del equipo; "Eliminar
   servicio" pasa a la barra inferior, a la derecha. Pendiente de pasar a `main`.

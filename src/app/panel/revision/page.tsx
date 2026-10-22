@@ -4,6 +4,7 @@ import { ReviewRejectForm } from "@/components/panel-review-form";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { formatDateTime } from "@/lib/panel-format";
 import { related } from "@/lib/panel-relations";
+import { canManageProviders } from "@/lib/panel-permissions";
 import { canManageCatalog } from "@/types/panel";
 import { approveServiceAction } from "./actions";
 
@@ -23,8 +24,11 @@ export default async function ReviewPage() {
   if (error) throw new Error("No se pudo cargar la cola de revisión.");
 
   const items = data ?? [];
-  // El colaborador ve la cola, pero solo el equipo principal aprueba o pide cambios.
-  const canReview = canManageCatalog(role);
+  // Todo el equipo revisa. El colaborador abre la vista previa porque no edita servicios.
+  const canReview = canManageProviders(role);
+  const fichaHref = (id: string) => canManageCatalog(role)
+    ? `/panel/servicios/${id}`
+    : `/panel/servicios/${id}/vista-previa`;
 
   return (
     <>
@@ -52,7 +56,7 @@ export default async function ReviewPage() {
           {canReview ? (
             <>
               <div className="actions">
-                <Link className="button secondary" href={`/panel/servicios/${service.id}`}>
+                <Link className="button secondary" href={fichaHref(service.id)}>
                   Revisar ficha
                 </Link>
                 <form action={approveServiceAction}>
