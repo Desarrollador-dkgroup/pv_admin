@@ -91,6 +91,9 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Historial
 
+- 2026-10-22 (nube): Propietarios lee con la sesión del equipo (profiles con correo), sin la
+  clave de servicio. Crear, suspender y borrar cuentas sí la siguen necesitando.
+
 - 2026-10-22 (nube): el colaborador revisa servicios (vista previa, aprobar, pedir cambios)
   y deja de tener Permisos. `202610220001_collaborator_reviews.sql` aplicada y probada.
   Propietarios y Mi cuenta fallan por falta de `SUPABASE_SERVICE_ROLE_KEY` en el worker.

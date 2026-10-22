@@ -5,7 +5,6 @@ import { PersonNameForm } from "@/components/panel-person-name-form";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { canEditName, canManageProviders } from "@/lib/panel-permissions";
 import { OwnerActions } from "@/components/panel-owner-actions";
-import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 // Estados que puede mostrar la lista. Activos es el filtro inicial.
 const FILTERS = [
@@ -28,21 +27,21 @@ export default async function OwnersPage({ searchParams }: { searchParams: Searc
     ? (estado as FilterValue)
     : "activos";
 
-  const admin = getSupabaseAdminClient();
+  // Se lee con la sesión del equipo (RLS lo permite). Cada cuenta de Auth tiene su fila en
+  // profiles, con nombre y correo, así que no hace falta la clave de servicio.
   const [
-    accounts, team, profiles, memberships, blocked, businesses, categories, lodgingTypes,
+    team, profiles, memberships, blocked, businesses, categories, lodgingTypes,
   ] = await Promise.all([
-      admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
-      admin.from("platform_admins").select("user_id"),
-      admin.from("profiles").select("id, display_name"),
-      admin.from("business_members").select("business_id, user_id").eq("role", "owner"),
-      admin.from("blocked_users").select("user_id"),
-      admin.from("businesses").select("id, name").order("name"),
+      supabase.from("platform_admins").select("user_id"),
+      supabase.from("profiles").select("id, display_name, email"),
+      supabase.from("business_members").select("business_id, user_id").eq("role", "owner"),
+      supabase.from("blocked_users").select("user_id"),
+      supabase.from("businesses").select("id, name").order("name"),
       supabase.from("categories").select("id, label").order("sort_order"),
       supabase.from("hospedaje_types").select("id, label").order("sort_order"),
     ]);
   if (
-    accounts.error || team.error || profiles.error || memberships.error ||
+    team.error || profiles.error || memberships.error ||
     blocked.error || businesses.error || categories.error || lodgingTypes.error
   ) {
     throw new Error("No se pudo cargar la lista de propietarios.");
@@ -50,10 +49,10 @@ export default async function OwnersPage({ searchParams }: { searchParams: Searc
 
   // Toda cuenta que no es del equipo es propietaria, tenga o no negocio asignado.
   const teamIds = new Set((team.data ?? []).map((row) => row.user_id));
-  const accountList = accounts.data?.users ?? [];
+  const accountList = profiles.data ?? [];
   const emailOf = new Map(accountList.map((account) => [account.id, account.email ?? ""]));
   const profileNames = new Map(
-    (profiles.data ?? []).map((row) => [row.id, row.display_name ?? ""]),
+    accountList.map((row) => [row.id, row.display_name ?? ""]),
   );
   const businessNames = new Map((businesses.data ?? []).map((item) => [item.id, item.name]));
   const byOwner = new Map<string, string[]>();
