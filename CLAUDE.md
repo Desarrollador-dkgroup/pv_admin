@@ -17,7 +17,9 @@ Ambos deben estar siempre iguales. Reglas estrictas:
 3. **Recordar siempre al usuario**, al inicio y al final de cada tarea, que sincronice:
    push donde trabajó y pull en el otro lado antes de seguir. No omitir este aviso.
 4. Si local y nube divergen, detenerse y avisar antes de seguir trabajando.
-5. Lo que solo se dice en el chat no existe para la otra sesión: si es una decisión,
+5. Rama de trabajo única: `fusion`, tanto en local como en la nube. No crear otras ramas
+   sin que el usuario lo pida.
+6. Lo que solo se dice en el chat no existe para la otra sesión: si es una decisión,
    se escribe aquí o en la bitácora.
 
 ## Reglas de trabajo

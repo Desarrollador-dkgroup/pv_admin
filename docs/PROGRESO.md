@@ -9,7 +9,7 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 ## Estado actual (2026-10-22)
 
 - Local y nube sincronizados: el usuario subió sus últimos cambios a `main` en ambos repos.
-- La rama de la nube `claude/adoring-lamport-hgz2jf` está al día con `origin/main`.
+- Rama de trabajo única: `fusion` (local y nube). En `panama-viajero` se creó desde `main`.
 - `pv_admin` tiene la rama `feat/merchant-dashboard` con 12 commits que no están en `main`,
   incluidas las migraciones `202610200008` y `202610210002`. Decidir si se fusiona.
 
@@ -70,4 +70,5 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Historial
 
+- 2026-10-22 (nube): la rama de trabajo pasa a ser `fusion` en ambos repos.
 - 2026-10-22 (nube): se crean `CLAUDE.md` en ambos repos y esta bitácora.
