@@ -22,6 +22,16 @@ Ambos deben estar siempre iguales. Reglas estrictas:
 6. Lo que solo se dice en el chat no existe para la otra sesión: si es una decisión,
    se escribe aquí o en la bitácora.
 
+## Flujo de ramas
+
+- `main` es producción. `fusion` es la rama de trabajo e integración.
+- Todo cambio se hace en `fusion`, se verifica y luego se pasa a `main`.
+- Cuando `feat/merchant-dashboard`, `feat/merchant-panel` u otra rama de colaboradores
+  reciba cambios: traerlos a `fusion` con merge, resolver conflictos, verificar con `tsc`
+  y `eslint`, revisar si traen migraciones (no se aplican solas) y solo entonces pasar
+  `fusion` a `main`. Avisar al usuario antes de subir a `main`.
+- Nunca reescribir historia de `main` ni de ramas de otros (sin rebase ni force-push).
+
 ## Reglas de trabajo
 
 - Trabajar en español. Comentarios en español. Líneas de 100 caracteres o menos.

@@ -11,7 +11,7 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 - Local y nube sincronizados: el usuario subió sus últimos cambios a `main` en ambos repos.
 - Rama de trabajo única: `fusion` (local y nube). En `panama-viajero` se creó desde `main`.
 - `pv_admin` tiene la rama `feat/merchant-dashboard` con 12 commits que no están en `main`,
-  incluidas las migraciones `202610200008` y `202610210002`. Decidir si se fusiona.
+  incluidas las migraciones `202610200008` y `202610210002`. Pendiente de traer a `fusion`.
 
 ## Panel de propietarios (ya funciona)
 
@@ -66,9 +66,10 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
    `src/components/panel-delete-service-button.tsx`.
 9. Rotar la clave `service_role` de Supabase y actualizar el secreto en Cloudflare.
 10. Ajustar textos del panel de revisión y notificaciones a los nuevos estados.
-11. Decidir qué hacer con `feat/merchant-dashboard`.
+11. Traer `feat/merchant-dashboard` a `fusion`, revisar sus migraciones y pasarla a `main`.
 
 ## Historial
 
+- 2026-10-22 (nube): `fusion` pasa a `main`; se borra la rama `claude/adoring-lamport-hgz2jf`.
 - 2026-10-22 (nube): la rama de trabajo pasa a ser `fusion` en ambos repos.
 - 2026-10-22 (nube): se crean `CLAUDE.md` en ambos repos y esta bitácora.
