@@ -74,6 +74,7 @@ export default async function LodgingUnitsPage({
       <LodgingCatalogManager
         serviceId={id}
         lodgingTypeId={service.hospedaje_type_id}
+        isOwner={role === "propietario"}
         rooms={roomRecords}
         areas={areaRecords}
         rates={(rateResult.data ?? []) as unknown as RatePeriod[]}

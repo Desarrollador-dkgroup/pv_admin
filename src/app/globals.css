@@ -435,6 +435,103 @@ form {
   color: var(--brand);
   text-decoration: underline;
 }
+.owner-plan-category {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.owner-plan-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 12px;
+}
+.merchant-section-heading {
+  margin-bottom: 18px;
+}
+.merchant-listing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 18px;
+}
+.merchant-listing-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  border-top: 4px solid var(--brand);
+}
+.merchant-listing-card h3 { overflow-wrap: anywhere; }
+.merchant-listing-type {
+  color: var(--brand);
+  font-size: 13px;
+  font-weight: 700;
+}
+.merchant-listing-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.merchant-listing-actions { margin-top: auto; flex-wrap: wrap; }
+.merchant-preview-callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 22px;
+  border-radius: 16px;
+  background: var(--pale);
+  color: var(--ink);
+}
+.merchant-preview-callout p { margin-top: 4px; color: var(--muted); }
+.merchant-preview-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 400px) minmax(240px, 1fr);
+  justify-content: center;
+  align-items: start;
+  gap: 32px;
+}
+.merchant-preview-phone {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 8px solid #202747;
+  border-radius: 38px;
+  background: white;
+  box-shadow: 0 22px 56px #2027472a;
+}
+.merchant-preview-photo { position: relative; height: 260px; background: var(--pale); }
+.merchant-preview-photo img, .merchant-preview-room-photo img { object-fit: cover; }
+.merchant-preview-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 24px;
+  color: var(--brand);
+  text-align: center;
+}
+.merchant-preview-content { display: flex; flex-direction: column; gap: 12px; padding: 22px; }
+.merchant-preview-content h2 { font-size: 26px; line-height: 1.2; }
+.merchant-preview-kicker { color: var(--brand); font-size: 13px; font-weight: 700; }
+.merchant-preview-location, .merchant-preview-description { color: var(--muted); white-space: pre-wrap; }
+.merchant-preview-lead { font-weight: 600; }
+.merchant-preview-section { display: flex; flex-direction: column; gap: 12px; padding-top: 18px; border-top: 1px solid var(--border); }
+.merchant-preview-section h3 { font-size: 18px; }
+.merchant-preview-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.merchant-preview-tags span { padding: 6px 10px; border-radius: 20px; background: var(--pale); font-size: 12px; }
+.merchant-preview-room { overflow: hidden; border: 1px solid var(--border); border-radius: 14px; }
+.merchant-preview-room-photo { position: relative; height: 150px; }
+.merchant-preview-room-copy { display: flex; flex-direction: column; gap: 4px; padding: 12px; }
+.merchant-preview-room-copy p, .merchant-preview-menu-row p { color: var(--muted); font-size: 13px; }
+.merchant-preview-room-copy b, .merchant-preview-price { color: var(--brand); }
+.merchant-preview-menu-row { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.merchant-preview-aside { display: flex; flex-direction: column; gap: 14px; max-width: 370px; }
+.merchant-preview-aside .actions { display: flex; align-items: flex-start; flex-direction: column; }
+.prepare-draft-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 .notice {
   display: flex;
   flex-direction: column;
@@ -657,6 +754,122 @@ td:first-child a:hover {
 }
 .history-event {
   border-bottom: 1px solid var(--border);
+}
+
+/* Editor de habitaciones: cada habitación conserva sus acciones y tarifas en
+   bloques propios, sin heredar las columnas de la cronología administrativa. */
+.lodging-item-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.lodging-item-heading,
+.lodging-rate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+}
+.lodging-item-summary {
+  min-width: 0;
+}
+.lodging-item-summary h3,
+.lodging-item-summary h4 {
+  margin: 0 0 4px;
+  overflow-wrap: anywhere;
+}
+.lodging-item-summary p {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.lodging-item-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.lodging-item-actions .button,
+.lodging-rate-row .button,
+.lodging-item-footer .button {
+  align-self: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.lodging-item-form {
+  width: 100%;
+  max-width: 640px;
+  min-width: 0;
+  padding: 20px;
+  border-radius: 12px;
+  background: var(--canvas);
+}
+.lodging-rates {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lodging-rates:empty {
+  display: none;
+}
+.lodging-rate-row {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.lodging-rate-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.lodging-item-footer {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.menu-section-editor {
+  width: 100%;
+  max-width: 520px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--canvas);
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.menu-item > div {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.menu-item > div small {
+  display: block;
+}
+@media (max-width: 720px) {
+  .lodging-item-heading,
+  .lodging-rate-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .lodging-item-actions {
+    justify-content: flex-start;
+  }
+  .lodging-item-form {
+    padding: 16px;
+  }
+  .lodging-rate-row .button {
+    align-self: flex-start;
+  }
 }
 
 /* Modales, avisos y animaciones de interacción. */
@@ -1404,6 +1617,9 @@ select[multiple] {
   }
 }
 @media (max-width: 760px) {
+  .merchant-preview-wrap { grid-template-columns: 1fr; }
+  .merchant-preview-aside { max-width: 400px; margin: 0 auto; }
+  .merchant-preview-callout { flex-direction: column; align-items: flex-start; }
   .form-row {
     grid-template-columns: 1fr;
   }

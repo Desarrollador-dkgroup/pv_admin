@@ -24,6 +24,9 @@ export default async function EditServicePage({
     <>
       <PanelServiceEditor serviceId={id} />
       <nav className="actions" aria-label="Administrar contenido relacionado">
+        <Link className="button primary" href={`/panel/servicios/${id}/vista-previa`}>
+          Vista previa guardada
+        </Link>
         <Link className="button secondary" href={`/panel/servicios/${id}/galeria`}>
           Galería
         </Link>

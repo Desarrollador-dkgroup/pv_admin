@@ -28,8 +28,16 @@ export function Badge({
   return <span className={tone ? `badge tone-${tone}` : "badge"}>{children}</span>;
 }
 
-export function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <section className={`panel ${className}`}>{children}</section>;
+export function Panel({
+  children,
+  className = "",
+  id,
+}: {
+  children: ReactNode;
+  className?: string;
+  id?: string;
+}) {
+  return <section id={id} className={`panel ${className}`}>{children}</section>;
 }
 
 // Utiliza un diálogo nativo para gestionar foco, Escape y navegación con teclado.

@@ -34,6 +34,7 @@ export function RestaurantMenuManager({
 }) {
   const [sections, setSections] = useState(initialSections);
   const [sectionId, setSectionId] = useState(initialSections[0]?.id ?? "");
+  const [renamingSectionId, setRenamingSectionId] = useState<string | null>(null);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -53,6 +54,65 @@ export function RestaurantMenuManager({
       const section = { ...data, dishes: [] };
       setSections((current) => [...current, section]);
       setSectionId(section.id);
+    }
+    setBusy(false);
+  }
+
+  async function renameSection(formData: FormData) {
+    const selected = sections.find((section) => section.id === renamingSectionId);
+    const title = stringValue(formData, "section_title");
+    if (!selected || !title) return;
+    setBusy(true);
+    setError("");
+    const { data, error: failure } = await supabase
+      .from("menu_sections")
+      .update({ title })
+      .eq("id", selected.id)
+      .eq("service_id", serviceId)
+      .select("id, title")
+      .single();
+    if (failure || !data) setError(failure?.message ?? "No se pudo cambiar el nombre.");
+    else {
+      setSections((current) => current.map((section) =>
+        section.id === data.id ? { ...section, title: data.title } : section));
+      setRenamingSectionId(null);
+    }
+    setBusy(false);
+  }
+
+  async function deleteEmptySection(section: MenuSection) {
+    if (section.dishes.length) {
+      setError("Primero elimina los platos de esta sección.");
+      return;
+    }
+    if (!window.confirm(`¿Eliminar la sección «${section.title}»?`)) return;
+    setBusy(true);
+    setError("");
+    // Vuelve a comprobar el contenido en la base antes de solicitar el borrado.
+    const { data: dishes, error: checkError } = await supabase
+      .from("menu_dishes")
+      .select("id")
+      .eq("section_id", section.id)
+      .limit(1);
+    if (checkError || dishes?.length) {
+      setError(checkError?.message ?? "La sección ya contiene platos; actualiza la página.");
+      setBusy(false);
+      return;
+    }
+    const { data, error: failure } = await supabase
+      .from("menu_sections")
+      .delete()
+      .eq("id", section.id)
+      .eq("service_id", serviceId)
+      .select("id")
+      .maybeSingle();
+    if (failure || !data) setError(failure?.message ?? "No se pudo eliminar la sección.");
+    else {
+      const remaining = sections.filter((item) => item.id !== section.id);
+      setSections(remaining);
+      setSectionId(remaining[0]?.id ?? "");
+      setEditingDish(null);
+      setRenamingSectionId(null);
     }
     setBusy(false);
   }
@@ -141,6 +201,7 @@ export function RestaurantMenuManager({
   }
 
   async function deleteDish(dish: Dish) {
+    if (!window.confirm(`¿Eliminar «${dish.name}» del menú?`)) return;
     setBusy(true);
     setError("");
     const { error: failure } = await supabase
@@ -175,7 +236,11 @@ export function RestaurantMenuManager({
         {sections.length > 0 && (
           <label className="field">
             Sección seleccionada
-            <select value={sectionId} onChange={(event) => setSectionId(event.target.value)}>
+            <select value={sectionId} onChange={(event) => {
+              setSectionId(event.target.value);
+              setEditingDish(null);
+              setRenamingSectionId(null);
+            }}>
               {sections.map((section) => (
                 <option key={section.id} value={section.id}>
                   {section.title}
@@ -188,6 +253,30 @@ export function RestaurantMenuManager({
       {active && (
         <Panel>
           <h2>Platos y bebidas de {active.title}</h2>
+          {renamingSectionId === active.id ? (
+            <form action={renameSection} className="menu-section-editor">
+              <label className="field">
+                Nombre de la sección
+                <input name="section_title" required defaultValue={active.title} />
+              </label>
+              <div className="actions">
+                <Button type="submit" disabled={busy}>Guardar nombre</Button>
+                <Button tone="quiet" disabled={busy} onClick={() => setRenamingSectionId(null)}>
+                  Cancelar
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <div className="actions">
+              <Button tone="secondary" disabled={busy} onClick={() => setRenamingSectionId(active.id)}>
+                Cambiar nombre de la sección
+              </Button>
+              <Button tone="quiet" disabled={busy || active.dishes.length > 0}
+                onClick={() => void deleteEmptySection(active)}>
+                Eliminar sección vacía
+              </Button>
+            </div>
+          )}
           {active.dishes.map((dish) => (
             <article className="menu-item" key={dish.id}>
               <div>

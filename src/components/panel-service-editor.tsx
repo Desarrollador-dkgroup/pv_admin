@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { Panel } from "@/components/ui";
 import { ServiceEditorForm } from "@/components/service-editor-form";
 import { OwnServiceStatusPanel } from "@/components/panel-own-service-status";
+import { MerchantServiceForm } from "@/components/merchant-service-form";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { loadOwnerPlanUsage } from "@/lib/panel-service-plan";
 import { canManageCatalog } from "@/types/panel";
@@ -13,7 +14,7 @@ export async function PanelServiceEditor({
   preset = {},
 }: {
   serviceId?: string;
-  preset?: { categoryId?: string; lodgingTypeId?: string };
+  preset?: { categoryId?: string; lodgingTypeId?: string; businessId?: string };
 }) {
   const { supabase, role, businessIds, user } = await getPanelIdentity();
   const ownerName = String(user.user_metadata?.display_name ?? user.email ?? "");
@@ -126,7 +127,7 @@ export async function PanelServiceEditor({
     weekly_hours: weeklyHours,
   };
 
-  const businesses = businessResult.data ?? [];
+  let businesses = businessResult.data ?? [];
   if (!businesses.length) {
     return (
       <Panel>
@@ -142,8 +143,15 @@ export async function PanelServiceEditor({
   let lodgingTypes = typeResult.data ?? [];
   let presetLodgingTypeId = "";
   if (!serviceId && !isStaff) {
-    const usage = await loadOwnerPlanUsage(supabase, businesses[0].id);
-    const open = usage.filter((item) => item.remaining > 0);
+    const usage = await Promise.all(businesses.map(async (business) => ({
+      business,
+      slots: await loadOwnerPlanUsage(supabase, business.id),
+    })));
+    const open = usage.flatMap(({ business, slots }) =>
+      slots.filter((item) => item.remaining > 0).map((item) => ({
+        ...item, businessId: business.id, businessName: business.name,
+      })),
+    );
     if (!open.length) {
       return (
         <Panel>
@@ -168,11 +176,14 @@ export async function PanelServiceEditor({
           </header>
           <div className="dashboard-grid">
             {open.map((item) => {
-              const query = new URLSearchParams({ categoria: item.category_id });
+              const query = new URLSearchParams({
+                categoria: item.category_id, negocio: item.businessId,
+              });
               if (item.hospedaje_type_id) query.set("tipo", item.hospedaje_type_id);
               return (
-                <Panel key={`${item.category_id}-${item.hospedaje_type_id ?? ""}`}>
+                <Panel key={`${item.businessId}-${item.category_id}-${item.hospedaje_type_id ?? ""}`}>
                   <h2>{item.type_label ?? item.category_label}</h2>
+                  <p className="muted">{item.businessName}</p>
                   {item.type_label && <p className="muted">{item.category_label}</p>}
                   <p>Disponibles: <b>{item.remaining}</b> de {item.quantity}</p>
                   <Link className="button primary" href={`/panel/servicios/nuevo?${query}`}>
@@ -187,10 +198,12 @@ export async function PanelServiceEditor({
     }
     const chosenType = preset.lodgingTypeId ?? "";
     const match = open.find((item) =>
+      item.businessId === preset.businessId &&
       item.category_id === preset.categoryId &&
       (item.hospedaje_type_id ?? "") === chosenType
     );
     if (!match) redirect("/panel/servicios/nuevo");
+    businesses = businesses.filter((business) => business.id === match.businessId);
     categories = categories.filter((category) => String(category.id) === preset.categoryId);
     lodgingTypes = lodgingTypes.filter((type) => String(type.id) === chosenType);
     presetLodgingTypeId = chosenType;
@@ -203,6 +216,36 @@ export async function PanelServiceEditor({
     serviceProvinceId ??
     (siteResult.data ?? []).find((site) => selectedSiteIds.includes(site.id))?.province_id ??
     "";
+
+  // El equipo conserva el editor completo. El propietario trabaja únicamente
+  // sobre lo que alimenta la ficha pública y los horarios necesarios para reservar.
+  if (role === "propietario" && serviceId) {
+    return (
+      <>
+        <header className="page-heading">
+          <div>
+            <h1>Editar {String(service.name ?? "servicio")}</h1>
+            <p>Completa la información que verá el viajero en Panamá Viajero.</p>
+          </div>
+          <Link className="button quiet" href="/panel/servicios">Volver a servicios</Link>
+        </header>
+        <MerchantServiceForm
+          service={service as Record<string, unknown>}
+          restaurant={restaurant as Record<string, unknown>}
+          amenities={amenityResult.data ?? []}
+          mealPlans={mealPlanResult.data ?? []}
+          sites={siteResult.data ?? []}
+          destinations={(destinationResult.data ?? []).map((row) => ({
+            provinceId: row.province_id, name: row.name,
+          }))}
+          destinationProvinceId={destinationProvinceId}
+          selectedSiteIds={selectedSiteIds}
+          selectedAmenityIds={(amenityLinks.data ?? []).map((item) => item.amenity_id)}
+          weeklyHours={weeklyHours}
+        />
+      </>
+    );
+  }
 
   return (
     <>

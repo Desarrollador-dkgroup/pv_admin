@@ -8,13 +8,15 @@ import { Button } from "@/components/ui";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 type AuthMode = "login" | "forgot" | "change" | "temporary" | "sent";
-type Props = { initialMode?: AuthMode };
+type AccessReason = "session" | "unassigned" | null;
+type Props = { initialMode?: AuthMode; initialReason?: AccessReason };
 
 // Gestiona el inicio de sesión real y la recuperación de contraseña en Supabase.
-export function AuthScreen({ initialMode = "login" }: Props) {
+export function AuthScreen({ initialMode = "login", initialReason = null }: Props) {
   const router = useRouter();
   // Controla el formulario, la validación y el progreso del acceso.
   const [mode, setMode] = useState<AuthMode>(initialMode);
+  const [accessReason, setAccessReason] = useState<AccessReason>(initialReason);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const titles = {
@@ -58,8 +60,8 @@ export function AuthScreen({ initialMode = "login" }: Props) {
               : "No se pudo guardar la contraseña. Intenta nuevamente.",
           );
         }
-        router.push("/panel");
-        router.refresh();
+        // Un documento nuevo lee las cookies que acaba de escribir Supabase.
+        window.location.replace("/panel");
       } else {
         const result = await supabase.auth.signInWithPassword({ email, password });
         if (result.error)
@@ -69,8 +71,7 @@ export function AuthScreen({ initialMode = "login" }: Props) {
           setMode("temporary");
           return;
         }
-        router.push("/panel");
-        router.refresh();
+        window.location.replace("/panel");
       }
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "No se pudo completar la solicitud.");
@@ -100,15 +101,52 @@ export function AuthScreen({ initialMode = "login" }: Props) {
       </section>
       <section className="auth-form">
         <div className="auth-form-inner">
-          <h2>{titles[mode]}</h2>
+          <h2>
+            {mode === "login" && accessReason === "unassigned"
+              ? "Falta verificar tu negocio"
+              : mode === "login" && accessReason === "session"
+                ? "No se mantuvo la sesión"
+                : titles[mode]}
+          </h2>
           <p>
-            {mode === "temporary"
+            {mode === "login" && accessReason === "unassigned"
+              ? "La cuenta está autenticada, pero el panel no encontró un rol asociado."
+              : mode === "login" && accessReason === "session"
+                ? "El servidor no pudo leer tu sesión. Puedes volver a intentar el acceso."
+                : mode === "temporary"
               ? "Antes de continuar, reemplaza tu contraseña temporal."
               : mode === "sent"
                 ? "Si el correo pertenece a una cuenta, recibirás las instrucciones."
                 : "Ingresa con tu cuenta de Panamá Viajero. Verás las herramientas que tienes asignadas."}
           </p>
-          {mode !== "sent" && (
+          {mode === "login" && accessReason === "unassigned" && (
+            <div role="alert" className="form-error">
+              Iniciaste sesión, pero no pudimos verificar un negocio o un rol asignado a tu cuenta.
+              Pide al equipo de Panamá Viajero que revise tu acceso.
+            </div>
+          )}
+          {mode === "login" && accessReason === "session" && (
+            <p role="alert" className="form-error">
+              No pudimos mantener la sesión en el panel. Intenta iniciar sesión de nuevo.
+            </p>
+          )}
+          {mode === "login" && accessReason === "unassigned" && (
+            <>
+              <Button onClick={() => window.location.assign("/panel")}>Comprobar acceso de nuevo</Button>
+              <Button tone="quiet" onClick={async () => {
+                const { error: failure } = await getSupabaseBrowserClient().auth.signOut();
+                if (failure) {
+                  setError("No se pudo cerrar la sesión. Intenta nuevamente.");
+                  return;
+                }
+                setAccessReason(null);
+                setError("");
+                router.replace("/acceso");
+              }}>Entrar con otra cuenta</Button>
+              {error && <p role="alert" className="form-error">{error}</p>}
+            </>
+          )}
+          {mode !== "sent" && !(mode === "login" && accessReason === "unassigned") && (
             <form key={mode} onSubmit={submit}>
               {["login", "forgot"].includes(mode) && (
                 <label className="field">

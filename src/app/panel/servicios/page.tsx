@@ -8,6 +8,7 @@ import { publishOwnServiceAction } from "@/app/panel/actions";
 import { DeleteServiceButton } from "@/components/panel-delete-service-button";
 import { related } from "@/lib/panel-relations";
 import { canManageCatalog } from "@/types/panel";
+import { PrepareDraftServiceButton } from "@/components/prepare-draft-service-button";
 
 // Lista servicios de Supabase dentro del alcance del equipo o del propietario.
 export default async function ServicesPage() {
@@ -25,10 +26,12 @@ export default async function ServicesPage() {
     );
   }
 
-  const planUsage = !isStaff && businessIds[0]
-    ? await loadOwnerPlanUsage(supabase, businessIds[0])
+  const planUsage = !isStaff
+    ? await Promise.all(businessIds.map(async (businessId) => ({
+      businessId,
+      slots: await loadOwnerPlanUsage(supabase, businessId),
+    })))
     : [];
-
   let query = supabase
     .from("services")
     .select("id, name, status, review_status, category_id, businesses(name)")
@@ -43,6 +46,69 @@ export default async function ServicesPage() {
 
   const categoryLabels = new Map((categories ?? []).map((item) => [item.id, item.label]));
 
+  if (!isStaff) {
+    const openSlots = planUsage.flatMap(({ businessId, slots }) => slots
+      .filter((slot) => slot.remaining > 0)
+      .map((slot) => ({ businessId, slot })));
+    return (
+      <>
+        <header className="page-heading">
+          <div>
+            <h1>Mis fichas</h1>
+            <p>Completa tus servicios y consulta la vista previa cuando guardes cambios.</p>
+          </div>
+        </header>
+        <div className="merchant-listing-grid">
+          {(data ?? []).map((service) => {
+            const state = ownerStateOf(service);
+            const href = service.category_id === "hospedaje"
+              ? `/panel/servicios/${service.id}/portada`
+              : `/panel/servicios/${service.id}`;
+            return (
+              <Panel className="merchant-listing-card" key={service.id}>
+                <span className="merchant-listing-type">
+                  {categoryLabels.get(service.category_id) ?? service.category_id}
+                </span>
+                <h2>{service.name}</h2>
+                <Badge tone={state.tone}>{state.label}</Badge>
+                <div className="actions merchant-listing-actions">
+                  <Link className="button primary" href={href}>Editar ficha</Link>
+                  <Link className="button secondary" href={`/panel/servicios/${service.id}/vista-previa`}>
+                    Vista previa
+                  </Link>
+                  {service.review_status === "approved" && service.status !== "published" && (
+                    <form action={publishOwnServiceAction}>
+                      <input type="hidden" name="service_id" value={service.id} />
+                      <button className="button secondary" type="submit">Publicar</button>
+                    </form>
+                  )}
+                </div>
+              </Panel>
+            );
+          })}
+          {openSlots.flatMap(({ businessId, slot }) =>
+            Array.from({ length: slot.remaining }, (_, index) => (
+              <Panel className="merchant-listing-card"
+                key={`${businessId}-${slot.category_id}-${slot.hospedaje_type_id ?? "none"}-${index}`}>
+                <span className="merchant-listing-type">{slot.category_label}</span>
+                <h2>{slot.type_label ?? slot.category_label} por preparar</h2>
+                <p className="muted">Empieza a añadir información y fotos de este servicio.</p>
+                <PrepareDraftServiceButton
+                  businessId={businessId}
+                  categoryId={slot.category_id}
+                  hospedajeTypeId={slot.hospedaje_type_id}
+                  label="Comenzar ficha"
+                />
+              </Panel>
+            ))) }
+        </div>
+        {!data?.length && !openSlots.length && <Panel>
+          <p>Aún no hay servicios asignados. Contacta con el equipo de Panamá Viajero.</p>
+        </Panel>}
+      </>
+    );
+  }
+
   return (
     <>
       <header className="page-heading">
@@ -54,20 +120,6 @@ export default async function ServicesPage() {
           + Crear servicio
         </Link>
       </header>
-      {!isStaff && (
-        <Panel>
-          <h2>Disponibles para añadir</h2>
-          {planUsage.map((item) => (
-            <div className="queue-item" key={`${item.category_id}-${item.hospedaje_type_id ?? ""}`}>
-              <b>{item.type_label ?? item.category_label}</b>
-              <small>
-                {item.remaining} disponibles de {item.quantity} · {item.used} creados
-              </small>
-            </div>
-          ))}
-          {!planUsage.length && <p className="muted">Tu plan aún no tiene servicios asignados.</p>}
-        </Panel>
-      )}
       <Panel className="table-panel">
         <div className="table-scroll">
           <table>
@@ -75,15 +127,9 @@ export default async function ServicesPage() {
               <tr>
                 <th>Servicio</th>
                 <th>Tipo</th>
-                {isStaff && <th>Negocio</th>}
-                {isStaff ? (
-                  <>
-                    <th>Estado</th>
-                    <th>Revisión</th>
-                  </>
-                ) : (
-                  <th>Estado</th>
-                )}
+                <th>Negocio</th>
+                <th>Estado</th>
+                <th>Revisión</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -91,20 +137,13 @@ export default async function ServicesPage() {
               {(data ?? []).map((service) => {
                 const status = statusOf(SERVICE_STATUS, service.status);
                 const review = statusOf(REVIEW_STATUS, service.review_status);
-                const ownerState = ownerStateOf(service);
                 return (
                   <tr key={service.id}>
                     <td>{service.name}</td>
                     <td>{categoryLabels.get(service.category_id) ?? service.category_id}</td>
-                    {isStaff && <td>{related(service.businesses)?.name ?? "—"}</td>}
-                    {isStaff ? (
-                      <>
-                        <td><Badge tone={status.tone}>{status.label}</Badge></td>
-                        <td><Badge tone={review.tone}>{review.label}</Badge></td>
-                      </>
-                    ) : (
-                      <td><Badge tone={ownerState.tone}>{ownerState.label}</Badge></td>
-                    )}
+                    <td>{related(service.businesses)?.name ?? "—"}</td>
+                    <td><Badge tone={status.tone}>{status.label}</Badge></td>
+                    <td><Badge tone={review.tone}>{review.label}</Badge></td>
                     <td>
                       <Link className="button secondary" href={`/panel/servicios/${service.id}`}>
                         Editar
