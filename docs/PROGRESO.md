@@ -49,8 +49,9 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Pendientes
 
-1. **Sitio público usa `cities`**, que `202610200005` elimina. Si está aplicada, fallan el
-   catálogo, el detalle de servicio y los sitios turísticos (`api/services/route.ts`,
+1. **Sitio público usa `cities`** (el usuario pidió verlo después: recordárselo).
+   `202610200005` la elimina. Si está aplicada, fallan el catálogo, el detalle de servicio y
+   los sitios turísticos (`api/services/route.ts`,
    `service-details.ts`, `tourist-sites.ts`, `tourist-site-services.ts`,
    `sitios-turisticos/[slug]/page.tsx`). El catálogo también pide `area_label`.
 2. Revisar `quote_stay` (usa `cities`).
