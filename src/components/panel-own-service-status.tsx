@@ -1,5 +1,6 @@
 "use client";
 
+import { startTransition } from "react";
 import { deleteOwnServiceAction, withdrawReviewAction } from "@/app/panel/actions";
 import { ownerStateOf } from "@/lib/panel-labels";
 
@@ -11,27 +12,35 @@ const NOTICES: Record<string, string> = {
   draft: "Borrador. Cuando esté listo, envíalo a revisión.",
 };
 
-// Muestra el estado del servicio y permite eliminarlo o cancelar su revisión con confirmación.
+// Muestra el estado del servicio, las correcciones pedidas por el equipo y, si está en
+// revisión, permite cancelarla con confirmación.
 export function OwnServiceStatusPanel({
   serviceId,
-  name,
   status,
   reviewStatus,
+  reviewComment,
 }: {
   serviceId: string;
-  name: string;
   status: string | null;
   reviewStatus: string | null;
+  reviewComment: string | null;
 }) {
   const state = ownerStateOf({ status, review_status: reviewStatus });
   const pending = reviewStatus === "pending" && status !== "published";
   const notice = NOTICES[status === "published" ? "published" : reviewStatus ?? "draft"];
+  const corrections = reviewStatus === "rejected" ? reviewComment?.trim() : "";
 
   return (
     <section className="panel" style={{ padding: 16, display: "grid", gap: 10 }}>
       <strong>Estado: {state.label}</strong>
       <small className="muted">{notice}</small>
-      {pending ? (
+      {corrections && (
+        <div role="note">
+          <b>Correcciones solicitadas</b>
+          <p style={{ margin: "4px 0 0", whiteSpace: "pre-line" }}>{corrections}</p>
+        </div>
+      )}
+      {pending && (
         <form action={withdrawReviewAction}>
           <input type="hidden" name="service_id" value={serviceId} />
           <button
@@ -48,25 +57,40 @@ export function OwnServiceStatusPanel({
             Cancelar revisión
           </button>
         </form>
-      ) : (
-        <form action={deleteOwnServiceAction}>
-          <input type="hidden" name="service_id" value={serviceId} />
-          <button
-            className="button secondary"
-            type="submit"
-            onClick={(event) => {
-              const extra = status === "published" ? " Dejará de verse en la web." : "";
-              if (!window.confirm(
-                `¿Seguro que quieres eliminar "${name}"? No se puede deshacer.${extra}`
-              )) {
-                event.preventDefault();
-              }
-            }}
-          >
-            Eliminar servicio
-          </button>
-        </form>
       )}
     </section>
+  );
+}
+
+// Botón para eliminar el servicio desde la barra inferior del editor. No es un formulario
+// propio porque vive dentro del formulario de edición.
+export function DeleteOwnServiceButton({
+  serviceId,
+  name,
+  status,
+}: {
+  serviceId: string;
+  name: string;
+  status: string;
+}) {
+  return (
+    <button
+      className="button secondary"
+      type="button"
+      style={{ marginLeft: "auto" }}
+      onClick={() => {
+        const extra = status === "published" ? " Dejará de verse en la web." : "";
+        if (!window.confirm(
+          `¿Seguro que quieres eliminar "${name}"? No se puede deshacer.${extra}`
+        )) {
+          return;
+        }
+        const formData = new FormData();
+        formData.set("service_id", serviceId);
+        startTransition(() => deleteOwnServiceAction(formData));
+      }}
+    >
+      Eliminar servicio
+    </button>
   );
 }

@@ -16,6 +16,7 @@ import {
   type SiteOption,
 } from "@/components/panel-service-site-picker";
 import { saveServiceAction } from "@/app/panel/actions";
+import { DeleteOwnServiceButton } from "@/components/panel-own-service-status";
 import { extractMapsEmbedUrl } from "@/lib/panel-maps";
 import { canManageCatalog, type PanelRole } from "@/types/panel";
 
@@ -56,6 +57,8 @@ export function ServiceEditorForm(props: Props) {
   const isStaff = canManageCatalog(role);
   const isNew = !service.id;
   const isPublished = service.status === "published";
+  // En revisión se cancela desde el panel de estado; no se ofrece eliminar.
+  const inReview = service.review_status === "pending" && !isPublished;
   // La categoría elegida controla qué campos se muestran (tipo de hospedaje, ficha de
   // hospedaje o de restaurante), así que vive en el estado del formulario.
   const [categoryId, setCategoryId] = useState(
@@ -367,6 +370,13 @@ export function ServiceEditorForm(props: Props) {
           </small>
         )}
         {isNew && <small>El nuevo servicio se guardará como borrador.</small>}
+        {!isStaff && !isNew && !inReview && (
+          <DeleteOwnServiceButton
+            serviceId={String(service.id)}
+            name={String(service.name ?? "")}
+            status={String(service.status ?? "")}
+          />
+        )}
       </footer>
     </form>
   );

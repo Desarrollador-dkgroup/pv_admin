@@ -179,8 +179,9 @@ export async function PanelServiceEditor({
                 categoria: item.category_id, negocio: item.businessId,
               });
               if (item.hospedaje_type_id) query.set("tipo", item.hospedaje_type_id);
+              const key = `${item.businessId}-${item.category_id}-${item.hospedaje_type_id ?? ""}`;
               return (
-                <Panel key={`${item.businessId}-${item.category_id}-${item.hospedaje_type_id ?? ""}`}>
+                <Panel key={key}>
                   <h2>{item.type_label ?? item.category_label}</h2>
                   <p className="muted">{item.businessName}</p>
                   {item.type_label && <p className="muted">{item.category_label}</p>}
@@ -230,9 +231,9 @@ export async function PanelServiceEditor({
       {!isStaff && serviceId && (
         <OwnServiceStatusPanel
           serviceId={serviceId}
-          name={String((service as Record<string, unknown>).name ?? "")}
           status={String((service as Record<string, unknown>).status ?? "")}
           reviewStatus={String((service as Record<string, unknown>).review_status ?? "")}
+          reviewComment={String((service as Record<string, unknown>).review_comment ?? "")}
         />
       )}
       <ServiceEditorForm

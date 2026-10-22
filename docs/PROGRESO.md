@@ -91,6 +91,9 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Historial
 
+- 2026-10-22 (nube): el panel de estado muestra las correcciones del equipo; "Eliminar
+  servicio" pasa a la barra inferior, a la derecha. Pendiente de pasar a `main`.
+
 - 2026-10-22 (nube): flujo del propietario restaurado al del usuario. "Cancelar revisión"
   en vez de "Eliminar revisión", sin "Eliminar" en la lista, Mi cuenta lee nombres sin la
   clave de servicio y se corrige el número de la campana. Pendiente de pasar a `main`.
