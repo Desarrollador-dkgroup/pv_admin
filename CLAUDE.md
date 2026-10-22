@@ -54,7 +54,10 @@ Ambos deben estar siempre iguales. Reglas estrictas:
 
 ## Supabase
 
-- Producción: proyecto `qqhcsacdffdxcbkzgulk`. Se trabaja con SQL manual en el SQL Editor.
+- Producción: proyecto `qqhcsacdffdxcbkzgulk`. Claude tiene el conector de Supabase: puede
+  leer libremente, pero cualquier cambio (SQL o migración) requiere confirmación del usuario.
+- El historial de Supabase no registra las migraciones del repo (se aplican a mano):
+  comprobar su estado por los objetos que crean, no por `list_migrations`.
 - Este repo es la fuente de las migraciones (`supabase/migrations/`).
   `npm run sync:content` copia tipos y SQL a `../panama-viajero` (requiere ambos repos).
 - `APLICAR_EN_SUPABASE.sql` es solo para una base vacía; no ejecutarlo en producción.
