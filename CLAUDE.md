@@ -25,11 +25,12 @@ Ambos deben estar siempre iguales. Reglas estrictas:
 ## Flujo de ramas
 
 - `main` es producción. `fusion` es la rama de trabajo e integración.
-- Todo cambio se hace en `fusion`, se verifica y luego se pasa a `main`.
+- Todo cambio se hace en `fusion`, se verifica (`tsc` y `eslint`) y se pasa a `main`
+  directamente, sin preguntar (decisión del usuario, 2026-10-22).
 - Cuando `feat/merchant-dashboard`, `feat/merchant-panel` u otra rama de colaboradores
   reciba cambios: traerlos a `fusion` con merge, resolver conflictos, verificar con `tsc`
   y `eslint`, revisar si traen migraciones (no se aplican solas) y solo entonces pasar
-  `fusion` a `main`. Avisar al usuario antes de subir a `main`.
+  `fusion` a `main`. Avisar al usuario si traen migraciones o cambian su flujo.
 - Nunca reescribir historia de `main` ni de ramas de otros (sin rebase ni force-push).
 
 ## Reglas de trabajo
