@@ -68,8 +68,9 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 10. Ajustar textos del panel de revisión y notificaciones a los nuevos estados.
 11. `feat/merchant-dashboard` ya está en `fusion`, pero NO en `main`. Antes de pasarla:
     aplicar `202610200008` (crea `owner_create_draft_service`, que el panel ya usa) y
-    `202610210002` (permite hospedajes borrador sin plan de comidas). Además, el propietario
-    edita con `MerchantServiceForm` y deja de ver `OwnServiceStatusPanel`: decidir.
+    `202610210002` (permite hospedajes borrador sin plan de comidas).
+    Decisión del usuario: el propietario usa su editor (`ServiceEditorForm`), no
+    `MerchantServiceForm`. Ese archivo y `saveMerchantServiceAction` quedan sin uso.
     `202610200005_owner_draft_service_quota.sql` es copia idéntica de `202610200008`.
 
 ## Historial
