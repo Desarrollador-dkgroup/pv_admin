@@ -5,6 +5,7 @@ import { getPanelIdentity } from "@/lib/panel-access";
 import { loadOwnerPlanUsage } from "@/lib/panel-service-plan";
 import { REVIEW_STATUS, SERVICE_STATUS, ownerStateOf, statusOf } from "@/lib/panel-labels";
 import { publishOwnServiceAction } from "@/app/panel/actions";
+import { DeleteServiceButton } from "@/components/panel-delete-service-button";
 import { related } from "@/lib/panel-relations";
 import { canManageCatalog } from "@/types/panel";
 
@@ -108,6 +109,9 @@ export default async function ServicesPage() {
                       <Link className="button secondary" href={`/panel/servicios/${service.id}`}>
                         Editar
                       </Link>
+                      {!isStaff && service.status !== "published" && (
+                        <DeleteServiceButton serviceId={service.id} name={service.name} />
+                      )}
                       {!isStaff && service.review_status === "approved" &&
                         service.status !== "published" && (
                         <form action={publishOwnServiceAction} style={{ display: "inline" }}>

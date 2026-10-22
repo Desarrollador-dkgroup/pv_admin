@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Panel } from "@/components/ui";
 import { ServiceEditorForm } from "@/components/service-editor-form";
+import { OwnServiceStatusPanel } from "@/components/panel-own-service-status";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { loadOwnerPlanUsage } from "@/lib/panel-service-plan";
 import { canManageCatalog } from "@/types/panel";
@@ -214,6 +215,14 @@ export async function PanelServiceEditor({
           Volver a servicios
         </Link>
       </header>
+      {!isStaff && serviceId && (
+        <OwnServiceStatusPanel
+          serviceId={serviceId}
+          name={String((service as Record<string, unknown>).name ?? "")}
+          status={String((service as Record<string, unknown>).status ?? "")}
+          reviewStatus={String((service as Record<string, unknown>).review_status ?? "")}
+        />
+      )}
       <ServiceEditorForm
         role={role}
         service={service as Record<string, unknown>}

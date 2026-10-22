@@ -334,6 +334,11 @@ export function ServiceEditorForm(props: Props) {
             {state.error}
           </p>
         )}
+        {state.saved && !state.error && (
+          <p role="status" style={{ color: "#15803d", margin: 0 }}>
+            Cambios guardados correctamente.
+          </p>
+        )}
         <Button type="submit" name="intent" value="save" disabled={pending}>
           {pending
             ? "Guardando..."

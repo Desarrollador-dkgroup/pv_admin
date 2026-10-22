@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { canManageCatalog } from "@/types/panel";
 
-type FormState = { error: string };
+type FormState = { error: string; saved?: boolean };
 
 const text = (formData: FormData, key: string) =>
   String(formData.get(key) ?? "").trim();
@@ -331,7 +331,9 @@ export async function saveServiceAction(
 
   revalidatePath("/panel");
   revalidatePath("/panel/servicios");
-  redirect(`/panel/servicios/${savedId}`);
+  // Un servicio nuevo pasa a su ficha de edición; uno existente confirma en la misma pantalla.
+  if (!serviceId) redirect(`/panel/servicios/${savedId}`);
+  return { error: "", saved: true };
 }
 
 // Convierte los valores monetarios visibles en dólares a centavos enteros.
@@ -436,4 +438,50 @@ export async function publishOwnServiceAction(formData: FormData): Promise<void>
   if (error) throw new Error(error.message);
   revalidatePath("/panel");
   revalidatePath("/panel/servicios");
+}
+
+// El propietario elimina un servicio suyo, esté o no publicado; la confirmación va en la pantalla.
+export async function deleteOwnServiceAction(formData: FormData): Promise<void> {
+  const { supabase, role, businessIds } = await getPanelIdentity();
+  if (role !== "propietario") throw new Error("Solo el propietario puede eliminar sus servicios.");
+  const serviceId = text(formData, "service_id");
+  const { data: service } = await supabase
+    .from("services")
+    .select("id, business_id, status")
+    .eq("id", serviceId)
+    .maybeSingle();
+  if (!service || !businessIds.includes(service.business_id)) {
+    throw new Error("No tienes acceso a este servicio.");
+  }
+  const { error } = await supabase.from("services").delete().eq("id", serviceId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/panel");
+  revalidatePath("/panel/servicios");
+  redirect("/panel/servicios");
+}
+
+// El propietario retira su servicio de la revisión; vuelve a borrador y conserva la ficha.
+export async function withdrawReviewAction(formData: FormData): Promise<void> {
+  const { supabase, role, businessIds } = await getPanelIdentity();
+  if (role !== "propietario") throw new Error("Solo el propietario puede retirar la revisión.");
+  const serviceId = text(formData, "service_id");
+  const { data: service } = await supabase
+    .from("services")
+    .select("id, business_id, review_status")
+    .eq("id", serviceId)
+    .maybeSingle();
+  if (!service || !businessIds.includes(service.business_id)) {
+    throw new Error("No tienes acceso a este servicio.");
+  }
+  if (service.review_status !== "pending") {
+    throw new Error("Este servicio no está en revisión.");
+  }
+  const { error } = await supabase
+    .from("services")
+    .update({ review_status: "not_submitted" })
+    .eq("id", serviceId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/panel");
+  revalidatePath("/panel/servicios");
+  revalidatePath(`/panel/servicios/${serviceId}`);
 }
