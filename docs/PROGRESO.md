@@ -11,7 +11,7 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 - Local y nube sincronizados: el usuario subió sus últimos cambios a `main` en ambos repos.
 - Rama de trabajo única: `fusion` (local y nube). En `panama-viajero` se creó desde `main`.
 - `pv_admin` tiene la rama `feat/merchant-dashboard` con 12 commits que no están en `main`,
-  incluidas las migraciones `202610200008` y `202610210002`. Pendiente de traer a `fusion`.
+  incluidas las migraciones `202610200008` y `202610210002`. Ya integrada en `fusion`.
 
 ## Panel de propietarios (ya funciona)
 
@@ -66,10 +66,15 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
    `src/components/panel-delete-service-button.tsx`.
 9. Rotar la clave `service_role` de Supabase y actualizar el secreto en Cloudflare.
 10. Ajustar textos del panel de revisión y notificaciones a los nuevos estados.
-11. Traer `feat/merchant-dashboard` a `fusion`, revisar sus migraciones y pasarla a `main`.
+11. `feat/merchant-dashboard` ya está en `fusion`, pero NO en `main`. Antes de pasarla:
+    aplicar `202610200008` (crea `owner_create_draft_service`, que el panel ya usa) y
+    `202610210002` (permite hospedajes borrador sin plan de comidas). Además, el propietario
+    edita con `MerchantServiceForm` y deja de ver `OwnServiceStatusPanel`: decidir.
+    `202610200005_owner_draft_service_quota.sql` es copia idéntica de `202610200008`.
 
 ## Historial
 
+- 2026-10-22 (nube): se integra `feat/merchant-dashboard` en `fusion` (no en `main`).
 - 2026-10-22 (nube): `fusion` pasa a `main`; se borra la rama `claude/adoring-lamport-hgz2jf`.
 - 2026-10-22 (nube): la rama de trabajo pasa a ser `fusion` en ambos repos.
 - 2026-10-22 (nube): se crean `CLAUDE.md` en ambos repos y esta bitácora.
