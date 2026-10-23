@@ -494,13 +494,19 @@ function receptionHours(formData: FormData) {
 // Mantiene los campos variables por tipo de hospedaje dentro del objeto JSON.
 function parseDetails(formData: FormData) {
   const entries = [...formData.entries()].filter(([key]) => key.startsWith("detail__"));
-  return Object.fromEntries(
-    entries.map(([key, value]) => {
-      const name = key.slice("detail__".length);
-      const raw = String(value).trim();
-      return [name, raw];
-    }),
-  );
+  return {
+    ...Object.fromEntries(
+      entries.map(([key, value]) => {
+        const name = key.slice("detail__".length);
+        const raw = String(value).trim();
+        return [name, raw];
+      }),
+    ),
+    // Restaurantes (servicios ya creados) que funcionan dentro del hospedaje.
+    linked_restaurant_ids: [
+      ...new Set(formData.getAll("linked_restaurant_ids").map(String).filter(Boolean)),
+    ],
+  };
 }
 
 // Convierte los turnos por día al formato relacional de restaurant_hours.

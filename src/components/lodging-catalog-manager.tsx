@@ -12,6 +12,7 @@ import {
 } from "@/components/panel-gallery-manager";
 import { getLodgingUnitFields, type LodgingDetailField } from "@/data/lodging-details";
 import { ROOM_AMENITIES, readRoomDetails } from "@/data/room-amenities";
+import { PhotoPicker } from "@/components/photo-picker";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { slugify } from "@/lib/panel-slug";
 import {
@@ -507,11 +508,8 @@ export function LodgingCatalogManager({
           >
             <h3>{rooms.length ? "Agregar otra habitación" : "Agregar la primera habitación"}</h3>
             <RoomFields unitFields={unitFields} />
-            <label className="field">
-              Fotos de la habitación (hasta {UNIT_PHOTO_LIMIT})
-              <input type="file" name="room_photos" accept="image/jpeg,image/png,image/webp"
-                multiple />
-            </label>
+            <PhotoPicker name="room_photos" label="Fotos de la habitación"
+              limit={UNIT_PHOTO_LIMIT} />
             {error && !roomErrorId && <p className="form-error" role="alert">{error}</p>}
             <div className="actions">
               <Button type="submit" disabled={busy}>
@@ -609,11 +607,7 @@ export function LodgingCatalogManager({
           {AREA_DETAIL_FIELDS.map(([key, label, multiline]) => (
             <Field key={key} label={label} name={`area__${key}`} multiline={multiline} />
           ))}</>}
-          <label className="field">
-            Fotos del área (hasta {UNIT_PHOTO_LIMIT})
-            <input type="file" name="area_photos" accept="image/jpeg,image/png,image/webp"
-              multiple />
-          </label>
+          <PhotoPicker name="area_photos" label="Fotos del área" limit={UNIT_PHOTO_LIMIT} />
           <Button type="submit" disabled={busy}>Guardar área</Button>
         </form>
       </Panel>

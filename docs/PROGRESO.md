@@ -87,6 +87,10 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Historial
 
+- 2026-10-23 (nube): un hospedaje vincula restaurantes ya creados del mismo negocio
+  (`lodging_profiles.details.linked_restaurant_ids`); el sitio los muestra si están
+  publicados. Vista previa de fotos al elegirlas en habitaciones y áreas.
+
 - 2026-10-23 (nube): formularios en cuadrícula (campos cortos en columnas; textos largos,
   casillas y botones a lo ancho). Casillas en columnas. Probado en escritorio y móvil.
 

@@ -38,6 +38,8 @@ type Props = {
   selectedSiteIds: string[];
   selectedAmenityIds: string[];
   selectedFeatureIds: string[];
+  // Restaurantes ya creados que se pueden vincular a un hospedaje.
+  restaurantOptions: Array<{ id: string; name: string; business_id: string }>;
 };
 
 // Presenta campos reales para el servicio y su ficha específica.
@@ -68,6 +70,13 @@ export function ServiceEditorForm(props: Props) {
     : [];
   const detailFields = getLodgingDetailFields(lodgingTypeId);
   const details = (lodging.details ?? {}) as Record<string, string>;
+  const savedDetails = (lodging.details ?? {}) as Record<string, unknown>;
+  const linkedRestaurantIds = Array.isArray(savedDetails.linked_restaurant_ids)
+    ? savedDetails.linked_restaurant_ids.map(String)
+    : [];
+  const serviceBusinessId = String(service.business_id ?? props.businesses[0]?.id ?? "");
+  const restaurantChoices = props.restaurantOptions.filter((item) =>
+    item.business_id === serviceBusinessId);
   const selectedSites = props.selectedSiteIds.length
     ? props.selectedSiteIds
     : service.tourist_site_id ? [String(service.tourist_site_id)] : [];
@@ -311,6 +320,33 @@ export function ServiceEditorForm(props: Props) {
               multiline={field.multiline}
             />
           ))}
+        </Panel>
+      )}
+
+      {categoryId === "hospedaje" && (
+        <Panel>
+          <h2>Restaurantes del hospedaje</h2>
+          {restaurantChoices.length ? (
+            <fieldset className="choice-group">
+              <legend>Marca los restaurantes que están dentro de este hospedaje</legend>
+              {restaurantChoices.map((item) => (
+                <label className="checkbox-option" key={item.id}>
+                  <input
+                    type="checkbox"
+                    name="linked_restaurant_ids"
+                    value={item.id}
+                    defaultChecked={linkedRestaurantIds.includes(item.id)}
+                  />
+                  {item.name}
+                </label>
+              ))}
+            </fieldset>
+          ) : (
+            <p className="muted">
+              Para vincular un restaurante, primero créalo como servicio de la categoría
+              Restaurantes en este mismo negocio.
+            </p>
+          )}
         </Panel>
       )}
 
