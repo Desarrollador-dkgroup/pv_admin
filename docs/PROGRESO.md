@@ -87,6 +87,11 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Historial
 
+- 2026-10-23 (nube): formulario completo de habitación para todos los roles (camas,
+  dormitorios, baños, área, precio, cantidad, comodidades en `details.amenities` y fotos).
+  Se quitan del formulario general los textos que repetían habitaciones o unidades.
+  Pendiente: error al cargar `/panel/servicios` (esperando el mensaje de Cloudflare).
+
 - 2026-10-23 (nube): habitaciones y áreas dentro de la página del servicio, cada una con su
   galería (también al crearlas). `/unidades` redirige ahí. Galería solo general. Se quitan
   los tipos de apartamento. El sitio público muestra la foto de cada habitación.

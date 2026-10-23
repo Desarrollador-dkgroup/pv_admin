@@ -5,6 +5,7 @@ import { getPanelIdentity } from "@/lib/panel-access";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { canManageCatalog } from "@/types/panel";
 import type { Room } from "@/components/lodging-catalog-manager";
+import { readRoomDetails } from "@/data/room-amenities";
 
 type DeleteResult = { error: string; warning?: string };
 
@@ -69,17 +70,12 @@ export async function updateRoomTypeAction(
     total_units: units,
     price_cents: Math.round(price * 100),
   };
-  if (canManageCatalog(role)) {
-    const optionalNumber = (key: string) => field(data, key) ? Number(field(data, key)) : null;
-    changes.bedroom_count = optionalNumber("bedroom_count");
-    changes.bathroom_count = optionalNumber("bathroom_count");
-    changes.area_m2 = optionalNumber("area_m2");
-    changes.details = Object.fromEntries(
-      [...data.entries()]
-        .filter(([key]) => key.startsWith("unit__"))
-        .map(([key, value]) => [key.slice("unit__".length), String(value).trim()]),
-    );
-  }
+  // El propietario también completa dormitorios, baños, área y comodidades.
+  const optionalNumber = (key: string) => field(data, key) ? Number(field(data, key)) : null;
+  changes.bedroom_count = optionalNumber("bedroom_count");
+  changes.bathroom_count = optionalNumber("bathroom_count");
+  changes.area_m2 = optionalNumber("area_m2");
+  changes.details = readRoomDetails(data);
   const { data: updated, error: updateError } = await supabase.from("room_types")
     .update(changes).eq("id", roomId).eq("service_id", serviceId)
     .select("id, name, description, capacity, beds_label, price_cents, total_units, booking_unit, bedroom_count, bathroom_count, area_m2, details")

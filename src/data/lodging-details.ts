@@ -7,11 +7,11 @@ export type LodgingDetailField = {
   multiline?: boolean;
 };
 
-// Expone campos específicos de las plantillas para cada tipo de hospedaje.
+// Expone campos específicos de las plantillas para cada tipo de hospedaje. Las habitaciones,
+// camas y unidades no van aquí: se añaden en la sección Habitaciones, cada una con sus fotos.
 const detailsByType: Record<string, LodgingDetailField[]> = {
   hotel: [
     { key: "classification", label: "Clasificación del hotel" },
-    { key: "room_count", label: "Cantidad total de habitaciones" },
     { key: "legal_operator", label: "Nombre legal del operador" },
     { key: "arrival_instructions", label: "Acceso y llegada", multiline: true },
     { key: "emergency_contact", label: "Contacto para emergencias" },
@@ -24,8 +24,6 @@ const detailsByType: Record<string, LodgingDetailField[]> = {
   ],
   hostal: [
     { key: "legal_operator", label: "Nombre legal del operador" },
-    { key: "room_count", label: "Cantidad de dormitorios" },
-    { key: "dormitory_types", label: "Dormitorios compartidos y privados", multiline: true },
     { key: "shared_spaces", label: "Zonas compartidas y horarios", multiline: true },
     { key: "hostal_services", label: "Servicios incluidos y opcionales", multiline: true },
     { key: "food_services", label: "Desayuno y otros alimentos", multiline: true },
@@ -42,7 +40,6 @@ const detailsByType: Record<string, LodgingDetailField[]> = {
   resort: [
     { key: "legal_operator", label: "Nombre legal del negocio" },
     { key: "resort_style", label: "Estilo del resort" },
-    { key: "unit_count", label: "Cantidad de unidades" },
     { key: "meal_plan", label: "Planes de alimentación e inclusiones", multiline: true },
     { key: "restaurants_bars", label: "Restaurantes, bares y zonas", multiline: true },
     { key: "restaurant_menus", label: "Menús vinculados al plan", multiline: true },
@@ -60,7 +57,6 @@ const detailsByType: Record<string, LodgingDetailField[]> = {
     { key: "property_type", label: "Tipo de vivienda" },
     { key: "exclusive_use", label: "Uso ofrecido y privacidad" },
     { key: "simultaneous_stays", label: "Estancias simultáneas" },
-    { key: "sleeping_spaces", label: "Dormitorios y otros espacios para dormir", multiline: true },
     { key: "access_instructions", label: "Acceso y llegada", multiline: true },
     { key: "emergency_protocol", label: "Emergencias y protocolo", multiline: true },
     { key: "equipment_notes", label: "Equipamiento y condiciones", multiline: true },
@@ -70,7 +66,6 @@ const detailsByType: Record<string, LodgingDetailField[]> = {
     { key: "legal_operator", label: "Nombre legal del operador" },
     { key: "style", label: "Estilo o categoría de la villa" },
     { key: "privacy", label: "Privacidad y exclusividad" },
-    { key: "sleeping_spaces", label: "Dormitorios, camas y baños", multiline: true },
     { key: "private_services", label: "Servicios privados y opcionales", multiline: true },
     { key: "host_contact", label: "Anfitrión y asistencia" },
     { key: "emergency_protocol", label: "Emergencias y protocolo", multiline: true },
@@ -89,7 +84,6 @@ const detailsByType: Record<string, LodgingDetailField[]> = {
   lodge: [
     { key: "legal_operator", label: "Nombre legal del operador" },
     { key: "environment", label: "Entorno principal" },
-    { key: "unit_count", label: "Capacidad y unidades" },
     { key: "water_energy", label: "Agua, energía y conectividad" },
     { key: "food_service", label: "Alimentación incluida o disponible", multiline: true },
     { key: "activities_access", label: "Actividades, acceso y seguridad", multiline: true },
@@ -104,8 +98,6 @@ const detailsByType: Record<string, LodgingDetailField[]> = {
   ],
   camping: [
     { key: "environment", label: "Entorno del camping" },
-    { key: "site_count", label: "Cantidad de sitios y parcelas" },
-    { key: "site_types", label: "Tipos de parcela o unidad", multiline: true },
     { key: "connections", label: "Electricidad, agua y desagüe", multiline: true },
     { key: "sanitary_facilities", label: "Baños, duchas y lavandería", multiline: true },
     { key: "safety_rules", label: "Clima, fuego, evacuación y reglas", multiline: true },

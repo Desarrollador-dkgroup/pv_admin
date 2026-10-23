@@ -10,7 +10,8 @@ import {
   type GalleryGroup,
   type Photo,
 } from "@/components/panel-gallery-manager";
-import { getLodgingUnitFields } from "@/data/lodging-details";
+import { getLodgingUnitFields, type LodgingDetailField } from "@/data/lodging-details";
+import { ROOM_AMENITIES, readRoomDetails } from "@/data/room-amenities";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { slugify } from "@/lib/panel-slug";
 import {
@@ -153,11 +154,7 @@ export function LodgingCatalogManager({
       bedroom_count: numberOrNull(value(formData, "bedroom_count")),
       bathroom_count: numberOrNull(value(formData, "bathroom_count")),
       area_m2: numberOrNull(value(formData, "area_m2")),
-      details: Object.fromEntries(
-        [...formData.entries()]
-          .filter(([key]) => key.startsWith("unit__"))
-          .map(([key, item]) => [key.slice(6), String(item).trim()]),
-      ),
+      details: readRoomDetails(formData),
       position: rooms.length,
     };
     const { data, error: failure } = await supabase
@@ -422,32 +419,7 @@ export function LodgingCatalogManager({
         {notice && <p role="status">{notice}</p>}
         <form action={saveRoom} id="agregar-habitacion">
           <h3>{rooms.length ? "Agregar otra habitación" : "Agregar la primera habitación"}</h3>
-          <Field label="Nombre de la habitación" name="room_name" required />
-          <Field label="Descripción" name="room_description" multiline required />
-          <label className="field">
-            Unidad que reserva el cliente
-            <select name="booking_unit" defaultValue="room">
-              <option value="room">Habitación completa</option>
-              <option value="bed">Cama individual</option>
-              <option value="unit">Unidad completa</option>
-              <option value="site">Parcela o sitio</option>
-            </select>
-          </label>
-          <Field label="Capacidad de huéspedes por unidad" name="capacity" type="number" required />
-          <Field label="Camas y distribución" name="beds_label" required />
-          <Field label="Precio base por noche (USD)" name="price" type="number" required />
-          <Field label="Cuántas unidades hay de este tipo" name="total_units" type="number" required />
-          {!isOwner && <><Field label="Dormitorios" name="bedroom_count" type="number" />
-          <Field label="Baños" name="bathroom_count" type="number" />
-          <Field label="Área (m²)" name="area_m2" type="number" />
-          {unitFields.map((field) => (
-            <Field
-              key={field.key}
-              label={field.label}
-              name={`unit__${field.key}`}
-              multiline={field.multiline}
-            />
-          ))}</>}
+          <RoomFields unitFields={unitFields} />
           <label className="field">
             Fotos de la habitación (hasta {UNIT_PHOTO_LIMIT})
             <input type="file" name="room_photos" accept="image/jpeg,image/png,image/webp"
@@ -473,9 +445,13 @@ export function LodgingCatalogManager({
               </div>
             </div>
             {roomErrorId === room.id && error && <p className="form-error" role="alert">{error}</p>}
-            {!isOwner && Object.entries(room.details ?? {}).map(([key, detail]) => (
-              <small key={key}>{labelFor(key)}: {detail}</small>
-            ))}
+            <p className="muted">{roomSummary(room)}</p>
+            {Object.entries(room.details ?? {}).filter(([, detail]) => detail)
+              .map(([key, detail]) => (
+                <small key={key}>
+                  {key === "amenities" ? "Comodidades" : labelFor(key)}: {detail}
+                </small>
+              ))}
             {editingRoomId === room.id && (
               <form className="lodging-item-form" action={(formData) => updateRoom(room.id, formData)}>
                 <h4>Datos de {room.name}</h4>
@@ -483,27 +459,7 @@ export function LodgingCatalogManager({
                   Capacidad: {room.capacity} · Cantidad: {room.total_units}. Si la habitación
                   ya tiene reservas, puedes aumentar estos valores, pero no reducirlos.
                 </p>
-                <Field label="Nombre o tipo" name="room_name" defaultValue={room.name} required />
-                <Field label="Descripción" name="room_description" multiline
-                  defaultValue={room.description} required />
-                <Field label="Capacidad de huéspedes por unidad" name="capacity" type="number"
-                  defaultValue={room.capacity} required />
-                <Field label="Cuántas unidades hay de este tipo" name="total_units" type="number"
-                  defaultValue={room.total_units} required />
-                <Field label="Camas y distribución" name="beds_label"
-                  defaultValue={room.beds_label} required />
-                <Field label="Precio base por noche (USD)" name="price" type="number"
-                  defaultValue={dollars(room.price_cents)} required />
-                {!isOwner && <><Field label="Dormitorios" name="bedroom_count" type="number"
-                  defaultValue={room.bedroom_count} />
-                <Field label="Baños" name="bathroom_count" type="number"
-                  defaultValue={room.bathroom_count} />
-                <Field label="Área (m²)" name="area_m2" type="number"
-                  defaultValue={room.area_m2} />
-                {unitFields.map((field) => (
-                  <Field key={field.key} label={field.label} name={`unit__${field.key}`}
-                    multiline={field.multiline} defaultValue={room.details?.[field.key] ?? ""} />
-                ))}</>}
+                <RoomFields unitFields={unitFields} room={room} />
                 <Button type="submit" disabled={busy}>Guardar cambios de habitación</Button>
               </form>
             )}
@@ -633,6 +589,84 @@ export function LodgingCatalogManager({
       </Panel>
     </>
   );
+}
+
+const BOOKING_UNITS: Array<[string, string]> = [
+  ["room", "Habitación completa"],
+  ["bed", "Cama individual"],
+  ["unit", "Unidad completa (apartamento, casa, cabaña)"],
+  ["site", "Parcela o sitio"],
+];
+
+// Campos de una habitación, iguales al crearla y al editarla.
+function RoomFields({
+  unitFields,
+  room,
+}: {
+  unitFields: LodgingDetailField[];
+  room?: Room;
+}) {
+  const saved = (room?.details?.amenities ?? "").split(",").map((item) => item.trim())
+    .filter(Boolean);
+  const others = saved.filter((item) => !ROOM_AMENITIES.includes(item));
+  return (
+    <>
+      <Field label="Nombre de la habitación" name="room_name" defaultValue={room?.name}
+        required />
+      <Field label="Descripción" name="room_description" multiline
+        defaultValue={room?.description} required />
+      {!room && (
+        <label className="field">
+          Qué reserva el cliente
+          <select name="booking_unit" defaultValue="room">
+            {BOOKING_UNITS.map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </select>
+        </label>
+      )}
+      <Field label="Capacidad de huéspedes" name="capacity" type="number"
+        defaultValue={room?.capacity} required />
+      <Field label="Camas y distribución (por ejemplo, 1 cama king y 1 sofá cama)"
+        name="beds_label" defaultValue={room?.beds_label} required />
+      <Field label="Dormitorios" name="bedroom_count" type="number"
+        defaultValue={room?.bedroom_count} />
+      <Field label="Baños" name="bathroom_count" type="number"
+        defaultValue={room?.bathroom_count} />
+      <Field label="Área (m²)" name="area_m2" type="number" defaultValue={room?.area_m2} />
+      <Field label="Precio por noche (USD)" name="price" type="number"
+        defaultValue={room ? dollars(room.price_cents) : undefined} required />
+      <Field label="Cuántas habitaciones iguales hay" name="total_units" type="number"
+        defaultValue={room?.total_units} required />
+      <fieldset className="choice-group">
+        <legend>Comodidades de la habitación</legend>
+        {ROOM_AMENITIES.map((amenity) => (
+          <label className="checkbox-option" key={amenity}>
+            <input type="checkbox" name="room_amenities" value={amenity}
+              defaultChecked={saved.includes(amenity)} />
+            {amenity}
+          </label>
+        ))}
+      </fieldset>
+      <Field label="Otras comodidades (separadas por comas)" name="room_amenities_other"
+        defaultValue={others.join(", ")} />
+      {unitFields.filter((field) => field.key !== "amenities").map((field) => (
+        <Field key={field.key} label={field.label} name={`unit__${field.key}`}
+          multiline={field.multiline} defaultValue={room?.details?.[field.key] ?? ""} />
+      ))}
+    </>
+  );
+}
+
+// Resumen corto de la habitación para su tarjeta.
+function roomSummary(room: Room) {
+  return [
+    room.beds_label,
+    room.bedroom_count ? `${room.bedroom_count} dormitorios` : "",
+    room.bathroom_count ? `${room.bathroom_count} baños` : "",
+    room.area_m2 ? `${room.area_m2} m²` : "",
+    `${room.total_units} ${room.total_units === 1 ? "disponible" : "disponibles"}`,
+  ].filter(Boolean).join(" · ");
 }
 
 function Field({

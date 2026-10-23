@@ -314,6 +314,24 @@ export function ServiceEditorForm(props: Props) {
         </Panel>
       )}
 
+      {categoryId === "hospedaje" && (
+        <Panel>
+          <h2>Habitaciones</h2>
+          {isNew ? (
+            <p>
+              Guarda primero el borrador. Después podrás añadir cada habitación con sus
+              camas, comodidades, precio y su galería de fotos.
+            </p>
+          ) : (
+            <p>
+              Cada habitación se añade, con sus camas, comodidades, precio y fotos, en la
+              sección <a className="text-link" href="#habitaciones">Habitaciones</a> de
+              esta misma página, debajo del formulario.
+            </p>
+          )}
+        </Panel>
+      )}
+
       {categoryId === "restaurantes" && (
         <RestaurantFields
           restaurant={restaurant}
