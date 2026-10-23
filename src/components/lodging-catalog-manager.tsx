@@ -121,6 +121,8 @@ export function LodgingCatalogManager({
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
+  // El formulario de alta se abre solo; con habitaciones ya creadas, al pulsar el botón.
+  const [adding, setAdding] = useState(initialRooms.length === 0);
   const [roomErrorId, setRoomErrorId] = useState<string | null>(null);
   const [editingAreaId, setEditingAreaId] = useState<string | null>(null);
   const unitFields = getLodgingUnitFields(lodgingTypeId);
@@ -180,9 +182,12 @@ export function LodgingCatalogManager({
     }
     setPhotos((current) => ({ ...current, rooms: { ...current.rooms, [room.id]: uploaded } }));
     setRooms((current) => [...current, room]);
+    setAdding(false);
+    window.setTimeout(() => document.getElementById(`habitacion-${room.id}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
     setNotice(photoError
       ? `Se agregó ${name}, pero algunas fotos no se subieron: ${photoError}`
-      : `Se agregó ${name}. Puedes agregar otra habitación.`);
+      : `Se agregó ${name}. Puedes ver sus datos y fotos aquí arriba.`);
     router.refresh();
     setBusy(false);
   }
@@ -415,23 +420,13 @@ export function LodgingCatalogManager({
         <p role="status">
           {rooms.length} {rooms.length === 1 ? "habitación agregada" : "habitaciones agregadas"}
         </p>
-        {error && !roomErrorId && <p className="form-error" role="alert">{error}</p>}
-        {notice && <p role="status">{notice}</p>}
-        <form action={saveRoom} id="agregar-habitacion">
-          <h3>{rooms.length ? "Agregar otra habitación" : "Agregar la primera habitación"}</h3>
-          <RoomFields unitFields={unitFields} />
-          <label className="field">
-            Fotos de la habitación (hasta {UNIT_PHOTO_LIMIT})
-            <input type="file" name="room_photos" accept="image/jpeg,image/png,image/webp"
-              multiple />
-          </label>
-          <Button type="submit" disabled={busy}>
-            {busy ? "Guardando..." : "Agregar habitación"}
-          </Button>
-        </form>
-        {rooms.length > 0 && <h3>Habitaciones agregadas</h3>}
+        {!adding && error && !roomErrorId && <p className="form-error" role="alert">{error}</p>}
+        {!adding && notice && <p className="form-success" role="status">{notice}</p>}
+        {!rooms.length && (
+          <p className="muted">Todavía no hay habitaciones. Agrega la primera abajo.</p>
+        )}
         {rooms.map((room) => (
-          <article className="lodging-item-card" key={room.id}>
+          <article className="lodging-item-card" key={room.id} id={`habitacion-${room.id}`}>
             <div className="lodging-item-heading">
               <div className="lodging-item-summary">
                 <h4>{room.name}</h4>
@@ -500,6 +495,41 @@ export function LodgingCatalogManager({
             </div>
           </article>
         ))}
+        {adding ? (
+          <form
+            id="agregar-habitacion"
+            className="lodging-item-card"
+            // Sin "action" para que un error no borre lo escrito ni las fotos elegidas.
+            onSubmit={(event) => {
+              event.preventDefault();
+              void saveRoom(new FormData(event.currentTarget));
+            }}
+          >
+            <h3>{rooms.length ? "Agregar otra habitación" : "Agregar la primera habitación"}</h3>
+            <RoomFields unitFields={unitFields} />
+            <label className="field">
+              Fotos de la habitación (hasta {UNIT_PHOTO_LIMIT})
+              <input type="file" name="room_photos" accept="image/jpeg,image/png,image/webp"
+                multiple />
+            </label>
+            {error && !roomErrorId && <p className="form-error" role="alert">{error}</p>}
+            <div className="actions">
+              <Button type="submit" disabled={busy}>
+                {busy ? "Guardando..." : "Guardar habitación"}
+              </Button>
+              {rooms.length > 0 && (
+                <Button tone="quiet" type="button" disabled={busy}
+                  onClick={() => { setAdding(false); setError(""); }}>
+                  Cancelar
+                </Button>
+              )}
+            </div>
+          </form>
+        ) : (
+          <Button type="button" onClick={() => { setAdding(true); setNotice(""); }}>
+            + Agregar habitación
+          </Button>
+        )}
       </Panel>
       <Panel id="areas">
         <h2>Áreas e instalaciones</h2>

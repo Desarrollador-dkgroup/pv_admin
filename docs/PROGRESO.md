@@ -87,6 +87,9 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Historial
 
+- 2026-10-23 (nube): las habitaciones se listan primero; el alta se abre con
+  "+ Agregar habitación", muestra el error junto al botón y no borra lo escrito.
+
 - 2026-10-23 (nube): formulario completo de habitación para todos los roles (camas,
   dormitorios, baños, área, precio, cantidad, comodidades en `details.amenities` y fotos).
   Se quitan del formulario general los textos que repetían habitaciones o unidades.
