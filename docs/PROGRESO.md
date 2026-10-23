@@ -87,6 +87,9 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Historial
 
+- 2026-10-23 (nube): formularios en cuadrícula (campos cortos en columnas; textos largos,
+  casillas y botones a lo ancho). Casillas en columnas. Probado en escritorio y móvil.
+
 - 2026-10-23 (nube): las habitaciones se listan primero; el alta se abre con
   "+ Agregar habitación", muestra el error junto al botón y no borra lo escrito.
 
