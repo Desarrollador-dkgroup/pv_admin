@@ -87,6 +87,10 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Historial
 
+- 2026-10-23 (nube): sitio público conectado a `destinations` (portada, /destinos y cada
+  destino con banner, sitios turísticos, hospedajes, restaurantes y mapa). Probado contra
+  producción.
+
 - 2026-10-23 (nube): un hospedaje vincula restaurantes ya creados del mismo negocio
   (`lodging_profiles.details.linked_restaurant_ids`); el sitio los muestra si están
   publicados. Vista previa de fotos al elegirlas en habitaciones y áreas.
