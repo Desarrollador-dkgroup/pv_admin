@@ -5,7 +5,6 @@ export type LodgingDetailField = {
   key: string;
   label: string;
   multiline?: boolean;
-  kind?: "text" | "apartment_types";
 };
 
 // Expone campos específicos de las plantillas para cada tipo de hospedaje.
@@ -51,12 +50,9 @@ const detailsByType: Record<string, LodgingDetailField[]> = {
     { key: "accessibility", label: "Accesibilidad del complejo", multiline: true },
     { key: "rate_rules", label: "Temporadas, tarifas y reglas", multiline: true },
   ],
+  // Los apartamentos se describen como habitaciones (con su galería) en la página del
+  // servicio; aquí solo quedan las reglas de la casa.
   apartamento: [
-    {
-      key: "apartment_types",
-      label: "Tipos de apartamento e inclusiones",
-      kind: "apartment_types",
-    },
     { key: "building_rules", label: "Reglas de la casa", multiline: true },
   ],
   casa: [

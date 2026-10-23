@@ -685,6 +685,28 @@ td:first-child a:hover {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 24px;
 }
+/* Galería dentro de la tarjeta de una habitación o un área. */
+.gallery-inline {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--canvas);
+}
+.gallery-inline p {
+  margin: 0;
+}
+.gallery-inline .gallery-grid-compact {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+.gallery-inline .photo-image {
+  height: 120px;
+}
+.gallery-photo {
+  display: grid;
+  gap: 8px;
+}
 .photo-placeholder {
   background: var(--pale);
   color: var(--brand);

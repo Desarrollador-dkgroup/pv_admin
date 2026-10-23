@@ -3,10 +3,20 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Panel } from "@/components/ui";
+import {
+  PanelGalleryManager,
+  uploadPhotosToGroup,
+  validatePhotos,
+  type GalleryGroup,
+  type Photo,
+} from "@/components/panel-gallery-manager";
 import { getLodgingUnitFields } from "@/data/lodging-details";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { slugify } from "@/lib/panel-slug";
-import { deleteRoomTypeAction, updateRoomTypeAction } from "@/app/panel/servicios/[id]/unidades/actions";
+import {
+  deleteRoomTypeAction,
+  updateRoomTypeAction,
+} from "@/app/panel/servicios/[id]/unidades/actions";
 
 export type Room = {
   id: string;
@@ -51,7 +61,39 @@ export type RatePeriod = {
   cancellation_policy: string | null;
 };
 
-// Gestiona unidades reservables y espacios con galerías independientes.
+// Máximo de fotos por habitación y por área (coincide con el límite de la base).
+const UNIT_PHOTO_LIMIT = 10;
+
+export type CatalogPhotos = {
+  rooms: Record<string, Photo[]>;
+  areas: Record<string, Photo[]>;
+};
+
+// Galería de una habitación (room_type_photos) o de un área (service_photos con su área).
+function unitGallery(
+  kind: "room" | "area",
+  id: string,
+  label: string,
+  photos: Photo[],
+): GalleryGroup {
+  return {
+    id: `${kind}-${id}`,
+    label,
+    table: kind === "room" ? "room_type_photos" : "service_photos",
+    relationId: id,
+    limit: UNIT_PHOTO_LIMIT,
+    photos,
+  };
+}
+
+// Archivos elegidos en el formulario de alta; ignora el campo vacío.
+function chosenFiles(formData: FormData, name: string) {
+  return formData.getAll(name).filter(
+    (item): item is File => item instanceof File && item.size > 0,
+  );
+}
+
+// Gestiona las habitaciones y las áreas del hospedaje, cada una con su propia galería.
 export function LodgingCatalogManager({
   serviceId,
   lodgingTypeId,
@@ -59,6 +101,7 @@ export function LodgingCatalogManager({
   rooms: initialRooms,
   areas: initialAreas,
   rates: initialRates,
+  photos: initialPhotos,
 }: {
   serviceId: string;
   lodgingTypeId: string;
@@ -66,11 +109,13 @@ export function LodgingCatalogManager({
   rooms: Room[];
   areas: Area[];
   rates: RatePeriod[];
+  photos: CatalogPhotos;
 }) {
   const router = useRouter();
   const [rooms, setRooms] = useState(initialRooms);
   const [areas, setAreas] = useState(initialAreas);
   const [rates, setRates] = useState(initialRates);
+  const [photos, setPhotos] = useState(initialPhotos);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -86,6 +131,13 @@ export function LodgingCatalogManager({
     setRoomErrorId(null);
     const supabase = getSupabaseBrowserClient();
     const name = value(formData, "room_name");
+    const files = chosenFiles(formData, "room_photos");
+    const invalid = validatePhotos(unitGallery("room", "", name, []), files);
+    if (invalid) {
+      setError(invalid);
+      setBusy(false);
+      return;
+    }
     const payload = {
       service_id: serviceId,
       name,
@@ -116,12 +168,25 @@ export function LodgingCatalogManager({
         "booking_unit, bedroom_count, bathroom_count, area_m2, details",
       )
       .single();
-    if (failure) setError(failure.message);
-    else {
-      setRooms((current) => [...current, data as unknown as Room]);
-      setNotice(`Se agregó ${name}. Puedes agregar otro tipo de habitación.`);
-      router.refresh();
+    if (failure || !data) {
+      setError(failure?.message ?? "No se pudo agregar la habitación.");
+      setBusy(false);
+      return;
     }
+    const room = data as unknown as Room;
+    const uploaded: Photo[] = [];
+    let photoError = "";
+    try {
+      await uploadPhotosToGroup(serviceId, unitGallery("room", room.id, name, []), files, uploaded);
+    } catch (problem) {
+      photoError = problem instanceof Error ? problem.message : "No se pudieron subir las fotos.";
+    }
+    setPhotos((current) => ({ ...current, rooms: { ...current.rooms, [room.id]: uploaded } }));
+    setRooms((current) => [...current, room]);
+    setNotice(photoError
+      ? `Se agregó ${name}, pero algunas fotos no se subieron: ${photoError}`
+      : `Se agregó ${name}. Puedes agregar otra habitación.`);
+    router.refresh();
     setBusy(false);
   }
 
@@ -155,6 +220,13 @@ export function LodgingCatalogManager({
   async function saveArea(formData: FormData) {
     setBusy(true);
     setError("");
+    const files = chosenFiles(formData, "area_photos");
+    const invalid = validatePhotos(unitGallery("area", "", "", []), files);
+    if (invalid) {
+      setError(invalid);
+      setBusy(false);
+      return;
+    }
     const supabase = getSupabaseBrowserClient();
     const { data, error: failure } = await supabase
       .from("lodging_areas")
@@ -179,11 +251,23 @@ export function LodgingCatalogManager({
         "included_in_rate, additional_price_cents, access_details, details",
       )
       .single();
-    if (failure) setError(failure.message);
-    else {
-      setAreas((current) => [...current, data as unknown as Area]);
-      router.refresh();
+    if (failure || !data) {
+      setError(failure?.message ?? "No se pudo guardar el área.");
+      setBusy(false);
+      return;
     }
+    const area = data as unknown as Area;
+    const uploaded: Photo[] = [];
+    try {
+      await uploadPhotosToGroup(serviceId, unitGallery("area", area.id, area.name, []), files,
+        uploaded);
+    } catch (problem) {
+      setError(`Se guardó ${area.name}, pero algunas fotos no se subieron: ${
+        problem instanceof Error ? problem.message : "error desconocido"}`);
+    }
+    setPhotos((current) => ({ ...current, areas: { ...current.areas, [area.id]: uploaded } }));
+    setAreas((current) => [...current, area]);
+    router.refresh();
     setBusy(false);
   }
 
@@ -297,7 +381,8 @@ export function LodgingCatalogManager({
 
   async function deleteRoom(room: Room) {
     if (!window.confirm(
-      `¿Eliminar «${room.name}»? Esta acción también elimina sus tarifas y fotos. No se puede deshacer.`,
+      `¿Eliminar «${room.name}»? También se eliminan sus tarifas y fotos. ` +
+        "No se puede deshacer.",
     )) return;
     setBusy(true);
     setError("");
@@ -325,17 +410,19 @@ export function LodgingCatalogManager({
   return (
     <>
       <Panel id="habitaciones">
-        <h2>Habitaciones y unidades del hospedaje</h2>
+        <h2>Habitaciones</h2>
         <p>
-          Agrega cada tipo por separado (por ejemplo, doble y triple) y señala
-          cuántas habitaciones o unidades iguales tienes de cada tipo.
+          Agrega cada tipo de habitación por separado (por ejemplo, doble, triple o
+          apartamento de 2 dormitorios), cuántas iguales tienes y sus fotos.
         </p>
-        <p role="status">{rooms.length} {rooms.length === 1 ? "tipo agregado" : "tipos agregados"}</p>
+        <p role="status">
+          {rooms.length} {rooms.length === 1 ? "habitación agregada" : "habitaciones agregadas"}
+        </p>
         {error && !roomErrorId && <p className="form-error" role="alert">{error}</p>}
         {notice && <p role="status">{notice}</p>}
         <form action={saveRoom} id="agregar-habitacion">
-          <h3>{rooms.length ? "Agregar otro tipo" : "Agregar la primera habitación o unidad"}</h3>
-          <Field label="Nombre del tipo de habitación o unidad" name="room_name" required />
+          <h3>{rooms.length ? "Agregar otra habitación" : "Agregar la primera habitación"}</h3>
+          <Field label="Nombre de la habitación" name="room_name" required />
           <Field label="Descripción" name="room_description" multiline required />
           <label className="field">
             Unidad que reserva el cliente
@@ -361,9 +448,16 @@ export function LodgingCatalogManager({
               multiline={field.multiline}
             />
           ))}</>}
-          <Button type="submit" disabled={busy}>Agregar tipo</Button>
+          <label className="field">
+            Fotos de la habitación (hasta {UNIT_PHOTO_LIMIT})
+            <input type="file" name="room_photos" accept="image/jpeg,image/png,image/webp"
+              multiple />
+          </label>
+          <Button type="submit" disabled={busy}>
+            {busy ? "Guardando..." : "Agregar habitación"}
+          </Button>
         </form>
-        <h3>Tipos agregados</h3>
+        {rooms.length > 0 && <h3>Habitaciones agregadas</h3>}
         {rooms.map((room) => (
           <article className="lodging-item-card" key={room.id}>
             <div className="lodging-item-heading">
@@ -372,7 +466,6 @@ export function LodgingCatalogManager({
                 <p>{room.capacity} personas · ${dollars(room.price_cents)} por noche</p>
               </div>
               <div className="lodging-item-actions">
-                <a className="text-link" href={`/panel/servicios/${serviceId}/galeria`}>Administrar fotos</a>
                 <Button tone="secondary" disabled={busy}
                   onClick={() => setEditingRoomId(editingRoomId === room.id ? null : room.id)}>
                   {editingRoomId === room.id ? "Cerrar edición" : `Editar ${room.name}`}
@@ -414,6 +507,11 @@ export function LodgingCatalogManager({
                 <Button type="submit" disabled={busy}>Guardar cambios de habitación</Button>
               </form>
             )}
+            <PanelGalleryManager
+              compact
+              serviceId={serviceId}
+              groups={[unitGallery("room", room.id, room.name, photos.rooms[room.id] ?? [])]}
+            />
             <div className="lodging-rates">
               {rates.filter((rate) => rate.room_type_id === room.id).map((rate) => (
                 <div className="lodging-rate-row" key={rate.id}>
@@ -457,7 +555,6 @@ export function LodgingCatalogManager({
                 <p>{area.description ?? "Sin descripción"}</p>
               </div>
               <div className="lodging-item-actions">
-                <a className="text-link" href={`/panel/servicios/${serviceId}/galeria`}>Administrar fotos</a>
                 <Button tone="secondary" disabled={busy}
                   onClick={() => setEditingAreaId(editingAreaId === area.id ? null : area.id)}>
                   {editingAreaId === area.id ? "Cerrar edición" : "Editar área"}
@@ -498,6 +595,11 @@ export function LodgingCatalogManager({
                 <Button type="submit" disabled={busy}>Guardar cambios del área</Button>
               </form>
             )}
+            <PanelGalleryManager
+              compact
+              serviceId={serviceId}
+              groups={[unitGallery("area", area.id, area.name, photos.areas[area.id] ?? [])]}
+            />
             <div className="lodging-item-footer">
               <Button tone="quiet" disabled={busy}
                 onClick={() => void deleteRecord("lodging_areas", area.id)}>
@@ -521,6 +623,11 @@ export function LodgingCatalogManager({
           {AREA_DETAIL_FIELDS.map(([key, label, multiline]) => (
             <Field key={key} label={label} name={`area__${key}`} multiline={multiline} />
           ))}</>}
+          <label className="field">
+            Fotos del área (hasta {UNIT_PHOTO_LIMIT})
+            <input type="file" name="area_photos" accept="image/jpeg,image/png,image/webp"
+              multiple />
+          </label>
           <Button type="submit" disabled={busy}>Guardar área</Button>
         </form>
       </Panel>

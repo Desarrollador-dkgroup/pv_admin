@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Button, Panel } from "@/components/ui";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
-type Photo = {
+export type Photo = {
   id: string;
   storage_path: string;
   is_cover: boolean;
@@ -25,9 +25,12 @@ export type GalleryGroup = {
 export function PanelGalleryManager({
   serviceId,
   groups,
+  compact = false,
 }: {
   serviceId: string;
   groups: GalleryGroup[];
+  // Una sola galería dentro de otra tarjeta (por ejemplo, la de una habitación).
+  compact?: boolean;
 }) {
   const [activeId, setActiveId] = useState(groups[0]?.id ?? "");
   const [items, setItems] = useState(groups);
@@ -55,46 +58,19 @@ export function PanelGalleryManager({
   async function upload(files: FileList | null) {
     if (!files?.length || !active) return;
     const selected = [...files];
-    if (selected.some((file) => !isValidImage(file))) {
-      setMessage("Usa imágenes JPG, PNG o WebP de hasta 8 MB cada una.");
-      return;
-    }
-    if (active.photos.length + selected.length > active.limit) {
-      setMessage(`Esta galería admite un máximo de ${active.limit} fotos.`);
+    const invalid = validatePhotos(active, selected);
+    if (invalid) {
+      setMessage(invalid);
       return;
     }
 
     setBusy(true);
     setMessage("");
-    const supabase = getSupabaseBrowserClient();
     const uploaded: Photo[] = [];
     let result = "Fotografías guardadas en la galería.";
 
     try {
-      for (const [index, file] of selected.entries()) {
-        const extension = file.name.split(".").pop()?.toLowerCase() || "webp";
-        const folder = active.relationId ?? "general";
-        const storagePath = [
-          serviceId,
-          active.id,
-          folder,
-          `${crypto.randomUUID()}.${extension}`,
-        ].join("/");
-        const storage = await supabase.storage
-          .from("service-media")
-          .upload(storagePath, file, {
-            contentType: file.type,
-            upsert: false,
-          });
-        if (storage.error) throw new Error(storage.error.message);
-
-        const photo = await insertPhoto(supabase, active, serviceId, storagePath, index);
-        if (photo.error || !photo.data) {
-          await supabase.storage.from("service-media").remove([storagePath]);
-          throw new Error(photo.error?.message ?? "No se pudo guardar la fotografía.");
-        }
-        uploaded.push(photo.data);
-      }
+      await uploadPhotosToGroup(serviceId, active, selected, uploaded);
     } catch (error) {
       const reason = error instanceof Error ? error.message : "No se pudieron subir las fotos.";
       result = uploaded.length
@@ -211,74 +187,99 @@ export function PanelGalleryManager({
     }
   }
 
+  const fileInput = active && (
+    <input
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      multiple
+      disabled={busy || active.photos.length >= active.limit}
+      onChange={(event) => {
+        void upload(event.currentTarget.files);
+        event.currentTarget.value = "";
+      }}
+    />
+  );
+  const photoGrid = active?.photos.length ? (
+    <div className={compact ? "gallery-grid gallery-grid-compact" : "gallery-grid"}>
+      {active.photos.map((photo) => {
+        const content = (
+          <>
+            <Image
+              src={publicUrl(photo.storage_path)}
+              alt=""
+              width={420}
+              height={260}
+              unoptimized
+              className="photo-image"
+            />
+            {photo.is_cover ? <span className="badge">Portada</span> : null}
+            <div className="actions">
+              {!photo.is_cover && (
+                <Button
+                  tone="secondary"
+                  disabled={busy}
+                  onClick={() => void chooseCover(photo)}
+                >
+                  Usar como portada
+                </Button>
+              )}
+              <Button
+                tone="quiet"
+                disabled={busy}
+                onClick={() => void removePhoto(photo)}
+              >
+                Eliminar
+              </Button>
+            </div>
+          </>
+        );
+        return compact
+          ? <div className="gallery-photo" key={photo.id}>{content}</div>
+          : <Panel key={photo.id}>{content}</Panel>;
+      })}
+    </div>
+  ) : null;
+
+  if (compact) {
+    return (
+      <div className="gallery-inline">
+        <p>
+          <b>Fotos de {active?.label}</b> · {active?.photos.length ?? 0} de {active?.limit}
+        </p>
+        {fileInput}
+        {photoGrid ?? <p className="muted">Todavía no tiene fotos.</p>}
+        {message && <p role="status">{message}</p>}
+      </div>
+    );
+  }
+
   return (
     <>
       <Panel>
         <h2>Galerías del servicio</h2>
-        <label className="field">
-          Sección de imágenes
-          <select value={active?.id ?? ""} disabled={busy}
-            onChange={(event) => setActiveId(event.target.value)}>
-            {items.map((group) => (
-              <option key={group.id} value={group.id}>
-                {group.label} · {group.photos.length}/{group.limit}
-              </option>
-            ))}
-          </select>
-        </label>
+        {items.length > 1 && (
+          <label className="field">
+            Sección de imágenes
+            <select value={active?.id ?? ""} disabled={busy}
+              onChange={(event) => setActiveId(event.target.value)}>
+              {items.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.label} · {group.photos.length}/{group.limit}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         {active && (
           <>
             <p>
-              {active.photos.length} de {active.limit} fotografías
+              {active.label}: {active.photos.length} de {active.limit} fotografías
             </p>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              disabled={busy || active.photos.length >= active.limit}
-              onChange={(event) => {
-                void upload(event.currentTarget.files);
-                event.currentTarget.value = "";
-              }}
-            />
+            {fileInput}
           </>
         )}
       </Panel>
-      {active?.photos.length ? (
-        <div className="gallery-grid">
-          {active.photos.map((photo) => (
-            <Panel key={photo.id}>
-              <Image
-                src={publicUrl(photo.storage_path)}
-                alt=""
-                width={420}
-                height={260}
-                unoptimized
-                className="photo-image"
-              />
-              {photo.is_cover ? <span className="badge">Portada</span> : null}
-              <div className="actions">
-                {!photo.is_cover && (
-                  <Button
-                    tone="secondary"
-                    disabled={busy}
-                    onClick={() => void chooseCover(photo)}
-                  >
-                    Usar como portada
-                  </Button>
-                )}
-                <Button
-                  tone="quiet"
-                  disabled={busy}
-                  onClick={() => void removePhoto(photo)}
-                >
-                  Eliminar
-                </Button>
-              </div>
-            </Panel>
-          ))}
-        </div>
-      ) : (
+      {photoGrid ?? (
         <Panel>
           <h2>Esta galería todavía no tiene fotos</h2>
           <p>Las imágenes que subas se guardarán en Supabase Storage.</p>
@@ -287,6 +288,53 @@ export function PanelGalleryManager({
       {message && <p role="status">{message}</p>}
     </>
   );
+}
+
+// Revisa formato, tamaño y límite antes de subir. Devuelve el motivo o "" si todo está bien.
+export function validatePhotos(group: GalleryGroup, files: File[]) {
+  if (files.some((file) => !isValidImage(file))) {
+    return "Usa imágenes JPG, PNG o WebP de hasta 8 MB cada una.";
+  }
+  if (group.photos.length + files.length > group.limit) {
+    return `Esta galería admite un máximo de ${group.limit} fotos.`;
+  }
+  return "";
+}
+
+// Sube archivos a Storage y registra cada foto en su tabla. Añade a `uploaded` las que
+// quedaron guardadas, para informar aunque falle una a mitad del lote.
+export async function uploadPhotosToGroup(
+  serviceId: string,
+  group: GalleryGroup,
+  files: File[],
+  uploaded: Photo[] = [],
+) {
+  const supabase = getSupabaseBrowserClient();
+  for (const [index, file] of files.entries()) {
+    const extension = file.name.split(".").pop()?.toLowerCase() || "webp";
+    const folder = group.relationId ?? "general";
+    const storagePath = [
+      serviceId,
+      group.id,
+      folder,
+      `${crypto.randomUUID()}.${extension}`,
+    ].join("/");
+    const storage = await supabase.storage
+      .from("service-media")
+      .upload(storagePath, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+    if (storage.error) throw new Error(storage.error.message);
+
+    const photo = await insertPhoto(supabase, group, serviceId, storagePath, index);
+    if (photo.error || !photo.data) {
+      await supabase.storage.from("service-media").remove([storagePath]);
+      throw new Error(photo.error?.message ?? "No se pudo guardar la fotografía.");
+    }
+    uploaded.push(photo.data);
+  }
+  return uploaded;
 }
 
 // Inserta la referencia en la tabla que corresponde a la galería seleccionada.

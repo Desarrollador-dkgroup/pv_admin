@@ -88,7 +88,7 @@ export async function updateRoomTypeAction(
     return { error: updateError?.message ?? "No se pudieron guardar los cambios." };
   }
 
-  revalidatePath(`/panel/servicios/${serviceId}/unidades`);
+  revalidatePath(`/panel/servicios/${serviceId}`);
   revalidatePath(`/panel/servicios/${serviceId}/vista-previa`);
   return { error: "", room: updated as unknown as Room };
 }
@@ -157,7 +157,7 @@ export async function deleteRoomTypeAction(
   if (deleteError) return { error: deleteError.message };
   if (!removed) return { error: "No se eliminó la habitación. Revisa tus permisos." };
 
-  revalidatePath(`/panel/servicios/${serviceId}/unidades`);
+  revalidatePath(`/panel/servicios/${serviceId}`);
   revalidatePath(`/panel/servicios/${serviceId}/galeria`);
   revalidatePath(`/panel/servicios/${serviceId}/vista-previa`);
 

@@ -31,7 +31,9 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 - Operación: recepción (No / 24 horas / horario), check-in, check-out, idiomas,
   estacionamiento, plan de comidas obligatorio (`meal_plans` → `services.meal_plan_id`),
   mascotas, fumar, eventos con reglamento si es Sí, cancelación.
-- Apartamento: tipos guardados en `lodging_profiles.details.apartment_types`; reglas de la casa.
+- Habitaciones (`room_types`) para todo tipo de hospedaje, en la página del servicio, cada una
+  con su galería (10). Galería general aparte (15 hospedaje, 30 restaurante, 10 otros).
+  Ya no existen los tipos de apartamento; solo quedan las reglas de la casa.
 - Hospedaje sin precio (`base_price_cents` nulo). Las demás categorías exigen precio.
 
 ## Estado de la base de producción (revisado con el conector, 2026-10-22)
@@ -70,22 +72,24 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 4. Probar en navegador: guardar restaurante con confirmación, eliminar, retirar revisión,
    publicar aprobado.
 5. Decidir si se agrega un límite total de hospedajes además del límite por tipo.
-6. Decidir si los tipos de apartamento se quedan o se usa la pantalla de unidades
-   (`/panel/servicios/[id]/unidades`).
-7. Sin uso tras volver al flujo del usuario (son de `feat/merchant-dashboard`; decidir si
+6. Sin uso tras volver al flujo del usuario (son de `feat/merchant-dashboard`; decidir si
    se borran): `merchant-service-form.tsx`, `prepare-draft-service-button.tsx`,
    `servicios/[id]/portada`, `saveMerchantServiceAction` y `src/lib/panel-service-plans.ts`.
    `vista-previa` sigue enlazada desde la edición del servicio.
-8. "Agregar otra persona" en Mi cuenta usa `SUPABASE_SERVICE_ROLE_KEY`. Mi cuenta fallaba
-    porque el worker no la encuentra: revisar el secreto en Cloudflare (ver el pendiente de rotar la clave).
-9. Rotar la clave `service_role` de Supabase y actualizar el secreto en Cloudflare.
-10. Ajustar textos del panel de revisión y notificaciones a los nuevos estados.
-11. Decisión del usuario: el propietario usa su flujo (lista "Mis servicios", "Mi panel",
+7. "Agregar otra persona" en Mi cuenta usa `SUPABASE_SERVICE_ROLE_KEY`. Mi cuenta fallaba
+   porque el worker no la encuentra: revisar el secreto en Cloudflare (y rotar la clave).
+8. Rotar la clave `service_role` de Supabase y actualizar el secreto en Cloudflare.
+9. Ajustar textos del panel de revisión y notificaciones a los nuevos estados.
+10. Decisión del usuario: el propietario usa su flujo (lista "Mis servicios", "Mi panel",
     crear desde `/panel/servicios/nuevo` y `ServiceEditorForm`), no el de
     `feat/merchant-dashboard`. No combinar ambos.
     `202610200005_owner_draft_service_quota.sql` es copia idéntica de `202610200008`.
 
 ## Historial
+
+- 2026-10-23 (nube): habitaciones y áreas dentro de la página del servicio, cada una con su
+  galería (también al crearlas). `/unidades` redirige ahí. Galería solo general. Se quitan
+  los tipos de apartamento. El sitio público muestra la foto de cada habitación.
 
 - 2026-10-22 (nube): `panama-viajero` conectado al panel: sin `cities`/`area_label`, fotos
   de `service-media`, ficha con horarios, normas, contacto, plan de comidas y mapa;

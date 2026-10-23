@@ -173,10 +173,10 @@ export default async function BusinessDetailPage({
                 Editar ficha y ubicación
               </Link>
               <Link className="button quiet" href={`/panel/servicios/${service.id}/galeria`}>
-                Fotos del establecimiento y habitaciones
+                Galería general
               </Link>
               {service.category_id === "hospedaje" && (
-                <Link className="button quiet" href={`/panel/servicios/${service.id}/unidades`}>
+                <Link className="button quiet" href={`/panel/servicios/${service.id}#habitaciones`}>
                   Habitaciones y tarifas
                 </Link>
               )}

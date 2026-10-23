@@ -171,7 +171,7 @@ export default async function ServicePreviewPage({
             <Link className="button primary" href={editHref}>Editar información</Link>
             <Link className="button secondary" href={`/panel/servicios/${id}/galeria`}>Agregar imágenes</Link>
             {service.category_id === "hospedaje" &&
-              <Link className="button secondary" href={`/panel/servicios/${id}/unidades`}>Habitaciones y tarifas</Link>}
+              <Link className="button secondary" href={`/panel/servicios/${id}#habitaciones`}>Habitaciones y tarifas</Link>}
             {service.category_id === "restaurantes" &&
               <Link className="button secondary" href={`/panel/servicios/${id}/menu`}>Editar menú</Link>}
           </div>

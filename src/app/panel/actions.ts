@@ -498,30 +498,9 @@ function parseDetails(formData: FormData) {
     entries.map(([key, value]) => {
       const name = key.slice("detail__".length);
       const raw = String(value).trim();
-      return [name, name === "apartment_types" ? parseApartmentTypes(raw) : raw];
+      return [name, raw];
     }),
   );
-}
-
-// Valida la lista de tipos de apartamento enviada como JSON desde el formulario.
-function parseApartmentTypes(raw: string) {
-  try {
-    const list = JSON.parse(raw) as Array<Record<string, unknown>>;
-    if (!Array.isArray(list)) return [];
-    return list
-      .map((item) => ({
-        name: String(item.name ?? "").trim(),
-        quantity: Math.max(0, Math.floor(Number(item.quantity) || 0)),
-        includes: Array.isArray(item.includes)
-          ? item.includes.map((entry) => String(entry).trim()).filter(Boolean)
-          : [],
-        minibar_included:
-          typeof item.minibar_included === "boolean" ? item.minibar_included : null,
-      }))
-      .filter((item) => item.name);
-  } catch {
-    return [];
-  }
 }
 
 // Convierte los turnos por día al formato relacional de restaurant_hours.
