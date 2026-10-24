@@ -103,11 +103,16 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 - Hecho: marco con pestañas (celular) y barra superior (escritorio), portada, Buscar,
   categorías con filtros y orden, ficha de servicio y restaurante, habitación, carta,
   destinos, sitio turístico, promociones, Cuenta, inicio de sesión, registro y contraseñas.
-- Falta: Favoritos (/favoritos), Mis viajes (/mis-viajes) y su detalle, reserva de hospedaje
-  con fechas y cotización (`quote_stay`, `create_stay_reservation`), solicitud de reserva
-  (/servicios/[slug]/solicitar), pago y PIN, panel de reservas del negocio, bienvenida,
-  sincronizar favoritos con la tabla `favorites`, borrar los componentes viejos y
-  `legacy.css`. Probar en navegador tableta y escritorio.
+- Hecho también (2026-10-24): Favoritos unidos a la cuenta (`merge_favorites` y tabla
+  `favorites`), solicitud de reserva (/servicios/[slug]/solicitar), reserva de hospedaje con
+  cotización real (`quote_stay`) y pago simulado como en la app, Mis viajes con detalle y PIN
+  de llegada, panel del hotel (/negocio/reservas: aceptar, rechazar, validar PIN, no show),
+  eliminar cuenta. Se borró el diseño anterior (componentes viejos, `legacy.css`, /api).
+  `/perfil` redirige a `/cuenta`.
+- Probado contra producción: todas las páginas cargan; la cotización de hospedaje responde.
+  No se creó ninguna reserva real. Falta probar con sesión iniciada (reservar, cancelar,
+  panel del hotel) y revisar a mano tableta y escritorio pantalla por pantalla.
+- Sin copiar todavía: la bienvenida con carrusel de promociones del primer arranque de la app.
 - Para los enlaces de correo hace falta añadir `<dominio>/cuenta/confirmar` a las URL de
   redirección de Supabase Auth (cambio en `auth`: pedir confirmación al usuario).
 
