@@ -85,7 +85,22 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
     `feat/merchant-dashboard`. No combinar ambos.
     `202610200005_owner_draft_service_quota.sql` es copia idéntica de `202610200008`.
 
+## App móvil (`Panama-Viajero-mobile`)
+
+- Repo privado de `neithandvss`; se trabaja solo en local y sin push sin permiso del usuario.
+- Análisis completo en `docs/ANALISIS-MOVIL.md`. Hoy no carga el catálogo en producción: pide
+  `cities`, `city_id`, `area_label`, coordenadas y `maps_query`, que ya no existen. Busca las
+  fotos de servicios en `catalog-photos` en vez de `service-media`.
+- Sus scripts `supabase/seed-remote-catalog.mjs`, `complete-catalog-photos.mjs` y
+  `tests/remote` escriben en producción. No ejecutarlos.
+- Cambios propuestos en el móvil: pendientes de confirmación del usuario.
+
 ## Historial
+
+- 2026-10-24 (local): análisis de la app móvil contra producción (`docs/ANALISIS-MOVIL.md`).
+  Las fotos de 78 sitios y de las promociones son rutas de `catalog-photos`; el sitio y el
+  panel ya las muestran. El panel deja de rechazar al guardar un sitio con esa foto antigua.
+  No probado en navegador. El conector de Supabase no estaba disponible.
 
 - 2026-10-23 (nube): sitio público conectado a `destinations` (portada, /destinos y cada
   destino con banner, sitios turísticos, hospedajes, restaurantes y mapa). Probado contra

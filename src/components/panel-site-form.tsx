@@ -10,6 +10,7 @@ import {
   SITE_IMAGE_MAX_BYTES,
   SITE_IMAGE_TYPES,
   siteImageExtension,
+  sitePhotoUrl,
 } from "@/lib/panel-sites";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -134,7 +135,7 @@ export function SiteForm({
             <div className="destination-image-preview">
               {photoPath ? (
                 // Vista previa de la foto; la URL pública no necesita optimización aquí.
-                <img src={photoPath} alt="" />
+                <img src={sitePhotoUrl(photoPath) ?? ""} alt="" />
               ) : (
                 <span className="muted">Sin imagen</span>
               )}

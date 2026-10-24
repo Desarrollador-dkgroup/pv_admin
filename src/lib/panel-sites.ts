@@ -1,7 +1,10 @@
-// Devuelve la foto de un sitio si es una URL válida; si no, null para mostrar un marcador.
+// Devuelve la URL de la foto de un sitio, o null para mostrar un marcador. Las fotos subidas
+// desde el panel son URL completas; las del catálogo inicial son rutas de `catalog-photos`.
 export function sitePhotoUrl(path: string | null): string | null {
   if (!path) return null;
-  return path.startsWith("http") || path.startsWith("/") ? path : null;
+  if (path.startsWith("http") || path.startsWith("/")) return path;
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  return base ? `${base}/storage/v1/object/public/catalog-photos/${path}` : null;
 }
 
 // Bucket y límites de las fotos de sitios turísticos. Se usan en servidor y en formularios.

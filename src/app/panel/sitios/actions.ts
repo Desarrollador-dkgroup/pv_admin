@@ -39,7 +39,14 @@ export async function saveTouristSiteAction(
 
   if (!name || !description) return { error: "Completa el nombre y la descripción del sitio." };
   if (photo && !isSitePhotoUrl(photo, siteId)) {
-    return { error: "La foto no pertenece a este sitio. Vuelve a subirla." };
+    // Los sitios del catálogo inicial guardan una ruta de `catalog-photos`; se acepta si no cambió.
+    const current = isNew
+      ? null
+      : await supabase.from("tourist_sites").select("photo_storage_path").eq("id", siteId)
+        .maybeSingle();
+    if (current?.data?.photo_storage_path !== photo) {
+      return { error: "La foto no pertenece a este sitio. Vuelve a subirla." };
+    }
   }
   if (mapsRaw && !mapsUrl) return { error: "Ese código no es un mapa de Google válido." };
   if (!provinceId) return { error: "Selecciona la provincia destino del sitio." };
