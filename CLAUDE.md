@@ -55,6 +55,8 @@ Ambos deben estar siempre iguales. Reglas estrictas:
   `npm run deploy`. La compilación usa Webpack (`--webpack`).
 - Secretos en Cloudflare: `SUPABASE_SERVICE_ROLE_KEY` (solo servidor, sin `NEXT_PUBLIC_`).
 - El sitio público es el repo `panama-viajero`; ambos comparten la misma base.
+- App móvil: `neithandvss/Panama-Viajero-mobile` (privado, de un compañero). Claude no lo
+  ve desde la nube; se trabaja solo en sesión local, clonado junto a los otros dos repos.
 
 ## Supabase
 
