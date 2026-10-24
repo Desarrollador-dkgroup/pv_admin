@@ -95,7 +95,25 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
   `tests/remote` escriben en producción. No ejecutarlos.
 - Cambios propuestos en el móvil: pendientes de confirmación del usuario.
 
+## Rediseño del sitio con el diseño de la app (en curso, solo en `fusion`)
+
+- Decisión del usuario (2026-10-24): la app móvil es el diseño principal; el sitio copia todo
+  lo de la app, celular primero (igual a la app), luego tableta y escritorio parecidos.
+- El rediseño queda en `fusion` y no pasa a `main` hasta que el usuario lo apruebe.
+- Hecho: marco con pestañas (celular) y barra superior (escritorio), portada, Buscar,
+  categorías con filtros y orden, ficha de servicio y restaurante, habitación, carta,
+  destinos, sitio turístico, promociones, Cuenta, inicio de sesión, registro y contraseñas.
+- Falta: Favoritos (/favoritos), Mis viajes (/mis-viajes) y su detalle, reserva de hospedaje
+  con fechas y cotización (`quote_stay`, `create_stay_reservation`), solicitud de reserva
+  (/servicios/[slug]/solicitar), pago y PIN, panel de reservas del negocio, bienvenida,
+  sincronizar favoritos con la tabla `favorites`, borrar los componentes viejos y
+  `legacy.css`. Probar en navegador tableta y escritorio.
+- Para los enlaces de correo hace falta añadir `<dominio>/cuenta/confirmar` a las URL de
+  redirección de Supabase Auth (cambio en `auth`: pedir confirmación al usuario).
+
 ## Historial
+
+- 2026-10-24 (local): rediseño del sitio con el diseño de la app, primera parte (ver arriba).
 
 - 2026-10-24 (local): análisis de la app móvil contra producción (`docs/ANALISIS-MOVIL.md`).
   Las fotos de 78 sitios y de las promociones son rutas de `catalog-photos`; el sitio y el
