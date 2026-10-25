@@ -118,6 +118,10 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Historial
 
+- 2026-10-24 (local): `panama-viajero` pasa a OpenNext con `wrangler.jsonc` (variables públicas
+  de Supabase en `vars`). En `fusion`; falta ajustar en Cloudflare la compilación y
+  las variables de compilación antes de pasarlo a `main`.
+
 - 2026-10-24 (local): rediseño del sitio con el diseño de la app, primera parte (ver arriba).
 
 - 2026-10-24 (local): análisis de la app móvil contra producción (`docs/ANALISIS-MOVIL.md`).
