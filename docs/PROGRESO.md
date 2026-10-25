@@ -119,8 +119,9 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 ## Historial
 
 - 2026-10-24 (local): `panama-viajero` pasa a OpenNext con `wrangler.jsonc` (variables públicas
-  de Supabase en `vars`). En `fusion`; falta ajustar en Cloudflare la compilación y
-  las variables de compilación antes de pasarlo a `main`.
+  de Supabase en `vars`). Cloudflare compilación con `npx opennextjs-cloudflare build` y
+  `npx wrangler deploy`. Corregido: el degradado del título (.titleScrim) cubre el ancho
+  completo en escritorio (left/right calc para escapescape del content-max).
 
 - 2026-10-24 (local): rediseño del sitio con el diseño de la app, primera parte (ver arriba).
 
