@@ -118,6 +118,8 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Historial
 
+- 2026-10-26 (local): Panel de propietarios: botón para eliminar sitios turísticos en la edición.
+
 - 2026-10-24 (local): `panama-viajero` pasa a OpenNext con `wrangler.jsonc` (variables públicas
   de Supabase en `vars`). Cloudflare compilación con `npx opennextjs-cloudflare build` y
   `npx wrangler deploy`. Corregido: el degradado del título (.titleScrim) cubre el ancho
