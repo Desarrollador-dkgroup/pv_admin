@@ -118,6 +118,9 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Historial
 
+- 2026-10-26 (nube): `supabase/seed-demo-hoteles-panama.sql` crea 25 hospedajes ficticios
+  publicados en Panamá (slug `demo-pa-`); `borrar-demo-hoteles-panama.sql` los elimina.
+
 - 2026-10-26 (local): Panel de propietarios: botón para eliminar sitios turísticos en la edición.
 
 - 2026-10-24 (local): `panama-viajero` pasa a OpenNext con `wrangler.jsonc` (variables públicas
