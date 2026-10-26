@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useRef, useState } from "react";
-import { saveTouristSiteAction } from "@/app/panel/sitios/actions";
+import { deleteTouristSiteAction, saveTouristSiteAction } from "@/app/panel/sitios/actions";
 import { Button, Panel } from "@/components/ui";
 import { extractMapsEmbedUrl } from "@/lib/panel-maps";
 import {
@@ -214,6 +214,18 @@ export function SiteForm({
         <Button type="submit" disabled={pending || photoBusy || mapsInvalid}>
           {pending ? "Guardando…" : site ? "Guardar sitio" : "Crear sitio"}
         </Button>
+        {site && (
+          <Button
+            type="button"
+            tone="quiet"
+            onClick={async () => {
+              if (!confirm(`¿Eliminar "${site.name}"? Esta acción no se puede deshacer.`)) return;
+              await deleteTouristSiteAction(site.id);
+            }}
+          >
+            Eliminar sitio
+          </Button>
+        )}
         <Link className="button quiet" href={site ? `/panel/sitios/${site.id}` : "/panel/sitios"}>
           Cancelar
         </Link>

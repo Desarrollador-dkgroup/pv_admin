@@ -100,3 +100,18 @@ export async function saveTouristSiteAction(
   const destinationId = destination.data?.id as string | undefined;
   redirect(destinationId ? `/panel/sitios/destinos/${destinationId}` : "/panel/sitios");
 }
+
+// Elimina un sitio turístico. Solo el propietario principal y los admins.
+export async function deleteTouristSiteAction(siteId: string): Promise<FormState> {
+  const { supabase, role } = await getPanelIdentity();
+  if (!canManageCatalog(role)) return { error: "Tu cuenta no puede administrar sitios." };
+
+  if (!UUID_PATTERN.test(siteId)) return { error: "No se reconoce el sitio." };
+
+  const deleted = await supabase.from("tourist_sites").delete().eq("id", siteId);
+  if (deleted.error) return { error: deleted.error.message };
+
+  revalidatePath("/panel/sitios");
+  revalidatePath("/panel");
+  redirect("/panel/sitios");
+}
