@@ -118,6 +118,9 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Historial
 
+- 2026-10-26 (nube): `supabase/seed-demo-restaurantes-panama.sql` crea 35 restaurantes
+  ficticios (10 vinculados a hoteles demo); `borrar-demo-restaurantes-panama.sql` los quita.
+
 - 2026-10-26 (nube): `supabase/seed-demo-hoteles-panama.sql` crea 25 hospedajes ficticios
   publicados en Panamá (slug `demo-pa-`); `borrar-demo-hoteles-panama.sql` los elimina.
 
