@@ -70,6 +70,9 @@ export function ServiceEditorForm(props: Props) {
   const [activity, setActivity] = useState<ActivityContent>(
     props.activity ?? { schedule: {}, minAge: null, whatIncludes: [], attractions: [] },
   );
+  const [activityHasMultipleShifts, setActivityHasMultipleShifts] = useState(false);
+  const [activityMultipleShiftsInput, setActivityMultipleShiftsInput] = useState("");
+  const [activityLocationDetails, setActivityLocationDetails] = useState("");
   const lodgingTypeId = String(service.hospedaje_type_id ?? props.presetLodgingTypeId ?? "");
   const selectedLanguages = Array.isArray(lodging.languages)
     ? lodging.languages.map(String)
@@ -91,11 +94,28 @@ export function ServiceEditorForm(props: Props) {
     <form onSubmit={handleSubmit}>
       <input type="hidden" name="service_id" value={String(service.id ?? "")} />
       {categoryId === "actividades" && (
-        <input
-          type="hidden"
-          name="activity_details"
-          value={JSON.stringify(activity)}
-        />
+        <>
+          <input
+            type="hidden"
+            name="activity_details"
+            value={JSON.stringify(activity)}
+          />
+          <input
+            type="hidden"
+            name="activity_has_multiple_shifts"
+            value={String(activityHasMultipleShifts)}
+          />
+          <input
+            type="hidden"
+            name="activity_multiple_shifts_input"
+            value={activityMultipleShiftsInput}
+          />
+          <input
+            type="hidden"
+            name="activity_location_details"
+            value={activityLocationDetails}
+          />
+        </>
       )}
       <Panel>
         <h2>Información general</h2>
@@ -392,7 +412,18 @@ export function ServiceEditorForm(props: Props) {
       {categoryId === "actividades" && (
         <Panel>
           <h2>Configuración de actividades</h2>
-          <ActivityFormFields activity={activity} onChange={setActivity} />
+          <ActivityFormFields
+            activity={activity}
+            onChange={setActivity}
+            hasMultipleShifts={activityHasMultipleShifts}
+            multipleShiftsInput={activityMultipleShiftsInput}
+            onMultipleShiftsChange={(hasMultiple, input) => {
+              setActivityHasMultipleShifts(hasMultiple);
+              setActivityMultipleShiftsInput(input);
+            }}
+            locationDetails={activityLocationDetails}
+            onLocationDetailsChange={setActivityLocationDetails}
+          />
         </Panel>
       )}
 

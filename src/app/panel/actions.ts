@@ -478,11 +478,85 @@ export async function saveServiceAction(
         return { error: "Los datos de la actividad no son válidos." };
       }
     }
+
+    const hasMultipleShifts = formData.get("activity_has_multiple_shifts") === "true";
+    const locationDetails = nullable(text(formData, "activity_location_details"));
+    const multipleShiftsInput = text(formData, "activity_multiple_shifts_input");
+
     const activity = await supabase.from("activity_profiles").upsert(
-      { service_id: savedId, details: activityDetails },
+      {
+        service_id: savedId,
+        details: activityDetails,
+        has_multiple_shifts: hasMultipleShifts,
+        location_address_details: locationDetails,
+      },
       { onConflict: "service_id" },
     );
     if (activity.error) return { error: activity.error.message };
+
+    // Si tiene múltiples turnos, procesar y guardar en activity_hours.
+    if (hasMultipleShifts && multipleShiftsInput) {
+      try {
+        const shiftsData = JSON.parse(multipleShiftsInput) as Record<string, string>;
+        const hours = [];
+        const dayMapping: Record<string, number> = {
+          lunes: 1,
+          martes: 2,
+          miércoles: 3,
+          jueves: 4,
+          viernes: 5,
+          sábado: 6,
+          domingo: 0,
+        };
+
+        for (const [day, shiftsStr] of Object.entries(shiftsData)) {
+          if (!shiftsStr.trim()) continue;
+          const shifts = shiftsStr
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+          let position = 0;
+
+          for (const shift of shifts) {
+            const match = shift.match(/^(\d{2}):(\d{2})-(\d{2}):(\d{2})$/);
+            if (!match) {
+              return { error: `Formato de turno inválido: ${shift}. Usa HH:MM-HH:MM.` };
+            }
+
+            hours.push({
+              service_id: savedId,
+              day_of_week: dayMapping[day] ?? 0,
+              opens_at: `${match[1]}:${match[2]}:00`,
+              closes_at: `${match[3]}:${match[4]}:00`,
+              position,
+            });
+            position += 1;
+          }
+        }
+
+        if (hours.length > 0) {
+          const { error: hoursError } = await supabase
+            .from("activity_hours")
+            .delete()
+            .eq("service_id", savedId);
+          if (hoursError) return { error: hoursError.message };
+
+          const { error: insertError } = await supabase
+            .from("activity_hours")
+            .insert(hours);
+          if (insertError) return { error: insertError.message };
+        }
+      } catch {
+        return { error: "Error al procesar los turnos de la actividad." };
+      }
+    } else if (!hasMultipleShifts) {
+      // Limpiar horarios si cambia a horario simple.
+      const { error: hoursError } = await supabase
+        .from("activity_hours")
+        .delete()
+        .eq("service_id", savedId);
+      if (hoursError) return { error: hoursError.message };
+    }
   }
 
   revalidatePath("/panel");

@@ -8,6 +8,11 @@ import styles from "@/components/lodging-form-fields.module.css";
 type Props = {
   activity: ActivityContent;
   onChange: (activity: ActivityContent) => void;
+  hasMultipleShifts?: boolean;
+  multipleShiftsInput?: string;
+  onMultipleShiftsChange?: (hasMultiple: boolean, input: string) => void;
+  locationDetails?: string;
+  onLocationDetailsChange?: (details: string) => void;
 };
 
 const DAYS = [
@@ -20,7 +25,15 @@ const DAYS = [
   "domingo",
 ];
 
-export function ActivityFormFields({ activity, onChange }: Props) {
+export function ActivityFormFields({
+  activity,
+  onChange,
+  hasMultipleShifts = false,
+  multipleShiftsInput = "",
+  onMultipleShiftsChange,
+  locationDetails = "",
+  onLocationDetailsChange,
+}: Props) {
   const [newAttractionName, setNewAttractionName] = useState("");
 
   const handleScheduleChange = (day: string, field: string, value: string) => {
@@ -62,28 +75,94 @@ export function ActivityFormFields({ activity, onChange }: Props) {
   return (
     <div className={styles.fieldSet}>
       <fieldset>
-        <legend>Horario semanal</legend>
-        <div className={styles.grid}>
-          {DAYS.map((day) => (
-            <div key={day} className={styles.row}>
-              <label htmlFor={`schedule-${day}-from`}>
+        <legend>Horario de operación</legend>
+        <label className="field">
+          <input
+            type="checkbox"
+            checked={hasMultipleShifts}
+            onChange={(e) => onMultipleShiftsChange?.(e.target.checked, "")}
+          />
+          ¿Múltiples turnos por día?
+        </label>
+      </fieldset>
+
+      {!hasMultipleShifts ? (
+        <fieldset>
+          <legend>Horario semanal</legend>
+          <small style={{ marginBottom: "1rem", display: "block" }}>
+            Define la hora de apertura y cierre para cada día.
+          </small>
+          <div className={styles.grid}>
+            {DAYS.map((day) => (
+              <div key={day} className={styles.row}>
+                <label htmlFor={`schedule-${day}-from`}>
+                  {day.charAt(0).toUpperCase() + day.slice(1)}
+                </label>
+                <input
+                  id={`schedule-${day}-from`}
+                  type="time"
+                  value={activity.schedule[day]?.from ?? ""}
+                  onChange={(e) =>
+                    handleScheduleChange(day, "from", e.target.value)
+                  }
+                />
+                <span>a</span>
+                <input
+                  type="time"
+                  value={activity.schedule[day]?.to ?? ""}
+                  onChange={(e) =>
+                    handleScheduleChange(day, "to", e.target.value)
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        </fieldset>
+      ) : (
+        <fieldset>
+          <legend>Turnos semanales</legend>
+          <small style={{ marginBottom: "1rem", display: "block" }}>
+            Ingresa los turnos en formato HH:MM-HH:MM, separados por coma.
+            Ejemplo: 09:00-12:00, 14:00-18:00
+          </small>
+          {DAYS.map((day) => {
+            let shiftsData: Record<string, string> = {};
+            try {
+              shiftsData =
+                multipleShiftsInput && multipleShiftsInput !== ""
+                  ? JSON.parse(multipleShiftsInput)
+                  : {};
+            } catch {
+              shiftsData = {};
+            }
+            return (
+              <label key={day} className="field">
                 {day.charAt(0).toUpperCase() + day.slice(1)}
+                <textarea
+                  placeholder="09:00-12:00, 14:00-18:00"
+                  value={shiftsData[day] ?? ""}
+                  onChange={(e) => {
+                    const updated = { ...shiftsData };
+                    updated[day] = e.target.value;
+                    onMultipleShiftsChange?.(true, JSON.stringify(updated));
+                  }}
+                  rows={2}
+                />
               </label>
-              <input
-                id={`schedule-${day}-from`}
-                type="time"
-                value={activity.schedule[day]?.from ?? ""}
-                onChange={(e) => handleScheduleChange(day, "from", e.target.value)}
-              />
-              <span>a</span>
-              <input
-                type="time"
-                value={activity.schedule[day]?.to ?? ""}
-                onChange={(e) => handleScheduleChange(day, "to", e.target.value)}
-              />
-            </div>
-          ))}
-        </div>
+            );
+          })}
+        </fieldset>
+      )}
+
+      <fieldset>
+        <legend>Ubicación exacta</legend>
+        <label className="field">
+          <textarea
+            placeholder="Ej: Altaplaza mall, 3er piso, frente de Cinépolis, entrada Oeste"
+            value={locationDetails}
+            onChange={(e) => onLocationDetailsChange?.(e.target.value)}
+          />
+        </label>
       </fieldset>
 
       <fieldset>
