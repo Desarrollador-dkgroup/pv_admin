@@ -57,11 +57,11 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Pendientes
 
-1. **Sitio público usa `cities`** (el usuario pidió verlo después: recordárselo).
-   `202610200005` la elimina. Si está aplicada, fallan el catálogo, el detalle de servicio y
-   los sitios turísticos (`api/services/route.ts`,
-   `service-details.ts`, `tourist-sites.ts`, `tourist-site-services.ts`,
-   `sitios-turisticos/[slug]/page.tsx`). El catálogo también pide `area_label`.
+1. ~~**Sitio público usa `cities`**~~ **RESUELTO** (2026-10-27):
+   - `202610200005` aplicada: tabla `cities` eliminada.
+   - Actualizado sitio público en panama-viajero para usar `destination_province_id`.
+   - Archivos corregidos: `api/services`, `service-details`, `tourist-sites`,
+     `tourist-site-services`, `sitios-turisticos/[slug]/page`, `use-published-services`.
 2. Revisar `quote_stay` (usa `cities`).
 3. Confirmar que `202610200006`, `202610200007` y `202610210001` están aplicadas.
 4. Pasar a migraciones del repo los cambios manuales listados arriba.
