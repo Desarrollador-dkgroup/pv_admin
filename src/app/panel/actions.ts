@@ -468,6 +468,23 @@ export async function saveServiceAction(
     }
   }
 
+  if (categoryId === "actividades") {
+    const activityDetailsJson = text(formData, "activity_details");
+    let activityDetails: Record<string, unknown> = {};
+    if (activityDetailsJson) {
+      try {
+        activityDetails = JSON.parse(activityDetailsJson);
+      } catch {
+        return { error: "Los datos de la actividad no son válidos." };
+      }
+    }
+    const activity = await supabase.from("activity_profiles").upsert(
+      { service_id: savedId, details: activityDetails },
+      { onConflict: "service_id" },
+    );
+    if (activity.error) return { error: activity.error.message };
+  }
+
   revalidatePath("/panel");
   revalidatePath("/panel/servicios");
   // Un servicio nuevo pasa a su ficha de edición; uno existente confirma en la misma pantalla.

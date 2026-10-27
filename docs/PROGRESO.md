@@ -8,11 +8,13 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Estado actual (2026-10-27)
 
-- Actividades implementadas: estructura base con horarios semanales (de X a Y),
+- Actividades completamente implementadas: estructura base con horarios semanales (de X a Y),
   edad recomendada, lista de qué incluye y atracciones con descripción y opciones.
   Capa base (migraciones, tipos, componente de formulario) lista en pv_admin.
+  ActivityFormFields integrada en service-editor-form.tsx con estado y serialización.
   Ficha pública en panama-viajero lista para mostrar actividades.
-  Pendiente: integrar ActivityFormFields en el formulario principal del panel.
+  Seed SQL para 20 actividades reales de Panamá creado: seed-demo-actividades-panama.sql
+  y borrar-demo-actividades-panama.sql.
 - Botón "Ver menú" en restaurantes ahora abre el enlace externo (`menu_url`) en una
   nueva pestaña.
 

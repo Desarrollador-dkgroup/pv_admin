@@ -8,6 +8,7 @@ import {
   EventsPolicyField,
   ReceptionHoursField,
 } from "@/components/lodging-form-fields";
+import { ActivityFormFields } from "@/components/activity-form-fields";
 import {
   ServiceSitePicker,
   type DestinationOption,
@@ -17,6 +18,7 @@ import { saveServiceAction } from "@/app/panel/actions";
 import { DeleteOwnServiceButton } from "@/components/panel-own-service-status";
 import { extractMapsEmbedUrl } from "@/lib/panel-maps";
 import { canManageCatalog, type PanelRole } from "@/types/panel";
+import type { ActivityContent } from "@/types/content";
 
 type Option = { id: string; name?: string; label?: string; province_id?: string };
 type Props = {
@@ -24,6 +26,7 @@ type Props = {
   service: Record<string, unknown>;
   lodging: Record<string, unknown>;
   restaurant: Record<string, unknown>;
+  activity?: ActivityContent;
   businesses: Option[];
   categories: Option[];
   lodgingTypes: Option[];
@@ -64,6 +67,9 @@ export function ServiceEditorForm(props: Props) {
   const [categoryId, setCategoryId] = useState(
     String(service.category_id ?? props.categories[0]?.id ?? "hospedaje"),
   );
+  const [activity, setActivity] = useState<ActivityContent>(
+    props.activity ?? { schedule: {}, minAge: null, whatIncludes: [], attractions: [] },
+  );
   const lodgingTypeId = String(service.hospedaje_type_id ?? props.presetLodgingTypeId ?? "");
   const selectedLanguages = Array.isArray(lodging.languages)
     ? lodging.languages.map(String)
@@ -84,6 +90,13 @@ export function ServiceEditorForm(props: Props) {
   return (
     <form onSubmit={handleSubmit}>
       <input type="hidden" name="service_id" value={String(service.id ?? "")} />
+      {categoryId === "actividades" && (
+        <input
+          type="hidden"
+          name="activity_details"
+          value={JSON.stringify(activity)}
+        />
+      )}
       <Panel>
         <h2>Información general</h2>
         <label className="field">
@@ -374,6 +387,13 @@ export function ServiceEditorForm(props: Props) {
           features={props.restaurantFeatures}
           selectedFeatureIds={props.selectedFeatureIds}
         />
+      )}
+
+      {categoryId === "actividades" && (
+        <Panel>
+          <h2>Configuración de actividades</h2>
+          <ActivityFormFields activity={activity} onChange={setActivity} />
+        </Panel>
       )}
 
       <footer className="sticky-actions">

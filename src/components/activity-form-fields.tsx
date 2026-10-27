@@ -172,7 +172,7 @@ export function ActivityFormFields({ activity, onChange }: Props) {
               <Button
                 type="button"
                 onClick={() => removeAttraction(index)}
-                variant="danger"
+                tone="secondary"
               >
                 Eliminar atracción
               </Button>
