@@ -8,6 +8,10 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Estado actual (2026-10-27)
 
+- **Compilación corregida** (2026-10-27): Se eliminaron imports no existentes
+  (ApartmentTypesField, readApartmentTypes) de service-editor-form.tsx que causaban
+  errores de TypeScript. El formulario de actividades se integró correctamente y ahora
+  compila sin errores. Listo para visualizar en el panel en línea.
 - **Actividades completamente implementadas con editor de atracciones** (2026-10-27):
   - Panel (pv_admin): formulario con horarios semanales, edad recomendada, qué incluye,
     atracciones y ubicación exacta; soporte para múltiples turnos por día (checkbox).
