@@ -6,7 +6,12 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 > **Regla estricta de sincronización.** Antes de empezar: pull en ambos repos y leer esta
 > bitácora. Al terminar: actualizarla, commit y push. Claude debe recordarlo siempre.
 
-## Estado actual (2026-10-22)
+## Estado actual (2026-10-27)
+
+- Botón "Ver menú" en restaurantes ahora abre el enlace externo (`menu_url`) en una
+  nueva pestaña, en lugar de ir a `/servicios/<slug>/menu`.
+
+## Estado anterior (2026-10-22)
 
 - Local y nube sincronizados: el usuario subió sus últimos cambios a `main` en ambos repos.
 - Rama de trabajo única: `fusion` (local y nube). En `panama-viajero` se creó desde `main`.
