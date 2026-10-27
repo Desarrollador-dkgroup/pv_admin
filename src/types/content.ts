@@ -51,3 +51,65 @@ export function formatPromotionPrice(cents: number, currency: string = "USD"): s
 export function formatPromotionDiscount(percent: number): string {
   return `-${new Intl.NumberFormat("es-PA", { maximumFractionDigits: 2 }).format(percent)}%`;
 }
+
+// Tipos para actividades y atracciones.
+export type ActivitySchedule = Record<string, { from: string; to: string }>;
+
+export type ActivityAttraction = {
+  name: string;
+  description: string;
+  options: string[];
+  photos: string[];
+};
+
+export type ActivityContent = {
+  schedule: ActivitySchedule;
+  minAge: number | null;
+  whatIncludes: string[];
+  attractions: ActivityAttraction[];
+};
+
+export function validateActivitySchedule(schedule: ActivitySchedule): void {
+  const validDays = [
+    "lunes",
+    "martes",
+    "miércoles",
+    "jueves",
+    "viernes",
+    "sábado",
+    "domingo",
+  ];
+
+  for (const day in schedule) {
+    if (!validDays.includes(day)) {
+      throw new Error(
+        `Día inválido: ${day}. Use: ${validDays.join(", ")}`
+      );
+    }
+
+    const { from, to } = schedule[day];
+    if (!from || !to) {
+      throw new Error(`${day}: complete horario de inicio y fin.`);
+    }
+
+    if (from >= to) {
+      throw new Error(`${day}: la hora de inicio debe ser menor que la de fin.`);
+    }
+  }
+}
+
+export function validateActivityAttraction(
+  attraction: ActivityAttraction
+): void {
+  if (!attraction.name || attraction.name.trim() === "") {
+    throw new Error("Nombre de atracción requerido.");
+  }
+
+  if (attraction.description.length > 500) {
+    throw new Error("Descripción de atracción: máximo 500 caracteres.");
+  }
+
+  if (attraction.photos.length > 5) {
+    throw new Error("Máximo 5 fotos por atracción.");
+  }
+}
