@@ -8,10 +8,13 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Estado actual (2026-10-27)
 
-- **Compilación corregida** (2026-10-27): Se eliminaron imports no existentes
-  (ApartmentTypesField, readApartmentTypes) de service-editor-form.tsx y prop no
-  utilizada (restaurantOptions) de panel-service-editor.tsx. El formulario de actividades
-  se integró correctamente y ahora compila sin errores. Listo para visualizar en el panel.
+- **Mejoras en formulario de actividades** (2026-10-27):
+  - Horarios: ahora incluyen hora de inicio Y cierre (no solo inicio)
+  - "Lo que incluye": cambió de textarea a lista editable con botón "Agregar incluido"
+  - Atracciones: soporte completo para hasta 5 fotos por atracción (galería drag&drop)
+  - Tipos actualizados en ambos repos para reflejar la nueva estructura
+  - Panel: formulario completamente funcional con todos los campos
+  - Sitio público: muestra horarios completos y galerías de fotos en atracciones
 - **Actividades completamente implementadas con editor de atracciones** (2026-10-27):
   - Panel (pv_admin): formulario con horarios semanales, edad recomendada, qué incluye,
     atracciones y ubicación exacta; soporte para múltiples turnos por día (checkbox).
