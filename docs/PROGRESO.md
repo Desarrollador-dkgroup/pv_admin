@@ -8,6 +8,12 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Estado actual (2026-10-27)
 
+- **Corregida serialización de datos de actividades** (2026-10-27):
+  - Problema: Error "permission denied for table activity_profiles" al guardar actividades
+  - Causa: Formulario enviaba `detail__*` campos separados en lugar de `activity_details` JSON
+  - Solución: Actualizado `service-editor-form.tsx` para serializar atracciones, horarios e
+    inclusions como un único objeto JSON en campo `activity_details`
+  - Resultado: Acción servidor ahora recibe los datos en el formato esperado
 - **Mejoras en formulario de actividades** (2026-10-27):
   - Horarios: ahora incluyen hora de inicio Y cierre (no solo inicio)
   - "Lo que incluye": cambió de textarea a lista editable con botón "Agregar incluido"
