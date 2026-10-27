@@ -133,6 +133,11 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Historial
 
+- 2026-10-27 (nube): Datos: 20 nuevas actividades distribuidas entre los 12 sitios turísticos
+  de Panamá provincia. Scripts SQL: `borrar-demo-actividades-panama.sql` y
+  `seed-demo-actividades-panama.sql`. Actividades con horarios realistas, ubicación exacta,
+  precios $30-$70, edades mínimas 5-16+.
+
 - 2026-10-27 (nube): Actividades: carga de horarios semanales, estado en tiempo real,
   ubicación exacta y botón de reserva en la ficha pública (panama-viajero/src/lib/service-detail.ts
   y activity-screen.tsx). Soporte para múltiples turnos por día en el panel (pv_admin).
