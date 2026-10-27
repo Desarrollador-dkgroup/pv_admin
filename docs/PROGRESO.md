@@ -8,15 +8,17 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Estado actual (2026-10-27)
 
-- **Datos de demostración: 20 nuevas actividades en producción** (2026-10-27):
-  - Scripts SQL: `seed-demo-actividades-panama.sql` (crea 20 actividades),
-    `publish-demo-actividades-panama.sql` (las publica).
-  - 20 actividades creadas: distribuidas en Panamá provincia, precios $30–$70,
+- **Datos de demostración: 20 nuevas actividades PUBLICADAS en producción** (2026-10-27):
+  - Scripts SQL: `seed-demo-actividades-panama.sql` (crea 20 actividades, status=draft).
+  - Función SQL: `approve_and_publish_demo_activities()` (aprueba y publica en una sola ejecución).
+  - 20 actividades: distribuidas en Panamá provincia, precios $30–$70 USD,
     edades mínimas 5–16+, ubicaciones exactas, horarios 09:00–17:00 lunes–domingo.
   - Vinculadas al negocio de prueba (`b2996846-c6ec-43dc-ae69-192fcbf85d75`).
-  - Estado: draft, listos para ser aprobados y publicados (usar publish script).
+  - **Estado**: status='published', review_status='approved'.
   - Detalles JSONB: min_age, what_includes (vacío), attractions (vacío).
-  - Horarios: 7 registros por actividad (CROSS JOIN con GENERATE_SERIES).
+  - Horarios: 7 registros por actividad (días lunes–domingo, CROSS JOIN).
+  - **Verificado**: Aparecen en la base de datos con estado publicado.
+  - **Próximo paso**: Verificar que aparecen en sitio público (panama-viajero).
 - Local y nube sincronizados: rama de trabajo `claude/adoring-lamport-hgz2jf` con los scripts.
 
 ## Panel de propietarios (ya funciona)
