@@ -10,7 +10,7 @@ import {
   ReceptionHoursField,
   readApartmentTypes,
 } from "@/components/lodging-form-fields";
-import { AttractionsField, type Attraction } from "@/components/activity-form-fields";
+import { AttractionsField, ActivityScheduleField, type Attraction } from "@/components/activity-form-fields";
 import {
   ServiceSitePicker,
   type DestinationOption,
@@ -74,16 +74,25 @@ export function ServiceEditorForm(props: Props) {
   const [attractions, setAttractions] = useState<Attraction[]>(
     Array.isArray(details.attractions) ? details.attractions : [],
   );
+  const [schedule, setSchedule] = useState<Record<string, string>>(
+    typeof details.schedule === "object" && details.schedule ? details.schedule : {},
+  );
 
-  // Serializa las atracciones para enviarlas en el formulario.
+  // Serializa las atracciones y horarios para enviarlas en el formulario.
   const handleSubmitWithAttractions = (event: FormEvent<HTMLFormElement>) => {
     const formElement = event.currentTarget;
     if (categoryId === "actividades") {
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = "detail__attractions";
-      input.value = JSON.stringify(attractions);
-      formElement.appendChild(input);
+      const input1 = document.createElement("input");
+      input1.type = "hidden";
+      input1.name = "detail__attractions";
+      input1.value = JSON.stringify(attractions);
+      formElement.appendChild(input1);
+
+      const input2 = document.createElement("input");
+      input2.type = "hidden";
+      input2.name = "detail__schedule";
+      input2.value = JSON.stringify(schedule);
+      formElement.appendChild(input2);
     }
     handleSubmit(event);
   };
@@ -346,13 +355,50 @@ export function ServiceEditorForm(props: Props) {
       )}
 
       {categoryId === "actividades" && (
-        <Panel>
-          <h2>Atracciones</h2>
-          <AttractionsField
-            attractions={attractions}
-            onAttractionsChange={setAttractions}
-          />
-        </Panel>
+        <>
+          <Panel>
+            <h2>Horarios</h2>
+            <ActivityScheduleField
+              schedule={schedule}
+              onScheduleChange={setSchedule}
+            />
+          </Panel>
+
+          <Panel>
+            <h2>Descripción y atracciones</h2>
+            <label className="field">
+              Descripción de la actividad
+              <textarea
+                name="detail__description"
+                defaultValue={typeof details.description === "string" ? details.description : ""}
+                placeholder="Describe tu actividad..."
+                rows={4}
+                maxLength={1000}
+              />
+              <small style={{ color: "var(--muted)" }}>
+                {(typeof details.description === "string" ? details.description : "").length}/1000 caracteres
+              </small>
+            </label>
+
+            <label className="field">
+              Lo que incluye
+              <textarea
+                name="detail__whatIncludes"
+                defaultValue={Array.isArray(details.whatIncludes) ? details.whatIncludes.join("\n") : ""}
+                placeholder="Línea por línea..."
+                rows={4}
+              />
+              <small style={{ color: "var(--muted)" }}>
+                Una línea por item
+              </small>
+            </label>
+
+            <AttractionsField
+              attractions={attractions}
+              onAttractionsChange={setAttractions}
+            />
+          </Panel>
+        </>
       )}
 
       <footer className="sticky-actions">

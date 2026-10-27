@@ -4,10 +4,21 @@ import { useState } from "react";
 import { X, Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui";
 
+const DAYS_OF_WEEK = [
+  "lunes",
+  "martes",
+  "miércoles",
+  "jueves",
+  "viernes",
+  "sábado",
+  "domingo",
+];
+
 export type Attraction = {
   id: string;
   name: string;
   description: string;
+  options: string[];
   photos: Array<{
     storage_path?: string;
     position: number;
@@ -30,6 +41,7 @@ export function AttractionsField({ attractions, onAttractionsChange }: Props) {
       id: newId,
       name: "",
       description: "",
+      options: [],
       photos: [],
     };
     onAttractionsChange([...attractions, newAttraction]);
@@ -203,6 +215,11 @@ function AttractionEditor({
         </small>
       </label>
 
+      <OptionsField
+        options={attraction.options}
+        onOptionsChange={(options) => onUpdate({ options })}
+      />
+
       <PhotoGalleryField
         photos={attraction.photos}
         onPhotosChange={(photos) => onUpdate({ photos })}
@@ -221,6 +238,64 @@ function AttractionEditor({
           Eliminar atracción
         </Button>
       </div>
+    </div>
+  );
+}
+
+type OptionsFieldProps = {
+  options: string[];
+  onOptionsChange: (options: string[]) => void;
+};
+
+function OptionsField({ options, onOptionsChange }: OptionsFieldProps) {
+  const handleAddOption = () => {
+    onOptionsChange([...options, ""]);
+  };
+
+  const handleRemoveOption = (index: number) => {
+    onOptionsChange(options.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateOption = (index: number, value: string) => {
+    const updated = [...options];
+    updated[index] = value;
+    onOptionsChange(updated);
+  };
+
+  return (
+    <div className="field">
+      <label>Opciones que incluye</label>
+      <p style={{ fontSize: "0.875rem", color: "var(--muted)", marginBottom: 12 }}>
+        Ej: Guía profesional, Equipo de aventura, Almuerzo, Transporte
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+        {options.map((option, index) => (
+          <div key={index} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input
+              type="text"
+              value={option}
+              onChange={(e) => handleUpdateOption(index, e.target.value)}
+              placeholder="Ej: Guía profesional"
+              style={{ flex: 1 }}
+            />
+            <Button
+              type="button"
+              tone="quiet"
+              onClick={() => handleRemoveOption(index)}
+              style={{ padding: 8, color: "var(--error)" }}
+            >
+              <X size={16} />
+            </Button>
+          </div>
+        ))}
+      </div>
+      <Button
+        type="button"
+        onClick={handleAddOption}
+        style={{ width: "100%" }}
+      >
+        <Plus size={16} /> Agregar opción
+      </Button>
     </div>
   );
 }
@@ -343,6 +418,45 @@ function PhotoGalleryField({ photos, onPhotosChange }: PhotoGalleryFieldProps) {
           <Plus size={16} /> Agregar foto
         </Button>
       )}
+    </div>
+  );
+}
+
+type ActivityScheduleFieldProps = {
+  schedule: Record<string, string>;
+  onScheduleChange: (schedule: Record<string, string>) => void;
+};
+
+export function ActivityScheduleField({
+  schedule,
+  onScheduleChange,
+}: ActivityScheduleFieldProps) {
+  const handleTimeChange = (day: string, time: string) => {
+    onScheduleChange({
+      ...schedule,
+      [day]: time,
+    });
+  };
+
+  return (
+    <div className="field">
+      <label>Horarios de inicio por día</label>
+      <p style={{ fontSize: "0.875rem", color: "var(--muted)", marginBottom: 12 }}>
+        Hora de inicio de la actividad cada día (formato HH:MM)
+      </p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+        {DAYS_OF_WEEK.map((day) => (
+          <label key={day} className="field" style={{ margin: 0 }}>
+            {day.charAt(0).toUpperCase() + day.slice(1)}
+            <input
+              type="time"
+              value={schedule[day] ?? ""}
+              onChange={(e) => handleTimeChange(day, e.target.value)}
+              style={{ margin: "4px 0 0 0" }}
+            />
+          </label>
+        ))}
+      </div>
     </div>
   );
 }
