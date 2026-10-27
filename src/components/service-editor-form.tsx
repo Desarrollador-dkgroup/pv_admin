@@ -83,23 +83,16 @@ export function ServiceEditorForm(props: Props) {
   const handleSubmitWithAttractions = (event: FormEvent<HTMLFormElement>) => {
     const formElement = event.currentTarget;
     if (categoryId === "actividades") {
-      const input1 = document.createElement("input");
-      input1.type = "hidden";
-      input1.name = "detail__attractions";
-      input1.value = JSON.stringify(attractions);
-      formElement.appendChild(input1);
-
-      const input2 = document.createElement("input");
-      input2.type = "hidden";
-      input2.name = "detail__schedule";
-      input2.value = JSON.stringify(schedule);
-      formElement.appendChild(input2);
-
-      const input3 = document.createElement("input");
-      input3.type = "hidden";
-      input3.name = "detail__whatIncludes";
-      input3.value = JSON.stringify(whatIncludes);
-      formElement.appendChild(input3);
+      const activityDetails = {
+        attractions,
+        schedule,
+        whatIncludes,
+      };
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "activity_details";
+      input.value = JSON.stringify(activityDetails);
+      formElement.appendChild(input);
     }
     handleSubmit(event);
   };
