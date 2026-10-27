@@ -4,11 +4,9 @@ import { type FormEvent, startTransition, useActionState, useState } from "react
 import { Button, Panel } from "@/components/ui";
 import { LANGUAGE_OPTIONS, getLodgingDetailFields } from "@/data/lodging-details";
 import {
-  ApartmentTypesField,
   ChoiceField,
   EventsPolicyField,
   ReceptionHoursField,
-  readApartmentTypes,
 } from "@/components/lodging-form-fields";
 import { AttractionsField, ActivityScheduleField, type Attraction } from "@/components/activity-form-fields";
 import {
@@ -327,22 +325,15 @@ export function ServiceEditorForm(props: Props) {
             value={lodging.cancellation_policy}
             multiline
           />
-          {detailFields.map((field) =>
-            field.kind === "apartment_types" ? (
-              <ApartmentTypesField
-                key={field.key}
-                initial={readApartmentTypes(details.apartment_types)}
-              />
-            ) : (
-              <TextField
-                key={field.key}
-                label={field.label}
-                name={`detail__${field.key}`}
-                value={details[field.key]}
-                multiline={field.multiline}
-              />
-            ),
-          )}
+          {detailFields.map((field) => (
+            <TextField
+              key={field.key}
+              label={field.label}
+              name={`detail__${field.key}`}
+              value={details[field.key]}
+              multiline={field.multiline}
+            />
+          ))}
         </Panel>
       )}
 
