@@ -8,7 +8,7 @@ import {
   EventsPolicyField,
   ReceptionHoursField,
 } from "@/components/lodging-form-fields";
-import { AttractionsField, ActivityScheduleField, type Attraction } from "@/components/activity-form-fields";
+import { AttractionsField, ActivityScheduleField, WhatIncludesField, type Attraction } from "@/components/activity-form-fields";
 import {
   ServiceSitePicker,
   type DestinationOption,
@@ -72,11 +72,14 @@ export function ServiceEditorForm(props: Props) {
   const [attractions, setAttractions] = useState<Attraction[]>(
     Array.isArray(details.attractions) ? details.attractions : [],
   );
-  const [schedule, setSchedule] = useState<Record<string, string>>(
+  const [whatIncludes, setWhatIncludes] = useState<string[]>(
+    Array.isArray(details.whatIncludes) ? details.whatIncludes : [],
+  );
+  const [schedule, setSchedule] = useState<Record<string, { start: string; end: string }>>(
     typeof details.schedule === "object" && details.schedule ? details.schedule : {},
   );
 
-  // Serializa las atracciones y horarios para enviarlas en el formulario.
+  // Serializa las atracciones, horarios e inclusions para enviarlas en el formulario.
   const handleSubmitWithAttractions = (event: FormEvent<HTMLFormElement>) => {
     const formElement = event.currentTarget;
     if (categoryId === "actividades") {
@@ -91,6 +94,12 @@ export function ServiceEditorForm(props: Props) {
       input2.name = "detail__schedule";
       input2.value = JSON.stringify(schedule);
       formElement.appendChild(input2);
+
+      const input3 = document.createElement("input");
+      input3.type = "hidden";
+      input3.name = "detail__whatIncludes";
+      input3.value = JSON.stringify(whatIncludes);
+      formElement.appendChild(input3);
     }
     handleSubmit(event);
   };
@@ -371,18 +380,10 @@ export function ServiceEditorForm(props: Props) {
               </small>
             </label>
 
-            <label className="field">
-              Lo que incluye
-              <textarea
-                name="detail__whatIncludes"
-                defaultValue={Array.isArray(details.whatIncludes) ? details.whatIncludes.join("\n") : ""}
-                placeholder="Línea por línea..."
-                rows={4}
-              />
-              <small style={{ color: "var(--muted)" }}>
-                Una línea por item
-              </small>
-            </label>
+            <WhatIncludesField
+              items={whatIncludes}
+              onItemsChange={setWhatIncludes}
+            />
 
             <AttractionsField
               attractions={attractions}

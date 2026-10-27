@@ -53,7 +53,7 @@ export function formatPromotionDiscount(percent: number): string {
 }
 
 // Tipos para actividades y atracciones.
-export type ActivitySchedule = Record<string, string>; // Hora de inicio (ej: "09:00")
+export type ActivitySchedule = Record<string, { start: string; end: string }>; // Ej: { start: "09:00", end: "17:00" }
 
 export type ActivityAttraction = {
   name: string;
@@ -91,12 +91,17 @@ export function validateActivitySchedule(schedule: ActivitySchedule): void {
       );
     }
 
-    const time = schedule[day];
-    if (!time || time.trim() === "") {
-      throw new Error(`${day}: complete la hora de inicio.`);
+    const times = schedule[day];
+    if (!times || typeof times !== "object") {
+      throw new Error(`${day}: debe tener inicio y cierre.`);
     }
 
-    if (!/^\d{2}:\d{2}$/.test(time)) {
+    const { start, end } = times;
+    if (!start || !end) {
+      throw new Error(`${day}: complete el inicio y el cierre.`);
+    }
+
+    if (!/^\d{2}:\d{2}$/.test(start) || !/^\d{2}:\d{2}$/.test(end)) {
       throw new Error(`${day}: formato HH:MM requerido.`);
     }
   }

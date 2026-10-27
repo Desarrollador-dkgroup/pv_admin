@@ -422,39 +422,114 @@ function PhotoGalleryField({ photos, onPhotosChange }: PhotoGalleryFieldProps) {
   );
 }
 
+type WhatIncludesFieldProps = {
+  items: string[];
+  onItemsChange: (items: string[]) => void;
+};
+
+export function WhatIncludesField({ items, onItemsChange }: WhatIncludesFieldProps) {
+  const handleAddItem = () => {
+    onItemsChange([...items, ""]);
+  };
+
+  const handleRemoveItem = (index: number) => {
+    onItemsChange(items.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateItem = (index: number, value: string) => {
+    const updated = [...items];
+    updated[index] = value;
+    onItemsChange(updated);
+  };
+
+  return (
+    <div className="field">
+      <label>Lo que incluye</label>
+      <p style={{ fontSize: "0.875rem", color: "var(--muted)", marginBottom: 12 }}>
+        Ej: Guía profesional, Equipo de aventura, Almuerzo, Transporte
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+        {items.map((item, index) => (
+          <div key={index} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input
+              type="text"
+              value={item}
+              onChange={(e) => handleUpdateItem(index, e.target.value)}
+              placeholder="Ej: Guía profesional"
+              style={{ flex: 1 }}
+            />
+            <Button
+              type="button"
+              tone="quiet"
+              onClick={() => handleRemoveItem(index)}
+              style={{ padding: 8, color: "var(--error)" }}
+            >
+              <X size={16} />
+            </Button>
+          </div>
+        ))}
+      </div>
+      <Button
+        type="button"
+        onClick={handleAddItem}
+        style={{ width: "100%" }}
+      >
+        <Plus size={16} /> Agregar incluido
+      </Button>
+    </div>
+  );
+}
+
 type ActivityScheduleFieldProps = {
-  schedule: Record<string, string>;
-  onScheduleChange: (schedule: Record<string, string>) => void;
+  schedule: Record<string, { start: string; end: string }>;
+  onScheduleChange: (schedule: Record<string, { start: string; end: string }>) => void;
 };
 
 export function ActivityScheduleField({
   schedule,
   onScheduleChange,
 }: ActivityScheduleFieldProps) {
-  const handleTimeChange = (day: string, time: string) => {
+  const handleTimeChange = (day: string, field: "start" | "end", time: string) => {
     onScheduleChange({
       ...schedule,
-      [day]: time,
+      [day]: {
+        start: schedule[day]?.start ?? "",
+        end: schedule[day]?.end ?? "",
+        [field]: time,
+      },
     });
   };
 
   return (
     <div className="field">
-      <label>Horarios de inicio por día</label>
+      <label>Horarios por día</label>
       <p style={{ fontSize: "0.875rem", color: "var(--muted)", marginBottom: 12 }}>
-        Hora de inicio de la actividad cada día (formato HH:MM)
+        Hora de inicio y cierre de la actividad cada día (formato HH:MM)
       </p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 12 }}>
         {DAYS_OF_WEEK.map((day) => (
-          <label key={day} className="field" style={{ margin: 0 }}>
-            {day.charAt(0).toUpperCase() + day.slice(1)}
-            <input
-              type="time"
-              value={schedule[day] ?? ""}
-              onChange={(e) => handleTimeChange(day, e.target.value)}
-              style={{ margin: "4px 0 0 0" }}
-            />
-          </label>
+          <div key={day} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <label style={{ fontWeight: 600, fontSize: "0.875rem" }}>
+              {day.charAt(0).toUpperCase() + day.slice(1)}
+            </label>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="time"
+                value={schedule[day]?.start ?? ""}
+                onChange={(e) => handleTimeChange(day, "start", e.target.value)}
+                placeholder="Inicio"
+                title="Hora de inicio"
+              />
+              <span style={{ color: "var(--muted)" }}>a</span>
+              <input
+                type="time"
+                value={schedule[day]?.end ?? ""}
+                onChange={(e) => handleTimeChange(day, "end", e.target.value)}
+                placeholder="Cierre"
+                title="Hora de cierre"
+              />
+            </div>
+          </div>
         ))}
       </div>
     </div>
