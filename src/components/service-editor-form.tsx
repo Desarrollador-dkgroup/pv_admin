@@ -10,6 +10,7 @@ import {
   ReceptionHoursField,
   readApartmentTypes,
 } from "@/components/lodging-form-fields";
+import { AttractionsField, type Attraction } from "@/components/activity-form-fields";
 import {
   ServiceSitePicker,
   type DestinationOption,
@@ -70,9 +71,25 @@ export function ServiceEditorForm(props: Props) {
   const selectedSites = props.selectedSiteIds.length
     ? props.selectedSiteIds
     : service.tourist_site_id ? [String(service.tourist_site_id)] : [];
+  const [attractions, setAttractions] = useState<Attraction[]>(
+    Array.isArray(details.attractions) ? details.attractions : [],
+  );
+
+  // Serializa las atracciones para enviarlas en el formulario.
+  const handleSubmitWithAttractions = (event: FormEvent<HTMLFormElement>) => {
+    const formElement = event.currentTarget;
+    if (categoryId === "actividades") {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "detail__attractions";
+      input.value = JSON.stringify(attractions);
+      formElement.appendChild(input);
+    }
+    handleSubmit(event);
+  };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmitWithAttractions}>
       <input type="hidden" name="service_id" value={String(service.id ?? "")} />
       <Panel>
         <h2>Información general</h2>
@@ -326,6 +343,16 @@ export function ServiceEditorForm(props: Props) {
           features={props.restaurantFeatures}
           selectedFeatureIds={props.selectedFeatureIds}
         />
+      )}
+
+      {categoryId === "actividades" && (
+        <Panel>
+          <h2>Atracciones</h2>
+          <AttractionsField
+            attractions={attractions}
+            onAttractionsChange={setAttractions}
+          />
+        </Panel>
       )}
 
       <footer className="sticky-actions">
