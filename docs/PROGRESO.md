@@ -8,13 +8,16 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Estado actual (2026-10-27)
 
-- Actividades completamente implementadas: estructura base con horarios semanales (de X a Y),
-  edad recomendada, lista de qué incluye y atracciones con descripción y opciones.
-  Capa base (migraciones, tipos, componente de formulario) lista en pv_admin.
-  ActivityFormFields integrada en service-editor-form.tsx con estado y serialización.
-  Ficha pública en panama-viajero lista para mostrar actividades.
-  Seed SQL para 20 actividades reales de Panamá creado: seed-demo-actividades-panama.sql
-  y borrar-demo-actividades-panama.sql.
+- **Actividades completamente implementadas** (2026-10-27):
+  - Panel (pv_admin): formulario con horarios semanales, edad recomendada, qué incluye,
+    atracciones y ubicación exacta; soporte para múltiples turnos por día (checkbox).
+  - Migraciones aplicadas: `activity_hours` para horarios, columnas en `activity_profiles`
+    para ubicación y control de turnos múltiples.
+  - Servidor: carga de horarios, estado en tiempo real (Abierto/Pronto a cerrar/Cerrado),
+    ubicación exacta, botón de reserva como en hoteles y restaurantes.
+  - Ficha pública (panama-viajero): muestra estado actual, horarios semanales, ubicación
+    completa (Mapa + Destino + Sitio turístico + Ubicación exacta), botón de reserva.
+  - Pendiente: datos de demostración (seed SQL) para actividades con horarios y sitios turísticos.
 - Botón "Ver menú" en restaurantes ahora abre el enlace externo (`menu_url`) en una
   nueva pestaña.
 
@@ -129,6 +132,10 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
   redirección de Supabase Auth (cambio en `auth`: pedir confirmación al usuario).
 
 ## Historial
+
+- 2026-10-27 (nube): Actividades: carga de horarios semanales, estado en tiempo real,
+  ubicación exacta y botón de reserva en la ficha pública (panama-viajero/src/lib/service-detail.ts
+  y activity-screen.tsx). Soporte para múltiples turnos por día en el panel (pv_admin).
 
 - 2026-10-26 (nube): `supabase/seed-demo-restaurantes-panama.sql` crea 35 restaurantes
   ficticios (10 vinculados a hoteles demo); `borrar-demo-restaurantes-panama.sql` los quita.
