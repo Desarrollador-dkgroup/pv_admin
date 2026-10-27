@@ -90,23 +90,12 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Pendientes
 
-<<<<<<< HEAD
 1. Corregir los acentos de `owner_create_draft_service` en producción.
 2. Revisar los avisos de seguridad de Supabase (ver arriba).
 3. Pasar a migraciones del repo los cambios manuales listados arriba.
 4. Probar en navegador: guardar restaurante con confirmación, eliminar, retirar revisión,
-=======
-1. ~~**Sitio público usa `cities`**~~ **RESUELTO** (2026-10-27):
-   - `202610200005` aplicada: tabla `cities` eliminada.
-   - Actualizado sitio público en panama-viajero para usar `destination_province_id`.
-   - Archivos corregidos: `api/services`, `service-details`, `tourist-sites`,
-     `tourist-site-services`, `sitios-turisticos/[slug]/page`, `use-published-services`.
-2. Revisar `quote_stay` (usa `cities`).
-3. Confirmar que `202610200006`, `202610200007` y `202610210001` están aplicadas.
-4. Pasar a migraciones del repo los cambios manuales listados arriba.
-5. Probar en navegador: guardar restaurante con confirmación, eliminar, retirar revisión,
->>>>>>> claude/adoring-lamport-hgz2jf
    publicar aprobado.
+5. Revisar `quote_stay` (usa `cities`).
 5. Decidir si se agrega un límite total de hospedajes además del límite por tipo.
 6. Sin uso tras volver al flujo del usuario (son de `feat/merchant-dashboard`; decidir si
    se borran): `merchant-service-form.tsx`, `prepare-draft-service-button.tsx`,
@@ -153,6 +142,18 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
   redirección de Supabase Auth (cambio en `auth`: pedir confirmación al usuario).
 
 ## Historial
+
+- 2026-10-27 (nube): **Actividades: nueva estructura con atracciones y opciones** → PASADO A MAIN:
+  - Panel (pv_admin): Componentes nuevos `OptionsField` y `ActivityScheduleField`; editor
+    integrado en formulario de servicios con paneles "Horarios" y "Descripción y Atracciones".
+  - Tipos actualizados: `ActivityAttraction` incluye `options[]`; `ActivitySchedule` ahora es
+    `Record<string, string>` (solo hora inicio, sin duración).
+  - Web pública (panama-viajero): tipos sincronizados; pantalla de actividades muestra solo
+    "Inicia a las HH:MM"; display completo: descripción, lo que incluye, atracciones con
+    opciones, horarios por día, edad recomendada.
+  - Migración `202610280002_example_activities_new_structure.sql`: inserta 2 ejemplos
+    (Senderismo Cerro Jefe + Tour Gastronómico Panamá City) con todas las secciones pobladas.
+  - Commit/Push a rama `claude/dazzling-rubin-ryrvx6`; fusionado a `main` en ambos repos.
 
 - 2026-10-27 (nube): Datos: 20 nuevas actividades distribuidas entre los 12 sitios turísticos
   de Panamá provincia. Scripts SQL: `borrar-demo-actividades-panama.sql` y
