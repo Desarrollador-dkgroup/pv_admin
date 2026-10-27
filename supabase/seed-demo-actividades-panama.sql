@@ -1,43 +1,44 @@
 -- Crear 20 actividades de demostración en Panamá
+-- Vinculadas al negocio de prueba: b2996846-c6ec-43dc-ae69-192fcbf85d75
 
 BEGIN;
 
 WITH new_services AS (
   INSERT INTO public.services (
-    name, slug, category_id, destination_province_id, description, base_price_cents,
-    status, created_at, updated_at
+    name, slug, category_id, destination_province_id, description, search_description,
+    base_price_cents, status, business_id, created_at, updated_at
   )
   VALUES
-    ('Recorrido Interactivo Biomuseo', 'demo-pa-biomuseo-tour', 'actividades', 'panama', 'Exhibiciones interactivas sobre la historia natural del istmo.', 3500, 'published', NOW(), NOW()),
-    ('Taller de Conservación Marina', 'demo-pa-conservacion-marina', 'actividades', 'panama', 'Aprende sobre conservación marina participando en actividades educativas.', 4000, 'published', NOW(), NOW()),
-    ('Senderismo por Selva Tropical', 'demo-pa-chepo-selva', 'actividades', 'panama', 'Aventura guiada a través de la densa selva tropical.', 5000, 'published', NOW(), NOW()),
-    ('Tour de Rafting en Río Gatún', 'demo-pa-chepo-rafting', 'actividades', 'panama', 'Descenso emocionante por rápidos moderados.', 6500, 'published', NOW(), NOW()),
-    ('Tour Histórico Casco Viejo', 'demo-pa-casco-viejo-tour', 'actividades', 'panama', 'Recorrido guiado por calles coloniales e iglesias.', 3000, 'published', NOW(), NOW()),
-    ('Sunset Drink Tour', 'demo-pa-casco-sunset', 'actividades', 'panama', 'Visita de bares con vista al atardecer.', 4500, 'published', NOW(), NOW()),
-    ('Snorkel y Buceo en Arrecifes', 'demo-pa-taboga-snorkel', 'actividades', 'panama', 'Explora arrecifes coralinos y nada con peces tropicales.', 5500, 'published', NOW(), NOW()),
-    ('Paseo en Kayak Costero', 'demo-pa-taboga-kayak', 'actividades', 'panama', 'Navegación en kayak por aguas cristalinas.', 4000, 'published', NOW(), NOW()),
-    ('Senderismo en Cerro Azul', 'demo-pa-cerro-azul-trek', 'actividades', 'panama', 'Caminata a la cima con vistas panorámicas.', 3500, 'published', NOW(), NOW()),
-    ('Camping en la Naturaleza', 'demo-pa-cerro-azul-camping', 'actividades', 'panama', 'Experiencia de camping nocturno con observación de estrellas.', 4500, 'published', NOW(), NOW()),
-    ('Encuentro Cultural Emberá', 'demo-pa-embera-cultural', 'actividades', 'panama', 'Convive con la comunidad Emberá: danzas y artesanías.', 6000, 'published', NOW(), NOW()),
-    ('Taller de Artesanías Emberá', 'demo-pa-embera-artesanias', 'actividades', 'panama', 'Elabora artesanías tradicionales con maestros locales.', 5000, 'published', NOW(), NOW()),
-    ('Birdwatching Profesional', 'demo-pa-soberania-birds', 'actividades', 'panama', 'Avistamiento de aves guiado por ornitólogos.', 5500, 'published', NOW(), NOW()),
-    ('Caminata Pipeline Road', 'demo-pa-soberania-pipeline', 'actividades', 'panama', 'Recorrido por la famosa Pipeline Road.', 4000, 'published', NOW(), NOW()),
-    ('Exploración de Cuevas Subterráneas', 'demo-pa-bayano-cuevas', 'actividades', 'panama', 'Descubre cavernas y ríos subterráneos.', 5500, 'published', NOW(), NOW()),
-    ('Sendero Bosque Nublado', 'demo-pa-metropolitan-cloud', 'actividades', 'panama', 'Caminata por bosque nublado con cascadas.', 3000, 'published', NOW(), NOW()),
-    ('Yoga y Meditación en la Naturaleza', 'demo-pa-metropolitan-yoga', 'actividades', 'panama', 'Sesión de yoga rodeada de naturaleza virgen.', 3500, 'published', NOW(), NOW()),
-    ('Tour Arqueológico Panamá Viejo', 'demo-pa-panama-viejo-tour', 'actividades', 'panama', 'Explora ruinas de la primera ciudad de Panamá.', 3500, 'published', NOW(), NOW()),
-    ('Paseo en Bicicleta Calzada de Amador', 'demo-pa-amador-biking', 'actividades', 'panama', 'Recorrido en bici con vistas al skyline.', 4000, 'published', NOW(), NOW()),
-    ('Isla Hopping en las Perlas', 'demo-pa-contadora-islands', 'actividades', 'panama', 'Visita múltiples islas con playas vírgenes.', 7000, 'published', NOW(), NOW())
+    ('Recorrido Interactivo Biomuseo', 'demo-pa-biomuseo-tour', 'actividades', 'Panamá', 'Exhibiciones interactivas sobre la historia natural del istmo.', 'Exhibiciones interactivas sobre la historia natural del istmo.', 3500, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Taller de Conservación Marina', 'demo-pa-conservacion-marina', 'actividades', 'Panamá', 'Aprende sobre conservación marina participando en actividades educativas.', 'Aprende sobre conservación marina participando en actividades educativas.', 4000, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Senderismo por Selva Tropical', 'demo-pa-chepo-selva', 'actividades', 'Panamá', 'Aventura guiada a través de la densa selva tropical.', 'Aventura guiada a través de la densa selva tropical.', 5000, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Tour de Rafting en Río Gatún', 'demo-pa-chepo-rafting', 'actividades', 'Panamá', 'Descenso emocionante por rápidos moderados.', 'Descenso emocionante por rápidos moderados.', 6500, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Tour Histórico Casco Viejo', 'demo-pa-casco-viejo-tour', 'actividades', 'Panamá', 'Recorrido guiado por calles coloniales e iglesias.', 'Recorrido guiado por calles coloniales e iglesias.', 3000, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Sunset Drink Tour', 'demo-pa-casco-sunset', 'actividades', 'Panamá', 'Visita de bares con vista al atardecer.', 'Visita de bares con vista al atardecer.', 4500, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Snorkel y Buceo en Arrecifes', 'demo-pa-taboga-snorkel', 'actividades', 'Panamá', 'Explora arrecifes coralinos y nada con peces tropicales.', 'Explora arrecifes coralinos y nada con peces tropicales.', 5500, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Paseo en Kayak Costero', 'demo-pa-taboga-kayak', 'actividades', 'Panamá', 'Navegación en kayak por aguas cristalinas.', 'Navegación en kayak por aguas cristalinas.', 4000, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Senderismo en Cerro Azul', 'demo-pa-cerro-azul-trek', 'actividades', 'Panamá', 'Caminata a la cima con vistas panorámicas.', 'Caminata a la cima con vistas panorámicas.', 3500, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Camping en la Naturaleza', 'demo-pa-cerro-azul-camping', 'actividades', 'Panamá', 'Experiencia de camping nocturno con observación de estrellas.', 'Experiencia de camping nocturno con observación de estrellas.', 4500, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Encuentro Cultural Emberá', 'demo-pa-embera-cultural', 'actividades', 'Panamá', 'Convive con la comunidad Emberá: danzas y artesanías.', 'Convive con la comunidad Emberá: danzas y artesanías.', 6000, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Taller de Artesanías Emberá', 'demo-pa-embera-artesanias', 'actividades', 'Panamá', 'Elabora artesanías tradicionales con maestros locales.', 'Elabora artesanías tradicionales con maestros locales.', 5000, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Birdwatching Profesional', 'demo-pa-soberania-birds', 'actividades', 'Panamá', 'Avistamiento de aves guiado por ornitólogos.', 'Avistamiento de aves guiado por ornitólogos.', 5500, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Caminata Pipeline Road', 'demo-pa-soberania-pipeline', 'actividades', 'Panamá', 'Recorrido por la famosa Pipeline Road.', 'Recorrido por la famosa Pipeline Road.', 4000, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Exploración de Cuevas Subterráneas', 'demo-pa-bayano-cuevas', 'actividades', 'Panamá', 'Descubre cavernas y ríos subterráneos.', 'Descubre cavernas y ríos subterráneos.', 5500, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Sendero Bosque Nublado', 'demo-pa-metropolitan-cloud', 'actividades', 'Panamá', 'Caminata por bosque nublado con cascadas.', 'Caminata por bosque nublado con cascadas.', 3000, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Yoga y Meditación en la Naturaleza', 'demo-pa-metropolitan-yoga', 'actividades', 'Panamá', 'Sesión de yoga rodeada de naturaleza virgen.', 'Sesión de yoga rodeada de naturaleza virgen.', 3500, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Tour Arqueológico Panamá Viejo', 'demo-pa-panama-viejo-tour', 'actividades', 'Panamá', 'Explora ruinas de la primera ciudad de Panamá.', 'Explora ruinas de la primera ciudad de Panamá.', 3500, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Paseo en Bicicleta Calzada de Amador', 'demo-pa-amador-biking', 'actividades', 'Panamá', 'Recorrido en bici con vistas al skyline.', 'Recorrido en bici con vistas al skyline.', 4000, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+    ('Isla Hopping en las Perlas', 'demo-pa-contadora-islands', 'actividades', 'Panamá', 'Visita múltiples islas con playas vírgenes.', 'Visita múltiples islas con playas vírgenes.', 7000, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW())
   RETURNING id, slug, name
 )
 INSERT INTO public.activity_profiles (
   service_id, details, location_address_details, has_multiple_shifts, created_at, updated_at
 )
-SELECT 
+SELECT
   ns.id,
   jsonb_build_object(
     'schedule', '{}'::jsonb,
-    'min_age', CASE 
+    'min_age', CASE
       WHEN ns.slug IN ('demo-pa-conservacion-marina', 'demo-pa-chepo-rafting', 'demo-pa-taboga-snorkel', 'demo-pa-bayano-cuevas') THEN 10
       WHEN ns.slug IN ('demo-pa-embera-cultural', 'demo-pa-metropolitan-yoga', 'demo-pa-casco-sunset') THEN 16
       WHEN ns.slug IN ('demo-pa-cerro-azul-camping', 'demo-pa-soberania-birds') THEN 8
@@ -75,8 +76,8 @@ FROM new_services ns;
 
 -- Crear horarios básicos (lunes a domingo, 09:00-17:00)
 INSERT INTO public.activity_hours (service_id, day_of_week, opens_at, closes_at, position, created_at, updated_at)
-SELECT 
-  s.id, 
+SELECT
+  s.id,
   day_num,
   '09:00'::time,
   '17:00'::time,

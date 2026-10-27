@@ -6,12 +6,18 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 > **Regla estricta de sincronización.** Antes de empezar: pull en ambos repos y leer esta
 > bitácora. Al terminar: actualizarla, commit y push. Claude debe recordarlo siempre.
 
-## Estado actual (2026-10-22)
+## Estado actual (2026-10-27)
 
-- Local y nube sincronizados: el usuario subió sus últimos cambios a `main` en ambos repos.
-- La rama de la nube `claude/adoring-lamport-hgz2jf` está al día con `origin/main`.
-- `pv_admin` tiene la rama `feat/merchant-dashboard` con 12 commits que no están en `main`,
-  incluidas las migraciones `202610200008` y `202610210002`. Decidir si se fusiona.
+- **Datos de demostración: 20 nuevas actividades en producción** (2026-10-27):
+  - Scripts SQL: `seed-demo-actividades-panama.sql` (crea 20 actividades),
+    `publish-demo-actividades-panama.sql` (las publica).
+  - 20 actividades creadas: distribuidas en Panamá provincia, precios $30–$70,
+    edades mínimas 5–16+, ubicaciones exactas, horarios 09:00–17:00 lunes–domingo.
+  - Vinculadas al negocio de prueba (`b2996846-c6ec-43dc-ae69-192fcbf85d75`).
+  - Estado: draft, listos para ser aprobados y publicados (usar publish script).
+  - Detalles JSONB: min_age, what_includes (vacío), attractions (vacío).
+  - Horarios: 7 registros por actividad (CROSS JOIN con GENERATE_SERIES).
+- Local y nube sincronizados: rama de trabajo `claude/adoring-lamport-hgz2jf` con los scripts.
 
 ## Panel de propietarios (ya funciona)
 
