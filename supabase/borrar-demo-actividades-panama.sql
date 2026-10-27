@@ -1,21 +1,42 @@
--- Borra las 20 actividades ficticias de demostración creadas con seed-demo-actividades-panama.sql.
--- Se identifican por el patrón de slug 'demo-pa-' y categoría 'actividades'.
+-- Eliminar todas las actividades de demostración en Panamá.
 
 BEGIN;
 
-DELETE FROM public.activity_profiles
-  WHERE service_id IN (
-    SELECT id FROM public.services
-    WHERE slug LIKE 'demo-pa-%' AND category_id = 'actividades'
-  );
+DELETE FROM public.activity_hours 
+WHERE service_id IN (
+  SELECT id FROM public.services 
+  WHERE category_id = 'actividades' 
+  AND destination_province_id = 'panama'
+  AND slug LIKE 'demo-pa-%'
+);
 
-DELETE FROM public.service_amenities
-  WHERE service_id IN (
-    SELECT id FROM public.services
-    WHERE slug LIKE 'demo-pa-%' AND category_id = 'actividades'
-  );
+DELETE FROM public.activity_profiles 
+WHERE service_id IN (
+  SELECT id FROM public.services 
+  WHERE category_id = 'actividades' 
+  AND destination_province_id = 'panama'
+  AND slug LIKE 'demo-pa-%'
+);
 
-DELETE FROM public.services
-  WHERE slug LIKE 'demo-pa-%' AND category_id = 'actividades';
+DELETE FROM public.service_photos 
+WHERE service_id IN (
+  SELECT id FROM public.services 
+  WHERE category_id = 'actividades' 
+  AND destination_province_id = 'panama'
+  AND slug LIKE 'demo-pa-%'
+);
+
+DELETE FROM public.reviews 
+WHERE service_id IN (
+  SELECT id FROM public.services 
+  WHERE category_id = 'actividades' 
+  AND destination_province_id = 'panama'
+  AND slug LIKE 'demo-pa-%'
+);
+
+DELETE FROM public.services 
+WHERE category_id = 'actividades' 
+AND destination_province_id = 'panama'
+AND slug LIKE 'demo-pa-%';
 
 COMMIT;
