@@ -8,6 +8,22 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Estado actual (2026-10-27)
 
+- **Editor de atracciones para actividades implementado** (2026-10-27, nube):
+  - Nuevo archivo: `src/components/activity-form-fields.tsx` con componentes
+    para editar atracciones (nombre, descripción, galería de 5 fotos).
+  - Actualizado: `src/components/service-editor-form.tsx` integra
+    `AttractionsField` cuando categoryId === 'actividades'.
+  - Las atracciones se almacenan en `lodging.details.attractions` (JSONB).
+  - Soporte para galería de imágenes con vista previa en cliente (FileReader API).
+  - El formulario serializa las atracciones a JSON y las envía como hidden input
+    `detail__attractions` al guardar.
+  - TypeScript y eslint limpios. Listo para probar en navegador.
+  - Pendiente: verificar que el servidor guarda y recupera las atracciones
+    correctamente, probar edición y visualización de atracción en detalle de
+    actividad en sitio público.
+
+## Estado actual (2026-10-27 - anterior)
+
 - **Datos de demostración: 20 nuevas actividades PUBLICADAS en producción** (2026-10-27):
   - Scripts SQL: `seed-demo-actividades-panama.sql` (crea 20 actividades, status=draft).
   - Función SQL: `approve_and_publish_demo_activities()` (aprueba y publica en una sola ejecución).
