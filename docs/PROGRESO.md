@@ -8,16 +8,25 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Estado actual (2026-10-27)
 
-- **Actividades completamente implementadas** (2026-10-27):
+- **Actividades completamente implementadas con editor de atracciones** (2026-10-27):
   - Panel (pv_admin): formulario con horarios semanales, edad recomendada, qué incluye,
     atracciones y ubicación exacta; soporte para múltiples turnos por día (checkbox).
+  - Editor de atracciones: `src/components/activity-form-fields.tsx` con componentes para
+    editar atracciones (nombre, descripción, galería de 5 fotos cada una).
+    `src/components/service-editor-form.tsx` integra AttractionsField cuando
+    categoryId === 'actividades'.
+  - Atracciones se almacenan en `lodging.details.attractions` (JSONB).
   - Migraciones aplicadas: `activity_hours` para horarios, columnas en `activity_profiles`
     para ubicación y control de turnos múltiples.
   - Servidor: carga de horarios, estado en tiempo real (Abierto/Pronto a cerrar/Cerrado),
     ubicación exacta, botón de reserva como en hoteles y restaurantes.
   - Ficha pública (panama-viajero): muestra estado actual, horarios semanales, ubicación
-    completa (Mapa + Destino + Sitio turístico + Ubicación exacta), botón de reserva.
-  - Pendiente: datos de demostración (seed SQL) para actividades con horarios y sitios turísticos.
+    completa (Mapa + Destino + Sitio turístico + Ubicación exacta), botón de reserva,
+    y atracciones con galería (recuperadas de activity_profiles.details.attractions).
+  - Datos de demostración: 20 actividades PUBLICADAS con horarios y sitios turísticos
+    (scripts SQL: `seed-demo-actividades-panama.sql`).
+  - **Verificado**: Aparecen en la base de datos con estado publicado.
+  - TypeScript y eslint limpios. Listo para probar en navegador.
 - Botón "Ver menú" en restaurantes ahora abre el enlace externo (`menu_url`) en una
   nueva pestaña.
 
@@ -81,10 +90,22 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Pendientes
 
+<<<<<<< HEAD
 1. Corregir los acentos de `owner_create_draft_service` en producción.
 2. Revisar los avisos de seguridad de Supabase (ver arriba).
 3. Pasar a migraciones del repo los cambios manuales listados arriba.
 4. Probar en navegador: guardar restaurante con confirmación, eliminar, retirar revisión,
+=======
+1. ~~**Sitio público usa `cities`**~~ **RESUELTO** (2026-10-27):
+   - `202610200005` aplicada: tabla `cities` eliminada.
+   - Actualizado sitio público en panama-viajero para usar `destination_province_id`.
+   - Archivos corregidos: `api/services`, `service-details`, `tourist-sites`,
+     `tourist-site-services`, `sitios-turisticos/[slug]/page`, `use-published-services`.
+2. Revisar `quote_stay` (usa `cities`).
+3. Confirmar que `202610200006`, `202610200007` y `202610210001` están aplicadas.
+4. Pasar a migraciones del repo los cambios manuales listados arriba.
+5. Probar en navegador: guardar restaurante con confirmación, eliminar, retirar revisión,
+>>>>>>> claude/adoring-lamport-hgz2jf
    publicar aprobado.
 5. Decidir si se agrega un límite total de hospedajes además del límite por tipo.
 6. Sin uso tras volver al flujo del usuario (son de `feat/merchant-dashboard`; decidir si

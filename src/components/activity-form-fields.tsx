@@ -1,282 +1,348 @@
 "use client";
 
 import { useState } from "react";
+import { X, Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui";
-import type { ActivityContent, ActivityAttraction } from "@/types/content";
-import styles from "@/components/lodging-form-fields.module.css";
 
-type Props = {
-  activity: ActivityContent;
-  onChange: (activity: ActivityContent) => void;
-  hasMultipleShifts?: boolean;
-  multipleShiftsInput?: string;
-  onMultipleShiftsChange?: (hasMultiple: boolean, input: string) => void;
-  locationDetails?: string;
-  onLocationDetailsChange?: (details: string) => void;
+export type Attraction = {
+  id: string;
+  name: string;
+  description: string;
+  photos: Array<{
+    storage_path?: string;
+    position: number;
+    alt_text?: string;
+  }>;
 };
 
-const DAYS = [
-  "lunes",
-  "martes",
-  "miércoles",
-  "jueves",
-  "viernes",
-  "sábado",
-  "domingo",
-];
+type Props = {
+  attractions: Attraction[];
+  onAttractionsChange: (attractions: Attraction[]) => void;
+};
 
-export function ActivityFormFields({
-  activity,
-  onChange,
-  hasMultipleShifts = false,
-  multipleShiftsInput = "",
-  onMultipleShiftsChange,
-  locationDetails = "",
-  onLocationDetailsChange,
-}: Props) {
-  const [newAttractionName, setNewAttractionName] = useState("");
-
-  const handleScheduleChange = (day: string, field: string, value: string) => {
-    const updated = { ...activity };
-    if (!updated.schedule[day]) updated.schedule[day] = { from: "", to: "" };
-    (updated.schedule[day] as Record<string, string>)[field] = value;
-    onChange(updated);
-  };
-
-  const handleAttractionChange = (
-    index: number,
-    field: keyof ActivityAttraction,
-    value: unknown
-  ) => {
-    const updated = { ...activity };
-    (updated.attractions[index] as Record<string, unknown>)[field] = value;
-    onChange(updated);
-  };
+// Editor de atracciones para actividades
+export function AttractionsField({ attractions, onAttractionsChange }: Props) {
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const addAttraction = () => {
-    if (!newAttractionName.trim()) return;
-    const updated = { ...activity };
-    updated.attractions.push({
-      name: newAttractionName,
+    const newId = `attr-${Date.now()}`;
+    const newAttraction: Attraction = {
+      id: newId,
+      name: "",
       description: "",
-      options: [],
       photos: [],
-    });
-    onChange(updated);
-    setNewAttractionName("");
+    };
+    onAttractionsChange([...attractions, newAttraction]);
+    setEditingId(newId);
   };
 
-  const removeAttraction = (index: number) => {
-    const updated = { ...activity };
-    updated.attractions.splice(index, 1);
-    onChange(updated);
+  const updateAttraction = (id: string, updates: Partial<Attraction>) => {
+    onAttractionsChange(
+      attractions.map((attr) => (attr.id === id ? { ...attr, ...updates } : attr))
+    );
+  };
+
+  const removeAttraction = (id: string) => {
+    onAttractionsChange(attractions.filter((attr) => attr.id !== id));
   };
 
   return (
-    <div className={styles.fieldSet}>
-      <fieldset>
-        <legend>Horario de operación</legend>
-        <label className="field">
-          <input
-            type="checkbox"
-            checked={hasMultipleShifts}
-            onChange={(e) => onMultipleShiftsChange?.(e.target.checked, "")}
-          />
-          ¿Múltiples turnos por día?
-        </label>
-      </fieldset>
+    <div className="field">
+      <label>Atracciones principales</label>
+      <p style={{ fontSize: "0.875rem", color: "var(--muted)", marginBottom: 16 }}>
+        Agrega las atracciones principales de tu actividad. Cada una puede incluir
+        descripción y hasta 5 fotos.
+      </p>
 
-      {!hasMultipleShifts ? (
-        <fieldset>
-          <legend>Horario semanal</legend>
-          <small style={{ marginBottom: "1rem", display: "block" }}>
-            Define la hora de apertura y cierre para cada día.
-          </small>
-          <div className={styles.grid}>
-            {DAYS.map((day) => (
-              <div key={day} className={styles.row}>
-                <label htmlFor={`schedule-${day}-from`}>
-                  {day.charAt(0).toUpperCase() + day.slice(1)}
-                </label>
-                <input
-                  id={`schedule-${day}-from`}
-                  type="time"
-                  value={activity.schedule[day]?.from ?? ""}
-                  onChange={(e) =>
-                    handleScheduleChange(day, "from", e.target.value)
-                  }
-                />
-                <span>a</span>
-                <input
-                  type="time"
-                  value={activity.schedule[day]?.to ?? ""}
-                  onChange={(e) =>
-                    handleScheduleChange(day, "to", e.target.value)
-                  }
-                />
-              </div>
-            ))}
-          </div>
-        </fieldset>
-      ) : (
-        <fieldset>
-          <legend>Turnos semanales</legend>
-          <small style={{ marginBottom: "1rem", display: "block" }}>
-            Ingresa los turnos en formato HH:MM-HH:MM, separados por coma.
-            Ejemplo: 09:00-12:00, 14:00-18:00
-          </small>
-          {DAYS.map((day) => {
-            let shiftsData: Record<string, string> = {};
-            try {
-              shiftsData =
-                multipleShiftsInput && multipleShiftsInput !== ""
-                  ? JSON.parse(multipleShiftsInput)
-                  : {};
-            } catch {
-              shiftsData = {};
-            }
-            return (
-              <label key={day} className="field">
-                {day.charAt(0).toUpperCase() + day.slice(1)}
-                <textarea
-                  placeholder="09:00-12:00, 14:00-18:00"
-                  value={shiftsData[day] ?? ""}
-                  onChange={(e) => {
-                    const updated = { ...shiftsData };
-                    updated[day] = e.target.value;
-                    onMultipleShiftsChange?.(true, JSON.stringify(updated));
-                  }}
-                  rows={2}
-                />
-              </label>
-            );
-          })}
-        </fieldset>
+      {attractions.map((attraction) => (
+        <AttractionEditor
+          key={attraction.id}
+          attraction={attraction}
+          isEditing={editingId === attraction.id}
+          onEdit={() => setEditingId(attraction.id)}
+          onClose={() => setEditingId(null)}
+          onUpdate={(updates) => updateAttraction(attraction.id, updates)}
+          onRemove={() => removeAttraction(attraction.id)}
+        />
+      ))}
+
+      {attractions.length === 0 && (
+        <div
+          style={{
+            padding: 16,
+            textAlign: "center",
+            color: "var(--muted)",
+            borderRadius: 8,
+            backgroundColor: "var(--background-secondary)",
+            marginBottom: 16,
+          }}
+        >
+          No hay atracciones agregadas
+        </div>
       )}
 
-      <fieldset>
-        <legend>Ubicación exacta</legend>
-        <label className="field">
-          <textarea
-            placeholder="Ej: Altaplaza mall, 3er piso, frente de Cinépolis, entrada Oeste"
-            value={locationDetails}
-            onChange={(e) => onLocationDetailsChange?.(e.target.value)}
-          />
-        </label>
-      </fieldset>
+      <Button
+        type="button"
+        onClick={addAttraction}
+        style={{ width: "100%" }}
+      >
+        <Plus size={16} /> Agregar atracción
+      </Button>
+    </div>
+  );
+}
 
-      <fieldset>
-        <legend>Edad recomendada</legend>
-        <div className={styles.row}>
-          <label htmlFor="min-age">Desde los</label>
-          <input
-            id="min-age"
-            type="number"
-            min="0"
-            max="120"
-            value={activity.minAge ?? ""}
-            onChange={(e) => {
-              const updated = { ...activity };
-              updated.minAge = e.target.value ? Number(e.target.value) : null;
-              onChange(updated);
+type AttractionEditorProps = {
+  attraction: Attraction;
+  isEditing: boolean;
+  onEdit: () => void;
+  onClose: () => void;
+  onUpdate: (updates: Partial<Attraction>) => void;
+  onRemove: () => void;
+};
+
+function AttractionEditor({
+  attraction,
+  isEditing,
+  onEdit,
+  onClose,
+  onUpdate,
+  onRemove,
+}: AttractionEditorProps) {
+  if (!isEditing) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          padding: 12,
+          backgroundColor: "var(--background-secondary)",
+          borderRadius: 8,
+          marginBottom: 12,
+          alignItems: "center",
+        }}
+      >
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 600 }}>
+            {attraction.name || "Atracción sin nombre"}
+          </div>
+          <div
+            style={{
+              fontSize: "0.875rem",
+              color: "var(--muted)",
+              marginTop: 4,
             }}
-          />
-          <span>años</span>
+          >
+            {attraction.photos.length} foto(s) • {attraction.description.length} caracteres
+          </div>
         </div>
-      </fieldset>
+        <Button
+          type="button"
+          tone="quiet"
+          onClick={onEdit}
+          style={{ padding: 8 }}
+        >
+          Editar
+        </Button>
+        <Button
+          type="button"
+          tone="quiet"
+          onClick={onRemove}
+          style={{ padding: 8, color: "var(--error)" }}
+        >
+          <X size={16} />
+        </Button>
+      </div>
+    );
+  }
 
-      <fieldset>
-        <legend>Lo que incluye</legend>
-        <textarea
-          name="activity_includes"
-          placeholder="Separa items con saltos de línea: Guía certificado, Chaleco salvavidas..."
-          value={activity.whatIncludes.join("\n")}
-          onChange={(e) => {
-            const updated = { ...activity };
-            updated.whatIncludes = e.target.value
-              .split("\n")
-              .map((s) => s.trim())
-              .filter((s) => s);
-            onChange(updated);
-          }}
+  return (
+    <div
+      style={{
+        padding: 16,
+        backgroundColor: "var(--background-secondary)",
+        borderRadius: 8,
+        marginBottom: 12,
+        border: "1px solid var(--border)",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+        <h3 style={{ margin: 0 }}>Editar atracción</h3>
+        <Button
+          type="button"
+          tone="quiet"
+          onClick={onClose}
+          style={{ padding: 4 }}
+        >
+          <X size={16} />
+        </Button>
+      </div>
+
+      <label className="field">
+        Nombre de la atracción
+        <input
+          type="text"
+          value={attraction.name}
+          onChange={(e) => onUpdate({ name: e.target.value })}
+          placeholder="Ej: Cascada Chiquita"
+          maxLength={100}
         />
-      </fieldset>
+      </label>
 
-      <fieldset>
-        <legend>Atracciones</legend>
-        <div className={styles.list}>
-          {activity.attractions.map((attraction, index) => (
-            <div key={index} className={styles.item}>
-              <div className={styles.row}>
-                <label>Nombre:</label>
+      <label className="field">
+        Descripción
+        <textarea
+          value={attraction.description}
+          onChange={(e) => onUpdate({ description: e.target.value })}
+          placeholder="Describe esta atracción..."
+          rows={4}
+          maxLength={500}
+        />
+        <small style={{ color: "var(--muted)" }}>
+          {attraction.description.length}/500 caracteres
+        </small>
+      </label>
+
+      <PhotoGalleryField
+        photos={attraction.photos}
+        onPhotosChange={(photos) => onUpdate({ photos })}
+      />
+
+      <div style={{ display: "flex", gap: 8 }}>
+        <Button type="button" tone="primary" onClick={onClose} style={{ flex: 1 }}>
+          Listo
+        </Button>
+        <Button
+          type="button"
+          tone="secondary"
+          onClick={onRemove}
+          style={{ flex: 1, color: "var(--error)" }}
+        >
+          Eliminar atracción
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+type PhotoGalleryFieldProps = {
+  photos: Attraction["photos"];
+  onPhotosChange: (photos: Attraction["photos"]) => void;
+};
+
+function PhotoGalleryField({ photos, onPhotosChange }: PhotoGalleryFieldProps) {
+  const handleAddPhoto = () => {
+    if (photos.length < 5) {
+      const newPhoto = {
+        position: (Math.max(...photos.map((p) => p.position), 0) + 1),
+        alt_text: "",
+      };
+      onPhotosChange([...photos, newPhoto]);
+    }
+  };
+
+  const handleRemovePhoto = (position: number) => {
+    onPhotosChange(photos.filter((p) => p.position !== position));
+  };
+
+  const handleUpdatePhoto = (position: number, updates: Partial<typeof photos[0]>) => {
+    onPhotosChange(
+      photos.map((p) =>
+        p.position === position ? { ...p, ...updates } : p
+      )
+    );
+  };
+
+  return (
+    <div className="field">
+      <label>Galería de fotos (máximo 5)</label>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, 120px)", gap: 12, marginBottom: 12 }}>
+        {photos.map((photo) => (
+          <div
+            key={photo.position}
+            style={{
+              position: "relative",
+              aspectRatio: "1",
+              backgroundColor: "var(--background)",
+              borderRadius: 8,
+              border: "1px solid var(--border)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+            }}
+          >
+            {photo.storage_path ? (
+              <>
+                <img
+                  src={photo.storage_path}
+                  alt={photo.alt_text || `Foto ${photo.position}`}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemovePhoto(photo.position)}
+                  style={{
+                    position: "absolute",
+                    top: 4,
+                    right: 4,
+                    background: "rgba(0,0,0,0.6)",
+                    border: "none",
+                    color: "white",
+                    borderRadius: 4,
+                    padding: 4,
+                    cursor: "pointer",
+                    display: "flex",
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              </>
+            ) : (
+              <label
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  color: "var(--muted)",
+                }}
+              >
+                <Upload size={20} />
                 <input
-                  type="text"
-                  value={attraction.name}
-                  onChange={(e) =>
-                    handleAttractionChange(index, "name", e.target.value)
-                  }
-                />
-              </div>
-              <div className={styles.row}>
-                <label>Descripción (máx. 500 caracteres):</label>
-                <textarea
-                  value={attraction.description}
-                  maxLength={500}
-                  onChange={(e) =>
-                    handleAttractionChange(
-                      index,
-                      "description",
-                      e.target.value
-                    )
-                  }
-                />
-                <span style={{ fontSize: "0.875rem", color: "var(--text-muted)" }}>
-                  {attraction.description.length}/500
-                </span>
-              </div>
-              <div className={styles.row}>
-                <label>Opciones:</label>
-                <textarea
-                  value={attraction.options.join("\n")}
-                  placeholder="Separa con saltos de línea"
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
                   onChange={(e) => {
-                    const options = e.target.value
-                      .split("\n")
-                      .map((s) => s.trim())
-                      .filter((s) => s);
-                    handleAttractionChange(index, "options", options);
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        handleUpdatePhoto(photo.position, {
+                          storage_path: event.target?.result as string,
+                        });
+                      };
+                      reader.readAsDataURL(file);
+                    }
                   }}
                 />
-              </div>
-              <Button
-                type="button"
-                onClick={() => removeAttraction(index)}
-                tone="secondary"
-              >
-                Eliminar atracción
-              </Button>
-            </div>
-          ))}
-        </div>
+              </label>
+            )}
+          </div>
+        ))}
+      </div>
 
-        <div className={styles.row}>
-          <input
-            type="text"
-            placeholder="Nombre de nueva atracción"
-            value={newAttractionName}
-            onChange={(e) => setNewAttractionName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addAttraction();
-              }
-            }}
-          />
-          <Button type="button" onClick={addAttraction}>
-            + Agregar atracción
-          </Button>
-        </div>
-      </fieldset>
+      {photos.length < 5 && (
+        <Button
+          type="button"
+          onClick={handleAddPhoto}
+          style={{ width: "100%" }}
+        >
+          <Plus size={16} /> Agregar foto
+        </Button>
+      )}
     </div>
   );
 }

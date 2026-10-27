@@ -4,21 +4,21 @@ import { type FormEvent, startTransition, useActionState, useState } from "react
 import { Button, Panel } from "@/components/ui";
 import { LANGUAGE_OPTIONS, getLodgingDetailFields } from "@/data/lodging-details";
 import {
+  ApartmentTypesField,
   ChoiceField,
   EventsPolicyField,
   ReceptionHoursField,
+  readApartmentTypes,
 } from "@/components/lodging-form-fields";
-import { ActivityFormFields } from "@/components/activity-form-fields";
+import { AttractionsField, type Attraction } from "@/components/activity-form-fields";
 import {
   ServiceSitePicker,
   type DestinationOption,
   type SiteOption,
 } from "@/components/panel-service-site-picker";
 import { saveServiceAction } from "@/app/panel/actions";
-import { DeleteOwnServiceButton } from "@/components/panel-own-service-status";
 import { extractMapsEmbedUrl } from "@/lib/panel-maps";
 import { canManageCatalog, type PanelRole } from "@/types/panel";
-import type { ActivityContent } from "@/types/content";
 
 type Option = { id: string; name?: string; label?: string; province_id?: string };
 type Props = {
@@ -26,7 +26,6 @@ type Props = {
   service: Record<string, unknown>;
   lodging: Record<string, unknown>;
   restaurant: Record<string, unknown>;
-  activity?: ActivityContent;
   businesses: Option[];
   categories: Option[];
   lodgingTypes: Option[];
@@ -41,8 +40,6 @@ type Props = {
   selectedSiteIds: string[];
   selectedAmenityIds: string[];
   selectedFeatureIds: string[];
-  // Restaurantes ya creados que se pueden vincular a un hospedaje.
-  restaurantOptions: Array<{ id: string; name: string; business_id: string }>;
 };
 
 // Presenta campos reales para el servicio y su ficha específica.
@@ -60,63 +57,40 @@ export function ServiceEditorForm(props: Props) {
   const isStaff = canManageCatalog(role);
   const isNew = !service.id;
   const isPublished = service.status === "published";
-  // En revisión se cancela desde el panel de estado; no se ofrece eliminar.
-  const inReview = service.review_status === "pending" && !isPublished;
   // La categoría elegida controla qué campos se muestran (tipo de hospedaje, ficha de
   // hospedaje o de restaurante), así que vive en el estado del formulario.
   const [categoryId, setCategoryId] = useState(
     String(service.category_id ?? props.categories[0]?.id ?? "hospedaje"),
   );
-  const [activity, setActivity] = useState<ActivityContent>(
-    props.activity ?? { schedule: {}, minAge: null, whatIncludes: [], attractions: [] },
-  );
-  const [activityHasMultipleShifts, setActivityHasMultipleShifts] = useState(false);
-  const [activityMultipleShiftsInput, setActivityMultipleShiftsInput] = useState("");
-  const [activityLocationDetails, setActivityLocationDetails] = useState("");
   const lodgingTypeId = String(service.hospedaje_type_id ?? props.presetLodgingTypeId ?? "");
   const selectedLanguages = Array.isArray(lodging.languages)
     ? lodging.languages.map(String)
     : [];
   const detailFields = getLodgingDetailFields(lodgingTypeId);
   const details = (lodging.details ?? {}) as Record<string, string>;
-  const savedDetails = (lodging.details ?? {}) as Record<string, unknown>;
-  const linkedRestaurantIds = Array.isArray(savedDetails.linked_restaurant_ids)
-    ? savedDetails.linked_restaurant_ids.map(String)
-    : [];
-  const serviceBusinessId = String(service.business_id ?? props.businesses[0]?.id ?? "");
-  const restaurantChoices = props.restaurantOptions.filter((item) =>
-    item.business_id === serviceBusinessId);
   const selectedSites = props.selectedSiteIds.length
     ? props.selectedSiteIds
     : service.tourist_site_id ? [String(service.tourist_site_id)] : [];
+  const [attractions, setAttractions] = useState<Attraction[]>(
+    Array.isArray(details.attractions) ? details.attractions : [],
+  );
+
+  // Serializa las atracciones para enviarlas en el formulario.
+  const handleSubmitWithAttractions = (event: FormEvent<HTMLFormElement>) => {
+    const formElement = event.currentTarget;
+    if (categoryId === "actividades") {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "detail__attractions";
+      input.value = JSON.stringify(attractions);
+      formElement.appendChild(input);
+    }
+    handleSubmit(event);
+  };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmitWithAttractions}>
       <input type="hidden" name="service_id" value={String(service.id ?? "")} />
-      {categoryId === "actividades" && (
-        <>
-          <input
-            type="hidden"
-            name="activity_details"
-            value={JSON.stringify(activity)}
-          />
-          <input
-            type="hidden"
-            name="activity_has_multiple_shifts"
-            value={String(activityHasMultipleShifts)}
-          />
-          <input
-            type="hidden"
-            name="activity_multiple_shifts_input"
-            value={activityMultipleShiftsInput}
-          />
-          <input
-            type="hidden"
-            name="activity_location_details"
-            value={activityLocationDetails}
-          />
-        </>
-      )}
       <Panel>
         <h2>Información general</h2>
         <label className="field">
@@ -344,59 +318,21 @@ export function ServiceEditorForm(props: Props) {
             value={lodging.cancellation_policy}
             multiline
           />
-          {detailFields.map((field) => (
-            <TextField
-              key={field.key}
-              label={field.label}
-              name={`detail__${field.key}`}
-              value={details[field.key]}
-              multiline={field.multiline}
-            />
-          ))}
-        </Panel>
-      )}
-
-      {categoryId === "hospedaje" && (
-        <Panel>
-          <h2>Restaurantes del hospedaje</h2>
-          {restaurantChoices.length ? (
-            <fieldset className="choice-group">
-              <legend>Marca los restaurantes que están dentro de este hospedaje</legend>
-              {restaurantChoices.map((item) => (
-                <label className="checkbox-option" key={item.id}>
-                  <input
-                    type="checkbox"
-                    name="linked_restaurant_ids"
-                    value={item.id}
-                    defaultChecked={linkedRestaurantIds.includes(item.id)}
-                  />
-                  {item.name}
-                </label>
-              ))}
-            </fieldset>
-          ) : (
-            <p className="muted">
-              Para vincular un restaurante, primero créalo como servicio de la categoría
-              Restaurantes en este mismo negocio.
-            </p>
-          )}
-        </Panel>
-      )}
-
-      {categoryId === "hospedaje" && (
-        <Panel>
-          <h2>Habitaciones</h2>
-          {isNew ? (
-            <p>
-              Guarda primero el borrador. Después podrás añadir cada habitación con sus
-              camas, comodidades, precio y su galería de fotos.
-            </p>
-          ) : (
-            <p>
-              Cada habitación se añade, con sus camas, comodidades, precio y fotos, en la
-              sección <a className="text-link" href="#habitaciones">Habitaciones</a> de
-              esta misma página, debajo del formulario.
-            </p>
+          {detailFields.map((field) =>
+            field.kind === "apartment_types" ? (
+              <ApartmentTypesField
+                key={field.key}
+                initial={readApartmentTypes(details.apartment_types)}
+              />
+            ) : (
+              <TextField
+                key={field.key}
+                label={field.label}
+                name={`detail__${field.key}`}
+                value={details[field.key]}
+                multiline={field.multiline}
+              />
+            ),
           )}
         </Panel>
       )}
@@ -411,18 +347,10 @@ export function ServiceEditorForm(props: Props) {
 
       {categoryId === "actividades" && (
         <Panel>
-          <h2>Configuración de actividades</h2>
-          <ActivityFormFields
-            activity={activity}
-            onChange={setActivity}
-            hasMultipleShifts={activityHasMultipleShifts}
-            multipleShiftsInput={activityMultipleShiftsInput}
-            onMultipleShiftsChange={(hasMultiple, input) => {
-              setActivityHasMultipleShifts(hasMultiple);
-              setActivityMultipleShiftsInput(input);
-            }}
-            locationDetails={activityLocationDetails}
-            onLocationDetailsChange={setActivityLocationDetails}
+          <h2>Atracciones</h2>
+          <AttractionsField
+            attractions={attractions}
+            onAttractionsChange={setAttractions}
           />
         </Panel>
       )}
@@ -466,13 +394,6 @@ export function ServiceEditorForm(props: Props) {
           </small>
         )}
         {isNew && <small>El nuevo servicio se guardará como borrador.</small>}
-        {!isStaff && !isNew && !inReview && (
-          <DeleteOwnServiceButton
-            serviceId={String(service.id)}
-            name={String(service.name ?? "")}
-            status={String(service.status ?? "")}
-          />
-        )}
       </footer>
     </form>
   );
