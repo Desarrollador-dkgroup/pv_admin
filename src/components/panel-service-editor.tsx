@@ -217,17 +217,6 @@ export async function PanelServiceEditor({
     (siteResult.data ?? []).find((site) => selectedSiteIds.includes(site.id))?.province_id ??
     "";
 
-  // Restaurantes ya creados de los negocios visibles, para vincularlos a un hospedaje.
-  const restaurantQuery = supabase
-    .from("services")
-    .select("id, name, business_id")
-    .eq("category_id", "restaurantes")
-    .order("name");
-  const restaurantOptions = await (isStaff
-    ? restaurantQuery.in("business_id", businesses.map((business) => business.id))
-    : restaurantQuery.in("business_id", businessIds));
-  if (restaurantOptions.error) throw new Error("No se pudieron cargar los restaurantes.");
-
   return (
     <>
       <header className="page-heading">
@@ -249,8 +238,6 @@ export async function PanelServiceEditor({
       )}
       <ServiceEditorForm
         role={role}
-        restaurantOptions={(restaurantOptions.data ?? []).filter((item) =>
-          item.id !== serviceId)}
         service={service as Record<string, unknown>}
         lodging={(lodgingResult.data ?? {}) as Record<string, unknown>}
         restaurant={restaurant as Record<string, unknown>}
