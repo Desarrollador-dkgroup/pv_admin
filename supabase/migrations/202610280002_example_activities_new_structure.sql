@@ -12,11 +12,11 @@ WITH new_services AS (
     ('Senderismo en Cerro Jefe con Cascadas', 'example-cerro-jefe-hiking', 'actividades', 'Panamá',
      'Aventura guiada a través de exuberante bosque tropical hacia cascadas cristalinas. Ideal para amantes de la naturaleza y aventura moderada.',
      'Senderismo en Cerro Jefe con visita a cascadas, guía profesional, equipo de aventura incluido.',
-     6500, 'published', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
+     6500, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW()),
     ('Tour Gastronómico Panamá City', 'example-panama-city-food-tour', 'actividades', 'Panamá',
      'Recorrido culinario por restaurantes y mercados locales. Prueba autentican sabores panameños y aprende de la gastronomía local.',
      'Tour gastronómico en Panamá City visitando mercados, restaurantes y bares típicos con degustaciones.',
-     5500, 'published', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW())
+     5500, 'draft', 'b2996846-c6ec-43dc-ae69-192fcbf85d75', NOW(), NOW())
   RETURNING id, slug, name
 )
 INSERT INTO public.activity_profiles (
