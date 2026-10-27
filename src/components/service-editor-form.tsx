@@ -204,20 +204,22 @@ export function ServiceEditorForm(props: Props) {
         <MapsEmbedField
           initial={service.maps_embed_url == null ? "" : String(service.maps_embed_url)}
         />
-        <fieldset className="choice-group">
-          <legend>Servicios y comodidades</legend>
-          {props.amenities.map((amenity) => (
-            <label className="checkbox-option" key={amenity.id}>
-              <input
-                type="checkbox"
-                name="amenity_ids"
-                value={amenity.id}
-                defaultChecked={props.selectedAmenityIds.includes(amenity.id)}
-              />
-              {amenity.label ?? amenity.id}
-            </label>
-          ))}
-        </fieldset>
+        {categoryId !== "actividades" && (
+          <fieldset className="choice-group">
+            <legend>Servicios y comodidades</legend>
+            {props.amenities.map((amenity) => (
+              <label className="checkbox-option" key={amenity.id}>
+                <input
+                  type="checkbox"
+                  name="amenity_ids"
+                  value={amenity.id}
+                  defaultChecked={props.selectedAmenityIds.includes(amenity.id)}
+                />
+                {amenity.label ?? amenity.id}
+              </label>
+            ))}
+          </fieldset>
+        )}
                 {categoryId !== "hospedaje" && (
   <TextField
             label="Precio desde (USD)"
