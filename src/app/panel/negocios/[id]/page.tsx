@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge, Button, Panel } from "@/components/ui";
 import { MemberAddForm } from "@/components/panel-member-form";
+import { ServicePlanAddForm } from "@/components/panel-service-plan-form";
 import { OwnBusinessForm } from "@/components/panel-own-business-form";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { canManageProviders } from "@/lib/panel-permissions";
@@ -33,7 +34,7 @@ export default async function BusinessDetailPage({
   if (error) throw new Error("No se pudo cargar el negocio.");
   if (!business) notFound();
 
-  const [membersResult, servicesResult, accountsResult, plansResult] =
+  const [membersResult, servicesResult, accountsResult, plansResult, categoriesResult, typesResult] =
     await Promise.all([
     supabase
       .from("business_members")
@@ -53,10 +54,12 @@ export default async function BusinessDetailPage({
       .select("id, quantity, categories(label), hospedaje_types(label)")
       .eq("business_id", id)
       .order("created_at"),
+    supabase.from("categories").select("id, label").order("label"),
+    supabase.from("hospedaje_types").select("id, label").order("label"),
   ]);
   if (
     membersResult.error || servicesResult.error || accountsResult.error ||
-    plansResult.error
+    plansResult.error || categoriesResult.error || typesResult.error
   ) {
     throw new Error("No se pudo cargar la información del negocio.");
   }
@@ -156,6 +159,13 @@ export default async function BusinessDetailPage({
         })}
         {!plansResult.data?.length && (
           <p className="muted">No hay un plan de servicios registrado para este negocio.</p>
+        )}
+        {canManageProviders(role) && (
+          <ServicePlanAddForm
+            businessId={id}
+            categories={categoriesResult.data ?? []}
+            lodgingTypes={typesResult.data ?? []}
+          />
         )}
       </Panel>
 

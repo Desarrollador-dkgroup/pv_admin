@@ -123,3 +123,40 @@ export async function updateOwnBusinessAction(
   revalidatePath("/panel");
   return { error: "" };
 }
+
+// Agrega un nuevo servicio al plan del negocio.
+export async function addServicePlanAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { supabase, role } = await getPanelIdentity();
+  if (!canManageProviders(role)) {
+    return { error: "Tu cuenta no puede agregar servicios al plan." };
+  }
+
+  const businessId = formText(formData, "business_id");
+  const categoryId = formText(formData, "category_id");
+  const hospedajeTypeId = formText(formData, "hospedaje_type_id");
+  const quantity = formText(formData, "quantity");
+
+  if (!categoryId) return { error: "Selecciona una categoría." };
+  if (!quantity || isNaN(Number(quantity)) || Number(quantity) < 1) {
+    return { error: "La cantidad debe ser un número mayor a 0." };
+  }
+
+  const { error } = await supabase.from("business_service_plans").insert({
+    business_id: businessId,
+    category_id: categoryId,
+    hospedaje_type_id: categoryId === "hospedaje" ? hospedajeTypeId : null,
+    quantity: Number(quantity),
+  });
+
+  if (error) {
+    return { error: error.message.includes("duplicate")
+      ? "Este tipo de servicio ya está en el plan."
+      : error.message };
+  }
+
+  refreshBusinessViews(businessId);
+  return { error: "" };
+}
