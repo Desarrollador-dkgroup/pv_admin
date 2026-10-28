@@ -260,12 +260,12 @@ export async function saveServiceAction(
 
   const intent = text(formData, "intent");
   const selectedStatus = text(formData, "status") || "draft";
-  // Un hospedaje no guarda precio base; las demás categorías lo exigen.
+  // Hospedaje y actividades no requieren precio base; restaurantes lo exigen.
   const hasPrice = numberValue(text(formData, "base_price")) !== null;
-  if (categoryId !== "hospedaje" && !hasPrice) {
+  if (categoryId === "restaurantes" && !hasPrice) {
     return { error: "Indica el precio desde del servicio." };
   }
-  const basePriceCents = categoryId !== "hospedaje" && hasPrice
+  const basePriceCents = hasPrice
     ? Math.round(Number(text(formData, "base_price")) * 100)
     : null;
 

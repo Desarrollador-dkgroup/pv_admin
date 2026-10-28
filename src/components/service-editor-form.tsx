@@ -213,12 +213,13 @@ export function ServiceEditorForm(props: Props) {
             ))}
           </fieldset>
         )}
-                {categoryId !== "hospedaje" && (
-  <TextField
+        {categoryId === "restaurantes" && (
+          <TextField
             label="Precio desde (USD)"
             name="base_price"
             value={dollars(service.base_price_cents)}
             type="number"
+            required
           />
         )}
         {isStaff && (
