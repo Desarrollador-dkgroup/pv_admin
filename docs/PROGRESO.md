@@ -8,6 +8,14 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Estado actual (2026-10-28)
 
+- **Agregar servicios al plan después de crear cuenta** (2026-10-28):
+  - Nuevo componente `panel-service-plan-form.tsx` con formulario para añadir servicios.
+  - Selección de categoría, tipo de hospedaje (condicional) y cantidad con stepper.
+  - Acción servidor `addServicePlanAction` valida datos y maneja duplicados.
+  - Página de detalle del negocio ahora obtiene todas las categorías y tipos al cargar.
+  - Formulario solo visible para administradores y colaboradores del negocio.
+  - Se puede añadir servicios al plan en cualquier momento después de crear la cuenta.
+
 - **Crear negocios al crear propietario** (2026-10-28):
   - Administrador o colaborador ahora puede crear negocios (services) con datos iniciales
     (nombre y precio) en el mismo formulario de creación de propietario.
