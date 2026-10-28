@@ -8,6 +8,14 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Estado actual (2026-10-28)
 
+- **Crear negocios al crear propietario** (2026-10-28):
+  - Administrador o colaborador ahora puede crear negocios (services) con datos iniciales
+    (nombre y precio) en el mismo formulario de creación de propietario.
+  - Campos opcionales: si se dejan vacíos, el propietario completa los datos después.
+  - Slug generado automáticamente con nombre + business_id.
+  - Servicios se crean directamente en tabla `services` como borrador.
+  - Cambios en `panel-owner-form.tsx` y `src/app/panel/propietarios/actions.ts`.
+
 - **Limpieza de actividades de demostración** (2026-10-28):
   - Eliminadas todas las actividades de la categoría "actividades" (40+ actividades de demostración).
   - Borrados registros: activity_hours, activity_profiles, services (categoría actividades).
