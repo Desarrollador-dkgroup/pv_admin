@@ -58,7 +58,13 @@ export async function reactivateOwnerAction(formData: FormData): Promise<void> {
 }
 
 type AdminClient = ReturnType<typeof getSupabaseAdminClient>;
-type OwnerServiceInput = { categoryId: string; hospedajeTypeId: string | null; count: number };
+type OwnerServiceInput = {
+  categoryId: string;
+  hospedajeTypeId: string | null;
+  count: number;
+  serviceName: string;
+  servicePrice: string;
+};
 type OwnerAccountInput = {
   name: string;
   email: string;
@@ -72,6 +78,20 @@ const MAX_UNITS_PER_LINE = 50;
 const MAX_UNITS_TOTAL = 100;
 const KEY_ERROR =
   "Falta configurar la clave de administración del servidor (SUPABASE_SERVICE_ROLE_KEY).";
+
+// Convierte un nombre a slug válido.
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[áäàâ]/g, "a")
+    .replace(/[éëèê]/g, "e")
+    .replace(/[íïìî]/g, "i")
+    .replace(/[óöòô]/g, "o")
+    .replace(/[úüùû]/g, "u")
+    .replace(/[ñ]/g, "n")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 // Revisa el nombre y el correo de la persona. Devuelve el mensaje de error o null.
 function validateIdentity(name: string, email: string): string | null {
@@ -235,6 +255,28 @@ export async function createOwnerAccountAction(
   if (plan.error) {
     await rollbackOwner(admin, businessId, userId);
     return { error: "No se pudo guardar el plan de servicios. La cuenta no se creó." };
+  }
+
+  // Crear servicios con datos iniciales si se proporcionan nombres
+  const servicesToCreate = input.services
+    .filter((s) => s.serviceName.length > 0)
+    .map((service, idx) => ({
+      name: service.serviceName,
+      slug: `${slugify(service.serviceName)}-${businessId.slice(0, 8)}-${idx}`,
+      category_id: service.categoryId,
+      price_cents: service.servicePrice ? Math.round(parseFloat(service.servicePrice) * 100) : 0,
+      status: "draft",
+      business_id: businessId,
+      created_at: new Date(),
+      updated_at: new Date(),
+    }));
+
+  if (servicesToCreate.length > 0) {
+    const servicesInsert = await admin.from("services").insert(servicesToCreate);
+    if (servicesInsert.error) {
+      // No fallamos si no se crean los servicios; el propietario puede crearlos después
+      console.error("Error creando servicios iniciales:", servicesInsert.error);
+    }
   }
 
   revalidatePath("/panel/propietarios");
