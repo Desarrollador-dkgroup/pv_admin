@@ -445,9 +445,6 @@ export function WhatIncludesField({ items, onItemsChange }: WhatIncludesFieldPro
   return (
     <div className="field">
       <label>Lo que incluye</label>
-      <p style={{ fontSize: "0.875rem", color: "var(--muted)", marginBottom: 12 }}>
-        Ej: Guía profesional, Equipo de aventura, Almuerzo, Transporte
-      </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
         {items.map((item, index) => (
           <div key={index} style={{ display: "flex", gap: 8, alignItems: "center" }}>

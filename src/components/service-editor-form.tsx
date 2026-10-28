@@ -81,24 +81,24 @@ export function ServiceEditorForm(props: Props) {
 
   // Serializa las atracciones, horarios e inclusions para enviarlas en el formulario.
   const handleSubmitWithAttractions = (event: FormEvent<HTMLFormElement>) => {
-    const formElement = event.currentTarget;
-    if (categoryId === "actividades") {
-      const activityDetails = {
-        attractions,
-        schedule,
-        whatIncludes,
-      };
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = "activity_details";
-      input.value = JSON.stringify(activityDetails);
-      formElement.appendChild(input);
-    }
     handleSubmit(event);
   };
 
+  const activityDetailsForForm = categoryId === "actividades" ? {
+    attractions,
+    schedule,
+    whatIncludes,
+  } : null;
+
   return (
     <form onSubmit={handleSubmitWithAttractions}>
+      {activityDetailsForForm && (
+        <input
+          type="hidden"
+          name="activity_details"
+          value={JSON.stringify(activityDetailsForForm)}
+        />
+      )}
       <input type="hidden" name="service_id" value={String(service.id ?? "")} />
       <Panel>
         <h2>Información general</h2>
