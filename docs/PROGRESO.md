@@ -6,16 +6,17 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 > **Regla estricta de sincronización.** Antes de empezar: pull en ambos repos y leer esta
 > bitácora. Al terminar: actualizarla, commit y push. Claude debe recordarlo siempre.
 
-## Estado actual (2026-10-27)
+## Estado actual (2026-10-28)
 
 - **Actividades con datos operacionales completos** (2026-10-28):
-  - Creada migración que llena "Paseo en Bicicleta Calzada de Amador" con todos los datos:
+  - Migración `202610280003` aplicada en Supabase producción.
+  - "Paseo en Bicicleta Calzada de Amador" ahora contiene todos los datos:
     horarios completos (lunes-viernes 08:00-18:00, sábado-domingo 07:00-19:00), edad mínima
     (8 años), qué incluye (bicicleta, casco, guía, agua, seguro, fotos), 3 atracciones
     (Calzada, Causeway Bridge, Isla Naos) con descripción y opciones, ubicación exacta.
   - Ficha pública (panama-viajero): ahora muestra estado actual, horarios semanales, edad,
     qué incluye, atracciones con opciones, ubicación exacta, mapa y reseñas.
-  - NOTA: Migración `202610280003` pendiente de aplicar en producción.
+  - La página pública debe redeployarse en Cloudflare para reflejar los cambios.
 - **Corregida serialización de datos de actividades** (2026-10-27):
   - Problema: Error "permission denied for table activity_profiles" al guardar actividades
   - Causa: Formulario enviaba `detail__*` campos separados en lugar de `activity_details` JSON
