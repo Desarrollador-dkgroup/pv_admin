@@ -12,8 +12,6 @@ type Item = {
   categoryId: string;
   typeId: string;
   count: number;
-  serviceName: string;
-  servicePrice: string;
 };
 type Created = { email: string; password: string };
 
@@ -82,8 +80,6 @@ export function CreateOwnerForm({
         categoryId: categories[0]?.id ?? "",
         typeId: lodgingTypes[0]?.id ?? "",
         count: 1,
-        serviceName: "",
-        servicePrice: "",
       },
     ]);
   }
@@ -129,8 +125,6 @@ export function CreateOwnerForm({
           categoryId: item.categoryId,
           hospedajeTypeId: item.categoryId === HOSPEDAJE ? item.typeId : null,
           count: item.count,
-          serviceName: item.serviceName.trim(),
-          servicePrice: item.servicePrice.trim(),
         })),
       });
       if (result.error) {
@@ -168,9 +162,8 @@ export function CreateOwnerForm({
       <section className="owner-section">
         <h3>2. Servicios que tendrá</h3>
         <p className="muted">
-          Elige el tipo de servicio y cuántos tiene. Opcionalmente, puedes añadir nombre y precio
-          para crear los negocios desde aquí. Si dejas vacíos esos campos, la persona los
-          completará al entrar a su cuenta.
+          Elige el tipo de servicio y cuántos tiene. La persona completará los detalles al entrar
+          a su cuenta.
         </p>
 
         <div className="owner-items">
@@ -221,27 +214,6 @@ export function CreateOwnerForm({
                   onChange={(count) => updateItem(item.key, { count })}
                 />
               </div>
-              <label className="field">
-                Nombre del negocio (opcional)
-                <input
-                  type="text"
-                  value={item.serviceName}
-                  onChange={(event) => updateItem(item.key, { serviceName: event.target.value })}
-                  placeholder="Ej: Mi Hotel Premium"
-                  maxLength={100}
-                />
-              </label>
-              <label className="field">
-                Precio base (opcional)
-                <input
-                  type="number"
-                  value={item.servicePrice}
-                  onChange={(event) => updateItem(item.key, { servicePrice: event.target.value })}
-                  placeholder="Ej: 50"
-                  min="0"
-                  step="0.01"
-                />
-              </label>
               <button
                 type="button"
                 className="text-button owner-item-remove"
