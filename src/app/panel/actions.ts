@@ -474,8 +474,9 @@ export async function saveServiceAction(
     if (activityDetailsJson) {
       try {
         activityDetails = JSON.parse(activityDetailsJson);
-      } catch {
-        return { error: "Los datos de la actividad no son válidos." };
+      } catch (e) {
+        const errorMsg = e instanceof Error ? e.message : String(e);
+        return { error: `Datos de actividad inválidos: ${errorMsg}` };
       }
     }
 
@@ -483,16 +484,19 @@ export async function saveServiceAction(
     const locationDetails = nullable(text(formData, "activity_location_details"));
     const multipleShiftsInput = text(formData, "activity_multiple_shifts_input");
 
-    const activity = await supabase.from("activity_profiles").upsert(
-      {
-        service_id: savedId,
-        details: activityDetails,
-        has_multiple_shifts: hasMultipleShifts,
-        location_address_details: locationDetails,
-      },
-      { onConflict: "service_id" },
-    );
-    if (activity.error) return { error: activity.error.message };
+    const activityProfile = {
+      service_id: savedId,
+      details: activityDetails,
+      has_multiple_shifts: hasMultipleShifts,
+      location_address_details: locationDetails,
+    };
+
+    const activity = await supabase.from("activity_profiles").upsert(activityProfile, {
+      onConflict: "service_id",
+    });
+    if (activity.error) {
+      return { error: `Error al guardar actividad: ${activity.error.message}` };
+    }
 
     // Si tiene múltiples turnos, procesar y guardar en activity_hours.
     if (hasMultipleShifts && multipleShiftsInput) {
