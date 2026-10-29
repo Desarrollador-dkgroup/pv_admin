@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { canManageCatalog } from "@/types/panel";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 type FormState = { error: string; saved?: boolean };
 
@@ -491,7 +492,8 @@ export async function saveServiceAction(
       location_address_details: locationDetails,
     };
 
-    const activity = await supabase.from("activity_profiles").upsert(activityProfile, {
+    const adminClient = getSupabaseAdminClient();
+    const activity = await adminClient.from("activity_profiles").upsert(activityProfile, {
       onConflict: "service_id",
     });
     if (activity.error) {
@@ -539,13 +541,13 @@ export async function saveServiceAction(
         }
 
         if (hours.length > 0) {
-          const { error: hoursError } = await supabase
+          const { error: hoursError } = await adminClient
             .from("activity_hours")
             .delete()
             .eq("service_id", savedId);
           if (hoursError) return { error: hoursError.message };
 
-          const { error: insertError } = await supabase
+          const { error: insertError } = await adminClient
             .from("activity_hours")
             .insert(hours);
           if (insertError) return { error: insertError.message };
@@ -555,7 +557,7 @@ export async function saveServiceAction(
       }
     } else if (!hasMultipleShifts) {
       // Limpiar horarios si cambia a horario simple.
-      const { error: hoursError } = await supabase
+      const { error: hoursError } = await adminClient
         .from("activity_hours")
         .delete()
         .eq("service_id", savedId);
