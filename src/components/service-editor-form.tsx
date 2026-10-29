@@ -384,6 +384,7 @@ export function ServiceEditorForm(props: Props) {
             />
 
             <AttractionsField
+              serviceId={String(service.id ?? "")}
               attractions={attractions}
               onAttractionsChange={setAttractions}
             />

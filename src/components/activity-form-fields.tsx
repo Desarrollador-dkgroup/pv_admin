@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 const DAYS_OF_WEEK = [
   "lunes",
@@ -27,12 +28,13 @@ export type Attraction = {
 };
 
 type Props = {
+  serviceId: string;
   attractions: Attraction[];
   onAttractionsChange: (attractions: Attraction[]) => void;
 };
 
 // Editor de atracciones para actividades
-export function AttractionsField({ attractions, onAttractionsChange }: Props) {
+export function AttractionsField({ serviceId, attractions, onAttractionsChange }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const addAttraction = () => {
@@ -69,6 +71,7 @@ export function AttractionsField({ attractions, onAttractionsChange }: Props) {
       {attractions.map((attraction) => (
         <AttractionEditor
           key={attraction.id}
+          serviceId={serviceId}
           attraction={attraction}
           isEditing={editingId === attraction.id}
           onEdit={() => setEditingId(attraction.id)}
@@ -105,6 +108,7 @@ export function AttractionsField({ attractions, onAttractionsChange }: Props) {
 }
 
 type AttractionEditorProps = {
+  serviceId: string;
   attraction: Attraction;
   isEditing: boolean;
   onEdit: () => void;
@@ -114,6 +118,7 @@ type AttractionEditorProps = {
 };
 
 function AttractionEditor({
+  serviceId,
   attraction,
   isEditing,
   onEdit,
@@ -221,6 +226,7 @@ function AttractionEditor({
       />
 
       <PhotoGalleryField
+        serviceId={serviceId}
         photos={attraction.photos}
         onPhotosChange={(photos) => onUpdate({ photos })}
       />
@@ -301,11 +307,24 @@ function OptionsField({ options, onOptionsChange }: OptionsFieldProps) {
 }
 
 type PhotoGalleryFieldProps = {
+  serviceId: string;
   photos: Attraction["photos"];
   onPhotosChange: (photos: Attraction["photos"]) => void;
 };
 
-function PhotoGalleryField({ photos, onPhotosChange }: PhotoGalleryFieldProps) {
+async function uploadAttractionPhoto(serviceId: string, file: File): Promise<string> {
+  const supabase = getSupabaseBrowserClient();
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const path = `${serviceId}/atracciones/${crypto.randomUUID()}.${extension}`;
+  const { error } = await supabase.storage
+    .from("service-media")
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (error) throw new Error(error.message);
+  return supabase.storage.from("service-media").getPublicUrl(path).data.publicUrl;
+}
+
+function PhotoGalleryField({ serviceId, photos, onPhotosChange }: PhotoGalleryFieldProps) {
+  const [uploadError, setUploadError] = useState("");
   const handleAddPhoto = () => {
     if (photos.length < 5) {
       const newPhoto = {
@@ -390,16 +409,22 @@ function PhotoGalleryField({ photos, onPhotosChange }: PhotoGalleryFieldProps) {
                   type="file"
                   accept="image/*"
                   style={{ display: "none" }}
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (event) => {
-                        handleUpdatePhoto(photo.position, {
-                          storage_path: event.target?.result as string,
-                        });
-                      };
-                      reader.readAsDataURL(file);
+                    e.target.value = "";
+                    if (!file) return;
+                    if (!serviceId) {
+                      setUploadError("Guarda la actividad antes de subir fotos.");
+                      return;
+                    }
+                    setUploadError("");
+                    try {
+                      const url = await uploadAttractionPhoto(serviceId, file);
+                      handleUpdatePhoto(photo.position, { storage_path: url });
+                    } catch (error) {
+                      setUploadError(
+                        error instanceof Error ? error.message : "No se pudo subir la foto.",
+                      );
                     }
                   }}
                 />
@@ -418,6 +443,7 @@ function PhotoGalleryField({ photos, onPhotosChange }: PhotoGalleryFieldProps) {
           <Plus size={16} /> Agregar foto
         </Button>
       )}
+      {uploadError && <p style={{ color: "var(--danger, #c00)" }}>{uploadError}</p>}
     </div>
   );
 }
