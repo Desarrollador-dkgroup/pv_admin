@@ -68,7 +68,7 @@ export async function PanelServiceEditor({
     notFound();
   }
   const [lodgingResult, restaurantResult, scheduleResult, siteLinks,
-    amenityLinks, featureLinks] = serviceId
+    amenityLinks, featureLinks, activityResult] = serviceId
     ? await Promise.all([
         supabase
           .from("lodging_profiles")
@@ -98,6 +98,11 @@ export async function PanelServiceEditor({
           .from("restaurant_service_features")
           .select("feature_id")
           .eq("service_id", serviceId),
+        supabase
+          .from("activity_profiles")
+          .select("*")
+          .eq("service_id", serviceId)
+          .maybeSingle(),
       ])
     : [
         { data: null, error: null },
@@ -106,11 +111,13 @@ export async function PanelServiceEditor({
         { data: [], error: null },
         { data: [], error: null },
         { data: [], error: null },
+        { data: null, error: null },
       ];
 
   if (
     lodgingResult.error || restaurantResult.error || scheduleResult.error ||
-    siteLinks.error || amenityLinks.error || featureLinks.error
+    siteLinks.error || amenityLinks.error || featureLinks.error ||
+    activityResult.error
   ) {
     throw new Error("No se pudo cargar la ficha específica del servicio.");
   }
@@ -241,6 +248,7 @@ export async function PanelServiceEditor({
         service={service as Record<string, unknown>}
         lodging={(lodgingResult.data ?? {}) as Record<string, unknown>}
         restaurant={restaurant as Record<string, unknown>}
+        activity={(activityResult.data ?? {}) as Record<string, unknown>}
         businesses={businesses}
         categories={categories}
         lodgingTypes={lodgingTypes}

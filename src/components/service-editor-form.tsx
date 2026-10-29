@@ -24,6 +24,7 @@ type Props = {
   service: Record<string, unknown>;
   lodging: Record<string, unknown>;
   restaurant: Record<string, unknown>;
+  activity: Record<string, unknown>;
   businesses: Option[];
   categories: Option[];
   lodgingTypes: Option[];
@@ -43,7 +44,7 @@ type Props = {
 // Presenta campos reales para el servicio y su ficha específica.
 export function ServiceEditorForm(props: Props) {
   const [state, action, pending] = useActionState(saveServiceAction, { error: "" });
-  const { role, service, lodging, restaurant } = props;
+  const { role, service, lodging, restaurant, activity } = props;
 
   // Envía sin que React limpie los campos: si el guardado falla, lo escrito se mantiene.
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -66,17 +67,18 @@ export function ServiceEditorForm(props: Props) {
     : [];
   const detailFields = getLodgingDetailFields(lodgingTypeId);
   const details = (lodging.details ?? {}) as Record<string, string>;
+  const activityDetails = (activity.details ?? {}) as Record<string, unknown>;
   const selectedSites = props.selectedSiteIds.length
     ? props.selectedSiteIds
     : service.tourist_site_id ? [String(service.tourist_site_id)] : [];
   const [attractions, setAttractions] = useState<Attraction[]>(
-    Array.isArray(details.attractions) ? details.attractions : [],
+    Array.isArray(activityDetails.attractions) ? (activityDetails.attractions as Attraction[]) : [],
   );
   const [whatIncludes, setWhatIncludes] = useState<string[]>(
-    Array.isArray(details.whatIncludes) ? details.whatIncludes : [],
+    Array.isArray(activityDetails.whatIncludes) ? (activityDetails.whatIncludes as string[]) : [],
   );
   const [schedule, setSchedule] = useState<Record<string, { start: string; end: string }>>(
-    typeof details.schedule === "object" && details.schedule ? details.schedule : {},
+    typeof activityDetails.schedule === "object" && activityDetails.schedule ? (activityDetails.schedule as Record<string, { start: string; end: string }>) : {},
   );
 
   // Serializa las atracciones, horarios e inclusions para enviarlas en el formulario.
