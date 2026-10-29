@@ -6,6 +6,7 @@ import { OwnServiceStatusPanel } from "@/components/panel-own-service-status";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { loadOwnerPlanUsage } from "@/lib/panel-service-plan";
 import { canManageCatalog } from "@/types/panel";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 // Carga catálogos y relaciones reales antes de mostrar el formulario.
 export async function PanelServiceEditor({
@@ -67,6 +68,7 @@ export async function PanelServiceEditor({
     (role === "propietario" && !businessIds.includes(String(service.business_id))))) {
     notFound();
   }
+  const adminClient = getSupabaseAdminClient();
   const [lodgingResult, restaurantResult, scheduleResult, siteLinks,
     amenityLinks, featureLinks, activityResult] = serviceId
     ? await Promise.all([
@@ -98,7 +100,7 @@ export async function PanelServiceEditor({
           .from("restaurant_service_features")
           .select("feature_id")
           .eq("service_id", serviceId),
-        supabase
+        adminClient
           .from("activity_profiles")
           .select("*")
           .eq("service_id", serviceId)
