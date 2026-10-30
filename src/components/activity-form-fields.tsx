@@ -31,10 +31,20 @@ type Props = {
   serviceId: string;
   attractions: Attraction[];
   onAttractionsChange: (attractions: Attraction[]) => void;
+  heading?: string;
+  intro?: string;
+  addLabel?: string;
 };
 
-// Editor de atracciones para actividades
-export function AttractionsField({ serviceId, attractions, onAttractionsChange }: Props) {
+// Editor de atracciones (actividades) o paradas (tours)
+export function AttractionsField({
+  serviceId,
+  attractions,
+  onAttractionsChange,
+  heading = "Atracciones principales",
+  intro = "Agrega las atracciones principales de tu actividad. Cada una puede incluir descripción y hasta 5 fotos.",
+  addLabel = "Agregar atracción",
+}: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const addAttraction = () => {
@@ -62,11 +72,8 @@ export function AttractionsField({ serviceId, attractions, onAttractionsChange }
 
   return (
     <div className="field">
-      <label>Atracciones principales</label>
-      <p style={{ fontSize: "0.875rem", color: "var(--muted)", marginBottom: 16 }}>
-        Agrega las atracciones principales de tu actividad. Cada una puede incluir
-        descripción y hasta 5 fotos.
-      </p>
+      <label>{heading}</label>
+      <p style={{ fontSize: "0.875rem", color: "var(--muted)", marginBottom: 16 }}>{intro}</p>
 
       {attractions.map((attraction) => (
         <AttractionEditor
@@ -101,7 +108,7 @@ export function AttractionsField({ serviceId, attractions, onAttractionsChange }
         onClick={addAttraction}
         style={{ width: "100%" }}
       >
-        <Plus size={16} /> Agregar atracción
+        <Plus size={16} /> {addLabel}
       </Button>
     </div>
   );

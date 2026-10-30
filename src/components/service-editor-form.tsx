@@ -9,6 +9,7 @@ import {
   ReceptionHoursField,
 } from "@/components/lodging-form-fields";
 import { AttractionsField, ActivityScheduleField, WhatIncludesField, type Attraction } from "@/components/activity-form-fields";
+import { EMPTY_TOUR, TourFields, type TourDetails } from "@/components/tour-form-fields";
 import {
   ServiceSitePicker,
   type DestinationOption,
@@ -80,16 +81,22 @@ export function ServiceEditorForm(props: Props) {
   const [schedule, setSchedule] = useState<Record<string, { start: string; end: string }>>(
     typeof activityDetails.schedule === "object" && activityDetails.schedule ? (activityDetails.schedule as Record<string, { start: string; end: string }>) : {},
   );
+  const [tour, setTour] = useState<TourDetails>({
+    ...EMPTY_TOUR,
+    ...((activityDetails.tour ?? {}) as Partial<TourDetails>),
+  });
 
   // Serializa las atracciones, horarios e inclusions para enviarlas en el formulario.
   const handleSubmitWithAttractions = (event: FormEvent<HTMLFormElement>) => {
     handleSubmit(event);
   };
 
-  const activityDetailsForForm = categoryId === "actividades" ? {
+  const isTour = categoryId === "tour-operador";
+  const activityDetailsForForm = categoryId === "actividades" || isTour ? {
     attractions,
     schedule,
     whatIncludes,
+    tour: isTour ? tour : undefined,
   } : null;
 
   return (
@@ -350,6 +357,56 @@ export function ServiceEditorForm(props: Props) {
           features={props.restaurantFeatures}
           selectedFeatureIds={props.selectedFeatureIds}
         />
+      )}
+
+      {isTour && (
+        <>
+          <Panel>
+            <h2>Datos del tour</h2>
+            <TourFields tour={tour} onChange={setTour} />
+          </Panel>
+
+          {tour.departureMode !== "dates" && (
+            <Panel>
+              <h2>Horario semanal de salidas</h2>
+              <ActivityScheduleField
+                schedule={schedule}
+                onScheduleChange={setSchedule}
+              />
+            </Panel>
+          )}
+
+          <Panel>
+            <h2>Descripción y paradas</h2>
+            <label className="field">
+              Descripción del tour
+              <textarea
+                name="detail__description"
+                defaultValue={typeof details.description === "string" ? details.description : ""}
+                placeholder="Describe el recorrido..."
+                rows={4}
+                maxLength={1000}
+              />
+              <small style={{ color: "var(--muted)" }}>
+                {(typeof details.description === "string" ? details.description : "").length}/1000 caracteres
+              </small>
+            </label>
+
+            <WhatIncludesField
+              items={whatIncludes}
+              onItemsChange={setWhatIncludes}
+            />
+
+            <AttractionsField
+              serviceId={String(service.id ?? "")}
+              attractions={attractions}
+              onAttractionsChange={setAttractions}
+              heading="Paradas del recorrido"
+              intro="Agrega las paradas del tour en orden. Cada una puede incluir descripción y hasta 5 fotos."
+              addLabel="Agregar parada"
+            />
+          </Panel>
+        </>
       )}
 
       {categoryId === "actividades" && (

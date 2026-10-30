@@ -469,7 +469,7 @@ export async function saveServiceAction(
     }
   }
 
-  if (categoryId === "actividades") {
+  if (categoryId === "actividades" || categoryId === "tour-operador") {
     const activityDetailsJson = text(formData, "activity_details");
     let activityDetails: Record<string, unknown> = {};
     if (activityDetailsJson) {
@@ -479,6 +479,12 @@ export async function saveServiceAction(
         const errorMsg = e instanceof Error ? e.message : String(e);
         return { error: `Datos de actividad inválidos: ${errorMsg}` };
       }
+    }
+    const meetingPointUrl = String(
+      (activityDetails.tour as { meetingPointUrl?: unknown } | undefined)?.meetingPointUrl ?? "",
+    );
+    if (meetingPointUrl && !/^https:\/\//i.test(meetingPointUrl)) {
+      return { error: "El enlace del punto de encuentro debe empezar con https://." };
     }
 
     const hasMultipleShifts = formData.get("activity_has_multiple_shifts") === "true";
