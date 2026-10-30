@@ -263,7 +263,7 @@ export async function saveServiceAction(
   const selectedStatus = text(formData, "status") || "draft";
   // Hospedaje y actividades no requieren precio base; restaurantes lo exigen.
   const hasPrice = numberValue(text(formData, "base_price")) !== null;
-  if (categoryId === "restaurantes" && !hasPrice) {
+  if ((categoryId === "restaurantes" || categoryId === "tour-operador") && !hasPrice) {
     return { error: "Indica el precio desde del servicio." };
   }
   const basePriceCents = hasPrice

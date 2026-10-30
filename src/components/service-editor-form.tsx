@@ -222,7 +222,7 @@ export function ServiceEditorForm(props: Props) {
             ))}
           </fieldset>
         )}
-        {categoryId === "restaurantes" && (
+        {(categoryId === "restaurantes" || categoryId === "tour-operador") && (
           <TextField
             label="Precio desde (USD)"
             name="base_price"
