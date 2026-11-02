@@ -61,20 +61,19 @@ export async function saveServicePromotionAction(
     .select("base_commission_pct, discount_limit_pct, target_profit_cents, commission_cap_pct")
     .eq("business_id", service.business_id)
     .maybeSingle();
-  if (!contract) {
-    return { error: "Este negocio no tiene contrato; no se pueden publicar promociones." };
-  }
-  const terms: CommissionTerms = {
-    baseCommissionPct: Number(contract.base_commission_pct),
-    discountLimitPct: Number(contract.discount_limit_pct),
-    targetProfitCents: Number(contract.target_profit_cents),
-    commissionCapPct: Number(contract.commission_cap_pct),
-  };
-  const preview = previewPromotion(regularCents, discount, terms);
-  if (preview.blocked) {
-    return {
-      error: `Tu contrato permite un descuento máximo de ${preview.maxDiscountPct}% en este servicio.`,
+  if (contract) {
+    const terms: CommissionTerms = {
+      baseCommissionPct: Number(contract.base_commission_pct),
+      discountLimitPct: Number(contract.discount_limit_pct),
+      targetProfitCents: Number(contract.target_profit_cents),
+      commissionCapPct: Number(contract.commission_cap_pct),
     };
+    const preview = previewPromotion(regularCents, discount, terms);
+    if (preview.blocked) {
+      return {
+        error: `Tu contrato permite un descuento máximo de ${preview.maxDiscountPct}% en este servicio.`,
+      };
+    }
   }
 
   let startsOn: string | null = null;

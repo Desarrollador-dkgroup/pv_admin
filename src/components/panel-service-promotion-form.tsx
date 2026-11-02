@@ -66,7 +66,7 @@ export function ServicePromotionForm({
   const preview = terms && regularCents && validDiscount
     ? previewPromotion(regularCents, discountValue, terms)
     : null;
-  const blocked = !terms || !regularCents || !validDiscount || Boolean(preview?.blocked)
+  const blocked = !regularCents || !validDiscount || Boolean(preview?.blocked)
     || (isHotel && !roomId);
 
   return (
@@ -206,9 +206,7 @@ export function ServicePromotionForm({
         <h2>Vista previa de precio y comisión</h2>
         {!service && <p className="muted">Selecciona un servicio.</p>}
         {service && !terms && (
-          <p className="form-error" role="alert">
-            Este negocio no tiene contrato. No se pueden publicar promociones hasta que tenga uno.
-          </p>
+          <p className="muted">Este negocio aún no tiene contrato: no hay límite de descuento.</p>
         )}
         {service && terms && !regularCents && (
           <p className="form-error" role="alert">
