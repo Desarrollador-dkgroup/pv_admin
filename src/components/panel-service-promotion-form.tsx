@@ -208,12 +208,20 @@ export function ServicePromotionForm({
         {service && !terms && (
           <p className="muted">Este negocio aún no tiene contrato: no hay límite de descuento.</p>
         )}
-        {service && terms && !regularCents && (
+        {service && !regularCents && (
           <p className="form-error" role="alert">
-            Este servicio no tiene precio regular. Agrégalo antes de crear promociones.
+            {isHotel
+              ? "Esta habitación no tiene precio. Agrégalo en la habitación antes de crear promociones."
+              : "Este servicio no tiene precio regular. Agrégalo antes de crear promociones."}
           </p>
         )}
         {isHotel && !roomId && <p className="muted">Selecciona la habitación para ver el cálculo.</p>}
+        {!validDiscount && discount !== "" && (
+          <p className="form-error" role="alert">El descuento debe ser mayor que 0% y menor que 100%.</p>
+        )}
+        {!validDiscount && discount === "" && (
+          <p className="muted">Escribe el porcentaje de descuento para ver el cálculo.</p>
+        )}
         {preview && regularCents && (
           <>
             <p>
