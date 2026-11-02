@@ -1,22 +1,22 @@
-import { PromotionForm } from "@/components/panel-promotion-form";
+import { ServicePromotionForm } from "@/components/panel-service-promotion-form";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
-import { loadPromotionOptions } from "@/lib/panel-promotion-options";
+import { loadPromotionFormData } from "@/lib/panel-service-promotions";
 
-// Formulario para crear una promoción con destinos reales de la base.
+// Crea una promoción para uno de tus servicios.
 export default async function NewPromotionPage() {
   const { supabase, role } = await getPanelIdentity();
-  requireRole(role, ["owner", "admin"]);
-  const { destinations } = await loadPromotionOptions(supabase);
+  requireRole(role, ["owner", "admin", "propietario"]);
+  const { options, termsByBusiness } = await loadPromotionFormData(supabase);
 
   return (
     <>
       <header className="page-heading">
         <div>
           <h1>Nueva promoción</h1>
-          <p>Completa la oferta. El porcentaje de descuento se calcula al guardar.</p>
+          <p>Elige el servicio, el descuento y cuándo aplica. La vista previa muestra el precio y la comisión.</p>
         </div>
       </header>
-      <PromotionForm promotion={null} destinations={destinations} />
+      <ServicePromotionForm services={options} termsByBusiness={termsByBusiness} promotion={null} />
     </>
   );
 }

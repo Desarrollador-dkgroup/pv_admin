@@ -1,9 +1,12 @@
 import { notFound } from "next/navigation";
-import { PromotionForm, type PromotionRecord } from "@/components/panel-promotion-form";
+import {
+  ServicePromotionForm,
+  type ServicePromotionRecord,
+} from "@/components/panel-service-promotion-form";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
-import { destinationRefOf, loadPromotionOptions } from "@/lib/panel-promotion-options";
+import { loadPromotionFormData } from "@/lib/panel-service-promotions";
 
-// Edita una promoción existente en la misma pestaña.
+// Edita una promoción de servicio existente.
 export default async function EditPromotionPage({
   params,
 }: {
@@ -11,28 +14,30 @@ export default async function EditPromotionPage({
 }) {
   const { id } = await params;
   const { supabase, role } = await getPanelIdentity();
-  requireRole(role, ["owner", "admin"]);
+  requireRole(role, ["owner", "admin", "propietario"]);
 
-  const [{ data, error }, { destinations }] = await Promise.all([
-    supabase.from("promotions").select("*").eq("id", id).maybeSingle(),
-    loadPromotionOptions(supabase),
+  const [{ data, error }, { options, termsByBusiness }] = await Promise.all([
+    supabase.from("service_promotions").select("*").eq("id", id).maybeSingle(),
+    loadPromotionFormData(supabase),
   ]);
   if (error) throw new Error("No se pudo cargar la promoción.");
   if (!data) notFound();
 
-  const promotion: PromotionRecord = {
+  const promotion: ServicePromotionRecord = {
     ...data,
-    destination_ref: destinationRefOf(data),
+    discount_pct: Number(data.discount_pct),
+    schedule_mode: data.schedule_mode as ServicePromotionRecord["schedule_mode"],
+    weekdays: data.weekdays ?? [],
   };
   return (
     <>
       <header className="page-heading">
         <div>
           <h1>{promotion.title}</h1>
-          <p>Edita la oferta, sus precios y su publicación.</p>
+          <p>Edita el descuento, la vigencia o los días en los que aplica.</p>
         </div>
       </header>
-      <PromotionForm promotion={promotion} destinations={destinations} />
+      <ServicePromotionForm services={options} termsByBusiness={termsByBusiness} promotion={promotion} />
     </>
   );
 }

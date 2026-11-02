@@ -1,23 +1,22 @@
 import Link from "next/link";
 import { Badge, Panel } from "@/components/ui";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
-import { canManageCatalog } from "@/types/panel";
-import { formatCents, formatDate } from "@/lib/panel-format";
-import { destinationRefOf, loadPromotionOptions } from "@/lib/panel-promotion-options";
-import { remainingLabel } from "@/lib/panel-promotion-labels";
+import { formatCents } from "@/lib/panel-format";
+import { loadPromotionFormData, scheduleLabel } from "@/lib/panel-service-promotions";
+import { previewPromotion } from "@/lib/promotion-commission";
+import { setServicePromotionActiveAction } from "./actions";
 
-// Lista las promociones reales. El propietario ve solo las de sus negocios (RLS).
+// Promociones de servicio del usuario. Cada una muestra su precio y su comisión.
 export default async function PromotionsPage() {
   const { supabase, role } = await getPanelIdentity();
   requireRole(role, ["owner", "admin", "propietario"]);
-  const isStaff = canManageCatalog(role);
 
-  const [{ data, error }, { labels }] = await Promise.all([
+  const [{ data, error }, { options, termsByBusiness }] = await Promise.all([
     supabase
-      .from("promotions")
+      .from("service_promotions")
       .select("*")
-      .order("valid_to", { ascending: false }),
-    loadPromotionOptions(supabase),
+      .order("created_at", { ascending: false }),
+    loadPromotionFormData(supabase),
   ]);
   if (error) throw new Error("No se pudieron cargar las promociones.");
 
@@ -26,16 +25,10 @@ export default async function PromotionsPage() {
     <>
       <header className="page-heading">
         <div>
-          <h1>{isStaff ? "Promociones" : "Mis promociones"}</h1>
-          <p>
-            {isStaff
-              ? "Ofertas que se muestran en la web. El descuento se calcula con los precios."
-              : "Promociones que tu negocio propuso o que se aplican a tus servicios."}
-          </p>
+          <h1>Mis promociones</h1>
+          <p>Promociones de tus servicios. Se muestran en la categoría de promociones y en la ubicación del servicio.</p>
         </div>
-        {isStaff && (
-          <Link className="button primary" href="/panel/promociones/nuevo">+ Nueva promoción</Link>
-        )}
+        <Link className="button primary" href="/panel/promociones/nuevo">+ Nueva promoción</Link>
       </header>
       <Panel className="table-panel">
         <div className="table-scroll">
@@ -43,57 +36,69 @@ export default async function PromotionsPage() {
             <thead>
               <tr>
                 <th>Promoción</th>
-                <th>Destino</th>
+                <th>Servicio</th>
                 <th>Precio</th>
                 <th>Vigencia</th>
                 <th>Estado</th>
-                {isStaff && <th>Acciones</th>}
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((promotion) => {
-                const ref = destinationRefOf(promotion);
-                const expired = new Date(promotion.valid_to) < new Date();
+                const service = options.find((item) => item.id === promotion.service_id);
+                const room = service?.rooms.find((item) => item.id === promotion.room_type_id);
+                const regularCents = promotion.room_type_id
+                  ? (room?.priceCents ?? null)
+                  : (service?.priceCents ?? null);
+                const terms = service ? termsByBusiness[service.businessId] : null;
+                const preview = terms && regularCents
+                  ? previewPromotion(regularCents, Number(promotion.discount_pct), terms)
+                  : null;
                 return (
                   <tr key={promotion.id}>
                     <td>
                       <b>{promotion.title}</b>
-                      <small className="table-subtitle">{promotion.place_name}</small>
-                    </td>
-                    <td>{labels.get(ref) ?? "Sin destino"}</td>
-                    <td>
-                      {formatCents(promotion.promotional_price_cents)}
                       <small className="table-subtitle">
-                        Regular {formatCents(promotion.regular_price_cents)}
-                        {promotion.discount_percent ? ` · -${promotion.discount_percent}%` : ""}
+                        {room ? `${room.name} · ` : ""}-{Number(promotion.discount_pct)}%
                       </small>
                     </td>
+                    <td>{service?.name ?? "Servicio eliminado"}</td>
                     <td>
-                      {formatDate(promotion.valid_from)} – {formatDate(promotion.valid_to)}
-                      <small className="table-subtitle">{remainingLabel(promotion.valid_to)}</small>
+                      {preview ? formatCents(preview.finalPriceCents) : "Sin precio"}
+                      <small className="table-subtitle">
+                        Regular {formatCents(regularCents)}
+                        {preview ? ` · comisión ${preview.commissionPct}%` : ""}
+                      </small>
+                    </td>
+                    <td>{scheduleLabel(promotion)}</td>
+                    <td>
+                      <Badge>{promotion.is_active ? "Activa" : "Pausada"}</Badge>
                     </td>
                     <td>
-                      <Badge>
-                        {expired ? "Vencida" : promotion.is_published ? "Publicada" : "Borrador"}
-                      </Badge>
-                    </td>
-                    {isStaff && (
-                      <td>
-                        <Link
-                          className="button secondary"
-                          href={`/panel/promociones/${promotion.id}`}
-                        >
+                      <div className="actions">
+                        <Link className="button secondary" href={`/panel/promociones/${promotion.id}`}>
                           Editar
                         </Link>
-                      </td>
-                    )}
+                        <form action={setServicePromotionActiveAction}>
+                          <input type="hidden" name="promotion_id" value={promotion.id} />
+                          <input
+                            type="hidden"
+                            name="next_active"
+                            value={promotion.is_active ? "false" : "true"}
+                          />
+                          <button className="button quiet" type="submit">
+                            {promotion.is_active ? "Pausar" : "Activar"}
+                          </button>
+                        </form>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-        {!rows.length && <p className="muted">Aún no hay promociones registradas.</p>}
+        {!rows.length && <p className="muted">Aún no tienes promociones.</p>}
       </Panel>
     </>
   );

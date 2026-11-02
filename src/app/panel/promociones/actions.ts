@@ -3,119 +3,130 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getPanelIdentity } from "@/lib/panel-access";
-import { slugCandidates, slugify } from "@/lib/panel-slug";
-import {
-  dollarsToCents,
-  formChecked,
-  formText,
-  linesToList,
-  nullableText,
-  panamaDateTimeToIso,
-} from "@/lib/panel-form";
-import { DESTINATION_KINDS, type DestinationKind } from "@/lib/panel-promotion-options";
-import { canManageCatalog } from "@/types/panel";
-import { validatePromotionPrices, type PromotionContent } from "@/types/content";
+import { formChecked, formText, nullableText } from "@/lib/panel-form";
+import { previewPromotion, type CommissionTerms } from "@/lib/promotion-commission";
 
 type FormState = { error: string };
 
+const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6];
 
-// Traduce la selección "tipo:identificador" a las columnas de destino de la tabla.
-// Solo la columna del tipo elegido recibe valor; las demás quedan vacías.
-function destinationColumns(ref: string) {
-  const [kind, id] = ref.split(":");
-  if (!DESTINATION_KINDS.includes(kind as DestinationKind) || !id) return null;
-  return {
-    destination_kind: kind,
-    destination_service_id: kind === "service" ? id : null,
-    destination_province_id: kind === "province" ? id : null,
-    destination_category_id: kind === "category" ? id : null,
-  };
-}
-
-// Crea o actualiza una promoción. El porcentaje lo calcula PostgreSQL, no el formulario.
-export async function savePromotionAction(
+// Crea o actualiza una promoción de servicio. Valida el descuento contra el contrato.
+export async function saveServicePromotionAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
   const { supabase, role } = await getPanelIdentity();
-  if (!canManageCatalog(role)) return { error: "Tu cuenta no puede administrar promociones." };
+  if (role === "collaborator") return { error: "Tu cuenta no puede publicar promociones." };
 
   const promotionId = formText(formData, "promotion_id");
+  const serviceId = formText(formData, "service_id");
+  const roomTypeId = formText(formData, "room_type_id");
   const title = formText(formData, "title");
-  const placeName = formText(formData, "place_name");
-  const periodLabel = formText(formData, "period_label");
-  const discountValue = formText(formData, "discount_value");
-  const photoPath = formText(formData, "photo_storage_path");
-  const destination = destinationColumns(formText(formData, "destination_ref"));
+  const discount = Number(formText(formData, "discount_pct"));
+  const mode = formText(formData, "schedule_mode");
 
-  if (!title || !placeName || !periodLabel || !discountValue || !photoPath) {
-    return { error: "Completa título, lugar, vigencia, descuento y la ruta de la imagen." };
-  }
-  if (!destination) return { error: "Selecciona el destino de la promoción." };
-
-  const validFrom = panamaDateTimeToIso(formText(formData, "valid_from"));
-  const validTo = panamaDateTimeToIso(formText(formData, "valid_to"));
-  if (!validFrom || !validTo || new Date(validTo) <= new Date(validFrom)) {
-    return { error: "La fecha de fin debe ser posterior a la fecha de inicio." };
+  if (!serviceId || !title) return { error: "Completa el servicio y el título." };
+  if (!Number.isFinite(discount) || discount <= 0 || discount >= 100) {
+    return { error: "El descuento debe ser mayor que 0% y menor que 100%." };
   }
 
-  // Los precios se guardan en centavos; validatePromotionPrices aplica las mismas reglas
-  // que el contrato compartido con la web pública.
-  const content: PromotionContent = {
-    description: nullableText(formText(formData, "description")),
-    conditions: nullableText(formText(formData, "conditions")),
-    inclusions: linesToList(formText(formData, "inclusions")),
-    exclusions: linesToList(formText(formData, "exclusions")),
-    schedule_details: nullableText(formText(formData, "schedule_details")),
-    regular_price_cents: dollarsToCents(formText(formData, "regular_price")),
-    promotional_price_cents: dollarsToCents(formText(formData, "promotional_price")),
-    currency: "USD",
+  const { data: service } = await supabase
+    .from("services")
+    .select("id, category_id, base_price_cents, business_id")
+    .eq("id", serviceId)
+    .maybeSingle();
+  if (!service) return { error: "No encontramos ese servicio." };
+
+  let regularCents: number | null = service.base_price_cents;
+  let targetRoomId: string | null = null;
+  if (service.category_id === "hospedaje") {
+    if (!roomTypeId) return { error: "Selecciona la habitación a la que aplica el descuento." };
+    const { data: room } = await supabase
+      .from("room_types")
+      .select("id, price_cents, service_id")
+      .eq("id", roomTypeId)
+      .maybeSingle();
+    if (!room || room.service_id !== service.id) {
+      return { error: "Esa habitación no pertenece a este servicio." };
+    }
+    regularCents = room.price_cents;
+    targetRoomId = room.id;
+  }
+  if (!regularCents || regularCents <= 0) {
+    return { error: "Antes de crear promociones, el servicio necesita un precio regular." };
+  }
+
+  const { data: contract } = await supabase
+    .from("business_contracts")
+    .select("base_commission_pct, discount_limit_pct, target_profit_cents, commission_cap_pct")
+    .eq("business_id", service.business_id)
+    .maybeSingle();
+  if (!contract) {
+    return { error: "Este negocio no tiene contrato; no se pueden publicar promociones." };
+  }
+  const terms: CommissionTerms = {
+    baseCommissionPct: Number(contract.base_commission_pct),
+    discountLimitPct: Number(contract.discount_limit_pct),
+    targetProfitCents: Number(contract.target_profit_cents),
+    commissionCapPct: Number(contract.commission_cap_pct),
   };
-  try {
-    validatePromotionPrices(content);
-  } catch (failure) {
-    return { error: failure instanceof Error ? failure.message : "Precios no válidos." };
-  }
-
-  const values = {
-    ...content,
-    ...destination,
-    title,
-    place_name: placeName,
-    eyebrow: formText(formData, "eyebrow"),
-    tags: formText(formData, "tags"),
-    period_label: periodLabel,
-    discount_value: discountValue,
-    discount_suffix: formText(formData, "discount_suffix"),
-    price_line: nullableText(formText(formData, "price_line")),
-    photo_storage_path: photoPath,
-    photo_is_illustrative: formChecked(formData, "photo_is_illustrative"),
-    valid_from: validFrom,
-    valid_to: validTo,
-    is_published: formChecked(formData, "is_published"),
-    sort_order: Number(formText(formData, "sort_order") || "0"),
-    updated_at: new Date().toISOString(),
-  };
-
-  // El identificador sale del título; si ya existe, se prueba con un sufijo corto.
-  const candidates = promotionId ? [] : slugCandidates(slugify(title, "promocion"));
-  let result = promotionId
-    ? await supabase.from("promotions").update(values).eq("id", promotionId)
-    : await supabase.from("promotions").insert({ ...values, slug: candidates[0] });
-  for (const slug of candidates.slice(1)) {
-    if (!result.error || !result.error.message.includes("duplicate")) break;
-    result = await supabase.from("promotions").insert({ ...values, slug });
-  }
-  if (result.error) {
-    const duplicated = result.error.message.includes("duplicate");
+  const preview = previewPromotion(regularCents, discount, terms);
+  if (preview.blocked) {
     return {
-      error: duplicated ? "Ya existe una promoción con ese identificador." : result.error.message,
+      error: `Tu contrato permite un descuento máximo de ${preview.maxDiscountPct}% en este servicio.`,
     };
   }
 
+  let startsOn: string | null = null;
+  let endsOn: string | null = null;
+  let weekdays: number[] = [];
+  if (mode === "range") {
+    startsOn = formText(formData, "starts_on") || null;
+    endsOn = formText(formData, "ends_on") || null;
+    if (!startsOn || !endsOn || endsOn < startsOn) {
+      return { error: "Indica fecha de inicio y de fin, y que el fin sea posterior al inicio." };
+    }
+  } else if (mode === "weekdays") {
+    weekdays = [...new Set(formData.getAll("weekday").map(Number))]
+      .filter((day) => WEEKDAYS.includes(day))
+      .sort((a, b) => a - b);
+    if (!weekdays.length) return { error: "Selecciona al menos un día de la semana." };
+  } else {
+    return { error: "Elige cómo se aplica la promoción." };
+  }
+
+  const values = {
+    service_id: service.id,
+    room_type_id: targetRoomId,
+    title,
+    description: nullableText(formText(formData, "description")),
+    discount_pct: discount,
+    schedule_mode: mode,
+    starts_on: startsOn,
+    ends_on: endsOn,
+    weekdays,
+    is_active: formChecked(formData, "is_active"),
+    updated_at: new Date().toISOString(),
+  };
+
+  const result = promotionId
+    ? await supabase.from("service_promotions").update(values).eq("id", promotionId)
+    : await supabase.from("service_promotions").insert(values);
+  if (result.error) return { error: result.error.message };
+
   revalidatePath("/panel/promociones");
-  revalidatePath("/panel");
-  revalidatePath("/panel/notificaciones");
-  // Tras guardar, la misma pestaña vuelve al listado.
   redirect("/panel/promociones");
+}
+
+// Pausa o reactiva una promoción sin borrarla.
+export async function setServicePromotionActiveAction(formData: FormData) {
+  const { supabase, role } = await getPanelIdentity();
+  if (role === "collaborator") return;
+  const promotionId = formText(formData, "promotion_id");
+  const active = formText(formData, "next_active") === "true";
+  await supabase
+    .from("service_promotions")
+    .update({ is_active: active, updated_at: new Date().toISOString() })
+    .eq("id", promotionId);
+  revalidatePath("/panel/promociones");
 }
