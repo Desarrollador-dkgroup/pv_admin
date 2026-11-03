@@ -1,8 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PromotionServiceOption } from "@/components/panel-service-promotion-form";
+import { formatPromotionSchedule } from "@/lib/promotion-schedule";
 import type { CommissionTerms } from "@/lib/promotion-commission";
-
-export const WEEKDAY_NAMES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
 // Servicios del usuario con sus habitaciones y los contratos de sus negocios.
 export async function loadPromotionFormData(supabase: SupabaseClient) {
@@ -55,18 +54,12 @@ export async function loadPromotionFormData(supabase: SupabaseClient) {
   return { options, termsByBusiness };
 }
 
-// Texto corto de la vigencia de una promoción de servicio.
+// Texto de la vigencia de una promoción de servicio.
 export function scheduleLabel(promotion: {
   schedule_mode: string;
   starts_on: string | null;
   ends_on: string | null;
   weekdays: number[];
 }) {
-  if (promotion.schedule_mode === "range") {
-    return `${promotion.starts_on ?? "?"} a ${promotion.ends_on ?? "?"}`;
-  }
-  return [...promotion.weekdays]
-    .sort((a, b) => a - b)
-    .map((day) => WEEKDAY_NAMES[day])
-    .join(", ");
+  return formatPromotionSchedule(promotion);
 }
