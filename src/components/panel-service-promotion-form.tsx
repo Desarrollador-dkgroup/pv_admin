@@ -51,7 +51,11 @@ export function ServicePromotionForm({
   promotion: ServicePromotionRecord | null;
 }) {
   const [state, action, pending] = useActionState(saveServicePromotionAction, { error: "" });
-  const [serviceId, setServiceId] = useState(promotion?.service_id ?? services[0]?.id ?? "");
+  const firstPriced = services.find((item) =>
+    item.priceCents || item.rooms.some((room) => room.priceCents));
+  const [serviceId, setServiceId] = useState(
+    promotion?.service_id ?? firstPriced?.id ?? services[0]?.id ?? "",
+  );
   const [roomId, setRoomId] = useState(promotion?.room_type_id ?? "");
   const [discount, setDiscount] = useState(promotion ? String(promotion.discount_pct) : "");
   const [mode, setMode] = useState<"range" | "weekdays">(promotion?.schedule_mode ?? "range");
