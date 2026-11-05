@@ -6,6 +6,24 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 > **Regla estricta de sincronización.** Antes de empezar: pull en ambos repos y leer esta
 > bitácora. Al terminar: actualizarla, commit y push. Claude debe recordarlo siempre.
 
+## Promociones en reservas de hospedaje (2026-11-05)
+
+- Migración `202611050004_stay_promotion_pricing.sql` aplicada en producción (prueba previa
+  con ROLLBACK). Cada noche usa la promoción vigente ese día: rango de fechas o días de la
+  semana; una promoción sin habitación aplica a todas.
+  - `stay_night_discount_pct` y `stay_room_total_cents` (funciones nuevas).
+  - `quote_stay` devuelve el total ya con descuento (`totalPrice`) y `discountCents`.
+  - `create_stay_reservation` guarda el total con descuento y agrega «promoción aplicada» en
+    `price_detail`. La firma de 6 argumentos ahora delega en la de 11.
+  - Prueba: Albrook Park Inn (habitación estándar, 9,99 % jueves y viernes). Miércoles a
+    jueves: 11 900 + 10 711 = 22 611 centavos.
+- Web (`panama-viajero`): la tarjeta de cada opción de hospedaje muestra el ahorro. Las
+  promociones próximas aparecen en Promociones y en la ficha con «Próximamente», sin precio
+  rebajado hasta que empiezan.
+- Pendiente: restaurantes y actividades no aplican promoción aún (la reserva por fecha usa
+  otra función). La vista previa del panel (`src/lib/public-service/`) es copia de la web y
+  falta sincronizarla. El `discount_pct` 9.99 de la promoción de prueba sigue sin corregir.
+
 ## Rediseño del panel en Figma (2026-11-05)
 
 - Aplicado al código (2026-11-05), parte 1:
