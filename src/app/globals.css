@@ -2427,3 +2427,86 @@ fieldset.choice-group .checkbox-option {
     line-height: 1.5;
   }
 }
+
+/* Rediseño: botones, tablas, badges y tarjetas según Figma (tanda 1). */
+.button {
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+}
+.button.primary {
+  background: var(--brand);
+  color: #ffffff;
+}
+.button.primary:hover:not(:disabled) {
+  background: #3a4588;
+}
+.button.secondary {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+.button.secondary:hover:not(:disabled) {
+  background: var(--canvas);
+}
+.button.quiet {
+  color: var(--brand);
+}
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.panel {
+  border-radius: 12px;
+  padding: 24px;
+  gap: 16px;
+}
+
+th {
+  background: var(--canvas);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+th,
+td {
+  padding: 14px 20px;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  gap: 6px;
+}
+.badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.badge.tone-neutral {
+  background: var(--canvas);
+  color: var(--muted);
+}
+.badge.tone-success {
+  background: #e7f5ee;
+  color: #16794f;
+}
+.badge.tone-warning {
+  background: #fdf3e3;
+  color: #a15c07;
+}
+.badge.tone-danger {
+  background: #fcedf0;
+  color: #c8344f;
+}
+.badge.tone-info {
+  background: #e8f1fb;
+  color: #2f6fb3;
+}
