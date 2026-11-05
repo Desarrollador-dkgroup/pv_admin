@@ -29,6 +29,7 @@ type RequestRow = {
   created_at: string;
   business_id: string;
   requested_by: string;
+  image_path: string;
   businesses: { name: string } | { name: string }[] | null;
   service_promotions: { title: string } | { title: string }[] | null;
 };
@@ -54,7 +55,7 @@ export default async function AdsPage() {
   const admin = getSupabaseAdminClient();
   const requestsQuery = admin
     .from("ad_requests")
-    .select("id, title, status, starts_on, ends_on, rejection_reason, notes, created_at, business_id, requested_by, businesses(name), service_promotions(title)")
+    .select("id, title, status, image_path, starts_on, ends_on, rejection_reason, notes, created_at, business_id, requested_by, businesses(name), service_promotions(title)")
     .order("created_at", { ascending: false });
   const scopedRequests = isOwner ? requestsQuery.in("business_id", businessIds) : requestsQuery;
 
@@ -96,6 +97,18 @@ export default async function AdsPage() {
           const promotion = one(request.service_promotions);
           return (
             <div className="list-row" key={request.id}>
+              {(() => {
+                const url = admin.storage.from("ads-media").getPublicUrl(request.image_path).data.publicUrl;
+                return isStaff ? (
+                  <div className="request-image">
+                    <Image src={url} alt={request.title} width={120} height={200} unoptimized
+                      className="request-thumb" />
+                    <a className="text-link small" href={url} target="_blank" rel="noreferrer" download>
+                      Descargar imagen
+                    </a>
+                  </div>
+                ) : null;
+              })()}
               <div className="list-row-text">
                 <b>{request.title}</b>
                 <small>

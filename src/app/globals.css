@@ -3384,3 +3384,18 @@ a.callout:hover {
   font-weight: 700;
   font-size: 15px;
 }
+
+/* Solicitudes de anuncio: miniatura de la imagen para el equipo. */
+.request-image {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+.request-thumb {
+  width: 120px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
