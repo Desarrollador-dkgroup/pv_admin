@@ -33,6 +33,13 @@ export default async function EditContractPage({
     commissionCapPct: Number(contract?.commission_cap_pct ?? 40),
     // Misma fecha que usa la impresión: la de la última actualización del contrato.
     // Un contrato nuevo no tiene fecha hasta guardarse.
+    legalName: contract?.legal_name ?? "",
+    taxId: contract?.tax_id ?? "",
+    legalRepresentative: contract?.legal_representative ?? "",
+    legalAddress: contract?.legal_address ?? "",
+    contactEmail: contract?.contact_email ?? "",
+    startsOn: contract?.starts_on ?? "",
+    endsOn: contract?.ends_on ?? "",
     dateLabel: contract?.updated_at
       ? new Date(contract.updated_at).toLocaleDateString("es-PA")
       : "se asigna al guardar",

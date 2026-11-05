@@ -15,6 +15,11 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
   - Contratos: vista previa al lado del formulario; fecha y formato de ganancia iguales en
     vista previa e impresión; hoja de impresión sin menú ni barra.
   - Promociones: el equipo ve «Promociones», no «Mis promociones».
+- Contratos, parte 2 (2026-11-05): migración `202611050001_contract_legal_data.sql`
+  aplicada en producción (columnas nuevas, nulas; prueba previa con ROLLBACK). Datos legales
+  (razón social, RUC, representante, correo, dirección) y vigencia en el formulario, en la
+  vista previa y en la impresión. Marcadores nuevos: razon_social, ruc, representante,
+  direccion, vigencia_inicio, vigencia_fin.
 - Pendiente del rediseño: pantallas nuevas (A07, A08, A13–A16, A18–A32, C01–C06, P01–P12) y
   el ciclo de contratos (migración con campos legales, vigencia, estado «por verificar» y
   versiones). No se han aplicado todavía.

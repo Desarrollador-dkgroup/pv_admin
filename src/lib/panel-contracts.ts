@@ -7,7 +7,26 @@ export const CONTRACT_PLACEHOLDERS = [
   { key: "ganancia_objetivo", label: "Ganancia objetivo por reserva" },
   { key: "tope_comision", label: "Tope de comisión (%)" },
   { key: "fecha", label: "Fecha de emisión" },
+  { key: "razon_social", label: "Razón social" },
+  { key: "ruc", label: "RUC" },
+  { key: "representante", label: "Representante legal" },
+  { key: "direccion", label: "Dirección legal" },
+  { key: "vigencia_inicio", label: "Inicio de vigencia" },
+  { key: "vigencia_fin", label: "Fin de vigencia" },
 ] as const;
+
+// Fecha legible; vacía si el dato no existe.
+export function formatContractDate(value: string | null | undefined) {
+  if (!value) return "";
+  const [year, month, day] = value.slice(0, 10).split("-").map(Number);
+  if (!year || !month || !day) return "";
+  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("es-PA", {
+    timeZone: "UTC",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
 
 export const DEFAULT_CONTRACT_TITLE = "Contrato de colaboración comercial (modelo de prueba)";
 

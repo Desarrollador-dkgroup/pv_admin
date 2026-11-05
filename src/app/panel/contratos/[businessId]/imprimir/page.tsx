@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { PrintContractButton } from "@/components/print-contract-button";
 import { getPanelIdentity } from "@/lib/panel-access";
-import { renderContract } from "@/lib/panel-contracts";
+import { formatContractDate, renderContract } from "@/lib/panel-contracts";
 import { formatCents } from "@/lib/panel-format";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { canManageCatalog } from "@/types/panel";
@@ -24,6 +24,12 @@ export default async function PrintContractPage({
   if (!business || !contract || contract.status === "draft") notFound();
 
   const text = renderContract(contract.template_body, {
+    razon_social: contract.legal_name ?? business.name,
+    ruc: contract.tax_id ?? "",
+    representante: contract.legal_representative ?? "",
+    direccion: contract.legal_address ?? "",
+    vigencia_inicio: formatContractDate(contract.starts_on),
+    vigencia_fin: formatContractDate(contract.ends_on),
     negocio: business.name,
     comision_base: String(Number(contract.base_commission_pct)),
     limite_descuento: String(Number(contract.discount_limit_pct)),

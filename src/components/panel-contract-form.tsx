@@ -7,6 +7,7 @@ import { Button, Panel } from "@/components/ui";
 import { formatCents } from "@/lib/panel-format";
 import {
   CONTRACT_PLACEHOLDERS,
+  formatContractDate,
   renderContract,
   type ContractValues,
 } from "@/lib/panel-contracts";
@@ -21,9 +22,25 @@ export type ContractFormValues = {
   discountLimitPct: number;
   targetProfitUsd: number;
   commissionCapPct: number;
+  legalName: string;
+  taxId: string;
+  legalRepresentative: string;
+  legalAddress: string;
+  contactEmail: string;
+  startsOn: string;
+  endsOn: string;
   // Fecha de emisión ya formateada en el servidor; la misma usa la impresión.
   dateLabel: string;
 };
+
+// Campos de texto de los datos legales, con el nombre que espera la acción.
+const LEGAL_FIELDS = [
+  { key: "legalName", name: "legal_name", label: "Razón social", type: "text" },
+  { key: "taxId", name: "tax_id", label: "RUC y DV", type: "text" },
+  { key: "legalRepresentative", name: "legal_representative", label: "Representante legal", type: "text" },
+  { key: "contactEmail", name: "contact_email", label: "Correo para avisos", type: "email" },
+  { key: "legalAddress", name: "legal_address", label: "Dirección legal", type: "text" },
+] as const;
 
 // Formulario del contrato con vista previa del texto ya llenado.
 export function ContractForm({ initial }: { initial: ContractFormValues }) {
@@ -32,6 +49,12 @@ export function ContractForm({ initial }: { initial: ContractFormValues }) {
   const [body, setBody] = useState(initial.templateBody);
 
   const previewValues: ContractValues = {
+    razon_social: values.legalName,
+    ruc: values.taxId,
+    representante: values.legalRepresentative,
+    direccion: values.legalAddress,
+    vigencia_inicio: formatContractDate(values.startsOn),
+    vigencia_fin: formatContractDate(values.endsOn),
     negocio: values.businessName,
     comision_base: String(values.baseCommissionPct),
     limite_descuento: String(values.discountLimitPct),
@@ -45,6 +68,34 @@ export function ContractForm({ initial }: { initial: ContractFormValues }) {
       <input type="hidden" name="business_id" value={initial.businessId} />
       <div className="contract-layout">
       <div className="contract-main">
+      <Panel>
+        <h2>Datos legales</h2>
+        <p className="contract-hint">Aparecen en el encabezado y en las cláusulas del documento.</p>
+        {LEGAL_FIELDS.map((field) => (
+          <label className="field" key={field.name}>
+            {field.label}
+            <input name={field.name} type={field.type} value={values[field.key]}
+              onChange={(e) => setValues({ ...values, [field.key]: e.target.value })} />
+          </label>
+        ))}
+      </Panel>
+
+      <Panel>
+        <h2>Vigencia</h2>
+        <div className="form-row">
+          <label className="field">
+            Inicio
+            <input name="starts_on" type="date" value={values.startsOn}
+              onChange={(e) => setValues({ ...values, startsOn: e.target.value })} />
+          </label>
+          <label className="field">
+            Fin
+            <input name="ends_on" type="date" value={values.endsOn}
+              onChange={(e) => setValues({ ...values, endsOn: e.target.value })} />
+          </label>
+        </div>
+      </Panel>
+
       <Panel>
         <h2>Condiciones</h2>
         <label className="field">

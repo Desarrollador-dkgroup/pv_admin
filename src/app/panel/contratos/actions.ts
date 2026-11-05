@@ -29,6 +29,13 @@ export async function saveContractAction(_previous: FormState, formData: FormDat
   const limit = percent(formText(formData, "discount_limit_pct"));
   const cap = percent(formText(formData, "commission_cap_pct"));
   const targetUsd = Number(formText(formData, "target_profit_usd"));
+  const legalName = formText(formData, "legal_name") || null;
+  const taxId = formText(formData, "tax_id") || null;
+  const legalRepresentative = formText(formData, "legal_representative") || null;
+  const legalAddress = formText(formData, "legal_address") || null;
+  const contactEmail = formText(formData, "contact_email") || null;
+  const startsOn = formText(formData, "starts_on") || null;
+  const endsOn = formText(formData, "ends_on") || null;
 
   if (!businessId || !title || !templateBody) return { error: "Completa el título y la plantilla." };
   if (base === null || limit === null || cap === null) {
@@ -39,6 +46,9 @@ export async function saveContractAction(_previous: FormState, formData: FormDat
     return { error: "La ganancia objetivo no puede ser negativa." };
   }
   if (status !== "draft" && status !== "issued") return { error: "Estado de contrato no válido." };
+  if (startsOn && endsOn && startsOn > endsOn) {
+    return { error: "La fecha de inicio no puede ser posterior a la de fin." };
+  }
 
   const admin = getSupabaseAdminClient();
   const { data: existing } = await admin
@@ -60,6 +70,13 @@ export async function saveContractAction(_previous: FormState, formData: FormDat
       discount_limit_pct: limit,
       commission_cap_pct: cap,
       target_profit_cents: Math.round(targetUsd * 100),
+      legal_name: legalName,
+      tax_id: taxId,
+      legal_representative: legalRepresentative,
+      legal_address: legalAddress,
+      contact_email: contactEmail,
+      starts_on: startsOn,
+      ends_on: endsOn,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "business_id" },
