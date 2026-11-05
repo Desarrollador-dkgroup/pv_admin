@@ -3312,38 +3312,12 @@ a.callout:hover {
   display: none;
 }
 
-/* Maqueta del anuncio: escritorio y celular. */
+/* Maqueta del anuncio: escritorio y celular. El botón va sobre la imagen, como en la web. */
 .ad-preview-set {
   display: flex;
   flex-direction: column;
   gap: 20px;
   align-items: stretch;
-}
-.ad-frame-desktop {
-  width: 100%;
-}
-.ad-frame-mobile {
-  width: 280px;
-  max-width: 100%;
-  align-self: center;
-}
-.ad-frame-desktop .ad-card-body {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-.ad-frame-desktop .ad-card-body small {
-  flex: 1;
-}
-.ad-frame-desktop .ad-card-button {
-  align-self: center;
-  width: 180px;
-  margin-top: 0;
-}
-.ad-frame-desktop .ad-card-close {
-  top: 12px;
-  right: 12px;
 }
 .ad-frame {
   margin: 0;
@@ -3353,6 +3327,14 @@ a.callout:hover {
   font-size: 12px;
   font-weight: 600;
   color: var(--muted);
+}
+.ad-frame-desktop {
+  width: 100%;
+}
+.ad-frame-mobile {
+  width: 280px;
+  max-width: 100%;
+  align-self: center;
 }
 .ad-frame-screen {
   padding: 14px;
@@ -3367,14 +3349,10 @@ a.callout:hover {
   position: relative;
   overflow: hidden;
   border-radius: 14px;
-  background: #ffffff;
-  box-shadow: 0 10px 30px rgb(0 0 0 / 30%);
+  background: #000;
 }
-.ad-frame-desktop .ad-card-image {
-  aspect-ratio: 16 / 7;
-}
-.ad-frame-mobile .ad-card-image {
-  aspect-ratio: 4 / 5;
+.ad-frame-mobile .ad-card {
+  border-radius: 20px;
 }
 .ad-card-image {
   display: block;
@@ -3382,46 +3360,41 @@ a.callout:hover {
   object-fit: cover;
   background: #dfe3f3;
 }
+.ad-frame-desktop .ad-card-image {
+  aspect-ratio: 16 / 9;
+}
+.ad-frame-mobile .ad-card-image {
+  aspect-ratio: 9 / 16;
+}
 .ad-card-empty {
   display: grid;
   place-items: center;
-  min-height: 120px;
   color: var(--muted);
   font-size: 13px;
 }
-.ad-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px 14px 14px;
-}
-.ad-card-body small {
-  color: var(--muted);
-  font-size: 12px;
-}
 .ad-card-close {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 1;
+  top: 12px;
+  right: 12px;
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: rgb(0 0 0 / 45%);
   color: #ffffff;
-  font-size: 18px;
+  font-size: 20px;
 }
 .ad-card-button {
-  align-self: stretch;
-  margin-top: 6px;
-  padding: 10px;
-  border-radius: 10px;
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 24px;
+  padding: 14px;
+  border-radius: 999px;
   background: var(--brand);
   color: #ffffff;
   text-align: center;
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: 700;
+  font-size: 15px;
 }
-
