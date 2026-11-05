@@ -9,6 +9,8 @@ export function PreviewFrame({ children }: { children: ReactNode }) {
     const control = (event.target as HTMLElement).closest("a, button");
     if (!control) return;
     if (control.getAttribute("aria-label")?.startsWith("Foto ")) return;
+    // Las paradas del recorrido llevan a su propia vista previa dentro del panel.
+    if (control.getAttribute("href")?.includes("/vista-previa/atracciones/")) return;
     event.preventDefault();
     event.stopPropagation();
   }

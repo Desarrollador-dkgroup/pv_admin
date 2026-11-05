@@ -227,7 +227,7 @@ export function ActivityScreen({ detail }: { detail: ServiceDetail }) {
                 heading={isTour ? "Paradas del recorrido" : "Atracciones"}
                 attractions={activity.attractions}
                 hrefFor={(attraction, idx) =>
-                  `/servicios/${item.slug}/atracciones/${attraction.id ?? idx}`}
+                  `/panel/servicios/${item.id}/vista-previa/atracciones/${attraction.id ?? idx}`}
               />
             </>
           )}
