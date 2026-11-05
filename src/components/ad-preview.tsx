@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
-// Cómo se ve el anuncio en la web: en escritorio es una ventana centrada; en el celular ocupa el
-// ancho de la pantalla. Se muestran las dos vistas para revisar ambas.
+// Cómo se ve el anuncio en el celular: un teléfono estándar de 390 × 844 px.
 export function AdPreview({ imageUrl, title, destination }: {
   imageUrl: string | null;
   title: string;
@@ -9,10 +8,7 @@ export function AdPreview({ imageUrl, title, destination }: {
 }) {
   return (
     <div className="ad-preview-set">
-      <AdFrame label="Escritorio" className="ad-frame-desktop">
-        <AdCard imageUrl={imageUrl} title={title} />
-      </AdFrame>
-      <AdFrame label="Celular" className="ad-frame-mobile">
+      <AdFrame label="Celular (390 × 844)">
         <AdCard imageUrl={imageUrl} title={title} />
       </AdFrame>
       <p className="muted">
@@ -22,9 +18,9 @@ export function AdPreview({ imageUrl, title, destination }: {
   );
 }
 
-function AdFrame({ label, className, children }: { label: string; className: string; children: ReactNode }) {
+function AdFrame({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <figure className={`ad-frame ${className}`}>
+    <figure className="ad-frame ad-frame-mobile">
       <figcaption>{label}</figcaption>
       <div className="ad-frame-screen">{children}</div>
     </figure>
