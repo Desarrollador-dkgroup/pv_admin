@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { AdForm } from "@/components/panel-ad-form";
-import { PageHeader } from "@/components/ui";
+import { AdDocumentForm } from "@/components/panel-ad-document-form";
+import { PageHeader, Panel } from "@/components/ui";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { loadAdPromotionOptions } from "@/lib/panel-ad-options";
@@ -15,6 +16,16 @@ export default async function EditAdPage({ params }: { params: Promise<{ id: str
   const { data: ad } = await admin.from("ads").select("*").eq("id", id).maybeSingle();
   if (!ad) notFound();
   const options = await loadAdPromotionOptions(admin);
+
+  // Si el anuncio vino de una solicitud, aquí se adjunta el documento firmado por el propietario.
+  const { data: request } = await admin
+    .from("ad_requests")
+    .select("id, document_path")
+    .eq("ad_id", id)
+    .maybeSingle();
+  const documentUrl = request?.document_path
+    ? (await admin.storage.from("contracts").createSignedUrl(request.document_path, 600)).data?.signedUrl ?? null
+    : null;
 
   return (
     <>
@@ -35,6 +46,19 @@ export default async function EditAdPage({ params }: { params: Promise<{ id: str
           is_active: ad.is_active,
         }}
       />
+      {request && (
+        <Panel>
+          <h2>Documento del anuncio</h2>
+          <p className="muted">
+            El documento que firmó el propietario, donde confirma el pago por la publicación. Se guarda también en
+            su sección de contrato.
+          </p>
+          {documentUrl && (
+            <a className="text-link" href={documentUrl} target="_blank" rel="noreferrer">Ver documento actual</a>
+          )}
+          <AdDocumentForm requestId={request.id} hasDocument={Boolean(request.document_path)} />
+        </Panel>
+      )}
     </>
   );
 }
