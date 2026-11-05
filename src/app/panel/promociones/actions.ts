@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getPanelIdentity } from "@/lib/panel-access";
+import { ACTIVE_CONTRACT_STATUSES } from "@/lib/panel-contracts";
 import { formChecked, formText, nullableText } from "@/lib/panel-form";
 import { previewPromotion, type CommissionTerms } from "@/lib/promotion-commission";
 
@@ -60,6 +61,7 @@ export async function saveServicePromotionAction(
     .from("business_contracts")
     .select("base_commission_pct, discount_limit_pct, target_profit_cents, commission_cap_pct")
     .eq("business_id", service.business_id)
+    .in("status", [...ACTIVE_CONTRACT_STATUSES])
     .maybeSingle();
   if (contract) {
     const terms: CommissionTerms = {
@@ -113,6 +115,18 @@ export async function saveServicePromotionAction(
     : await supabase.from("service_promotions").insert(values);
   if (result.error) return { error: result.error.message };
 
+  revalidatePath("/panel/promociones");
+  redirect("/panel/promociones");
+}
+
+// Elimina una promoción. La política de la tabla limita el borrado a sus dueños y al equipo.
+export async function deleteServicePromotionAction(formData: FormData) {
+  const { supabase, role } = await getPanelIdentity();
+  if (role === "collaborator") return;
+  const promotionId = formText(formData, "promotion_id");
+  if (!promotionId) return;
+  const { error } = await supabase.from("service_promotions").delete().eq("id", promotionId);
+  if (error) throw new Error(error.message);
   revalidatePath("/panel/promociones");
   redirect("/panel/promociones");
 }

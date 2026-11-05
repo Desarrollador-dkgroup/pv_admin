@@ -5,7 +5,7 @@ import { Button } from "@/components/ui";
 export function PrintContractButton() {
   return (
     <Button type="button" tone="primary" onClick={() => window.print()}>
-      Imprimir contrato
+      Imprimir o guardar PDF
     </Button>
   );
 }

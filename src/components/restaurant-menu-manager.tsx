@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Panel } from "@/components/ui";
+import { Button, Panel, confirmAction } from "@/components/ui";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 export type Dish = {
@@ -85,7 +85,11 @@ export function RestaurantMenuManager({
       setError("Primero elimina los platos de esta sección.");
       return;
     }
-    if (!window.confirm(`¿Eliminar la sección «${section.title}»?`)) return;
+    if (!(await confirmAction({
+      title: `¿Eliminar la sección «${section.title}»?`,
+      confirmLabel: "Eliminar sección",
+      danger: true,
+    }))) return;
     setBusy(true);
     setError("");
     // Vuelve a comprobar el contenido en la base antes de solicitar el borrado.
@@ -201,7 +205,12 @@ export function RestaurantMenuManager({
   }
 
   async function deleteDish(dish: Dish) {
-    if (!window.confirm(`¿Eliminar «${dish.name}» del menú?`)) return;
+    if (!(await confirmAction({
+      title: `¿Eliminar «${dish.name}» del menú?`,
+      body: "No se puede deshacer.",
+      confirmLabel: "Eliminar plato",
+      danger: true,
+    }))) return;
     setBusy(true);
     setError("");
     const { error: failure } = await supabase

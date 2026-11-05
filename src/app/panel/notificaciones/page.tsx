@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Panel } from "@/components/ui";
+import { PageHeader, Panel } from "@/components/ui";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { getPanelNotifications } from "@/lib/panel-notifications";
 
@@ -10,24 +10,28 @@ export default async function NotificationsPage() {
 
   return (
     <>
-      <header className="page-heading">
-        <div>
-          <h1>Notificaciones</h1>
-          <p>Avisos que requieren atención, calculados con los datos actuales.</p>
-        </div>
-      </header>
-      <Panel>
-        {notifications.map((item) => (
-          <Link className={`notification-card ${item.tone}`} href={item.href} key={item.id}>
+      <PageHeader
+        title="Notificaciones"
+        description="Avisos que requieren atención, calculados con los datos actuales. Desaparecen al resolverlos."
+      />
+      {notifications.map((item) => (
+        <article className={`panel notice-card ${item.tone === "alert" ? "unread" : ""}`} key={item.id}>
+          <span className={`confirm-icon ${item.tone === "alert" ? "danger" : ""}`} aria-hidden="true">
+            {item.tone === "alert" ? "!" : "i"}
+          </span>
+          <div className="list-row-text">
             <b>{item.title}</b>
-            <span>{item.detail}</span>
-            <small className="muted">Abrir sección</small>
-          </Link>
-        ))}
-        {!notifications.length && (
-          <p className="muted">No hay avisos pendientes. Todo está al día.</p>
-        )}
-      </Panel>
+            <p>{item.detail}</p>
+          </div>
+          <Link className="button secondary small" href={item.href}>Abrir ›</Link>
+        </article>
+      ))}
+      {!notifications.length && (
+        <Panel className="empty-state">
+          <h2>Todo al día</h2>
+          <p className="muted">No hay avisos pendientes.</p>
+        </Panel>
+      )}
     </>
   );
 }

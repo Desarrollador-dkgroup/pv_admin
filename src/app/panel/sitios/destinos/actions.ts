@@ -12,6 +12,18 @@ type FormState = { error: string };
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Elimina un destino. Sus sitios turísticos siguen ligados a la provincia.
+export async function deleteDestinationAction(formData: FormData) {
+  const { supabase, role } = await getPanelIdentity();
+  if (!canManageCatalog(role)) throw new Error("Tu cuenta no puede administrar destinos.");
+  const destinationId = formText(formData, "destination_id");
+  if (!UUID_PATTERN.test(destinationId)) return;
+  const { error } = await supabase.from("destinations").delete().eq("id", destinationId);
+  if (error) throw new Error("No se pudo eliminar el destino.");
+  revalidatePath("/panel/sitios");
+  redirect("/panel/sitios");
+}
+
 // Crea o actualiza la tarjeta de un destino. La provincia no cambia después de crearla.
 export async function saveDestinationAction(
   _previous: FormState,

@@ -12,6 +12,7 @@ type FormState = { error: string; saved?: boolean };
 const MAX_SIGNED_BYTES = 10 * 1024 * 1024;
 
 function percent(value: string) {
+  if (!value.trim()) return null;
   const number = Number(value);
   return Number.isFinite(number) && number >= 0 && number < 100 ? number : null;
 }
@@ -42,7 +43,7 @@ export async function saveContractAction(_previous: FormState, formData: FormDat
     return { error: "Los porcentajes deben estar entre 0 y menos de 100." };
   }
   if (cap < base) return { error: "El tope de comisión no puede ser menor que la comisión base." };
-  if (!Number.isFinite(targetUsd) || targetUsd < 0) {
+  if (!formText(formData, "target_profit_usd") || !Number.isFinite(targetUsd) || targetUsd < 0) {
     return { error: "La ganancia objetivo no puede ser negativa." };
   }
   if (status !== "draft" && status !== "issued") return { error: "Estado de contrato no válido." };
@@ -56,8 +57,8 @@ export async function saveContractAction(_previous: FormState, formData: FormDat
     .select("status")
     .eq("business_id", businessId)
     .maybeSingle();
-  if (existing?.status === "signed") {
-    return { error: "Este contrato ya está firmado y no se puede modificar." };
+  if (existing && existing.status !== "draft") {
+    return { error: "Este contrato ya se emitió. Crea una nueva versión para cambiarlo." };
   }
 
   const { error } = await admin.from("business_contracts").upsert(
@@ -77,6 +78,7 @@ export async function saveContractAction(_previous: FormState, formData: FormDat
       contact_email: contactEmail,
       starts_on: startsOn,
       ends_on: endsOn,
+      issued_at: status === "issued" ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "business_id" },
@@ -109,8 +111,8 @@ export async function uploadSignedContractAction(
     .select("id, status")
     .eq("business_id", businessId)
     .maybeSingle();
-  if (!contract || contract.status === "draft") {
-    return { error: "Este contrato todavía no ha sido emitido." };
+  if (!contract || contract.status !== "issued") {
+    return { error: "Este contrato no está esperando tu firma." };
   }
 
   const path = `${businessId}/${contract.id}.pdf`;
@@ -123,9 +125,10 @@ export async function uploadSignedContractAction(
   const { error } = await admin
     .from("business_contracts")
     .update({
-      status: "signed",
+      status: "submitted",
       signed_pdf_path: path,
       signed_at: new Date().toISOString(),
+      rejection_reason: null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", contract.id);
@@ -134,4 +137,83 @@ export async function uploadSignedContractAction(
   revalidatePath("/panel/mi-contrato");
   revalidatePath("/panel/contratos");
   return { error: "", saved: true };
+}
+
+// Cambia el estado del contrato desde la ficha del equipo.
+async function updateContractStatus(
+  businessId: string,
+  from: string[],
+  values: Record<string, unknown>,
+) {
+  const { role } = await getPanelIdentity();
+  if (!canManageCatalog(role)) throw new Error("Tu cuenta no puede administrar contratos.");
+  const admin = getSupabaseAdminClient();
+  const { error } = await admin
+    .from("business_contracts")
+    .update({ ...values, updated_at: new Date().toISOString() })
+    .eq("business_id", businessId)
+    .in("status", from);
+  if (error) throw new Error(error.message);
+  revalidatePath("/panel/contratos");
+  revalidatePath(`/panel/contratos/${businessId}`);
+  revalidatePath("/panel/mi-contrato");
+}
+
+// El equipo aprueba la copia firmada: el contrato queda vigente.
+export async function verifySignedContractAction(formData: FormData) {
+  const businessId = formText(formData, "business_id");
+  await updateContractStatus(businessId, ["submitted"], {
+    status: "signed",
+    verified_at: new Date().toISOString(),
+    rejection_reason: null,
+  });
+}
+
+// El equipo rechaza la copia firmada con un motivo; el negocio debe subir otra.
+export async function rejectSignedContractAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const businessId = formText(formData, "business_id");
+  const reason = formText(formData, "rejection_reason");
+  if (!reason) return { error: "Escribe el motivo para que el negocio pueda corregirlo." };
+  await updateContractStatus(businessId, ["submitted"], {
+    status: "issued",
+    signed_pdf_path: null,
+    signed_at: null,
+    rejection_reason: reason,
+  });
+  return { error: "", saved: true };
+}
+
+// Abre una nueva versión editable a partir del contrato actual.
+export async function newContractVersionAction(formData: FormData) {
+  const businessId = formText(formData, "business_id");
+  const { role } = await getPanelIdentity();
+  if (!canManageCatalog(role)) throw new Error("Tu cuenta no puede administrar contratos.");
+  const admin = getSupabaseAdminClient();
+  const { data: contract } = await admin
+    .from("business_contracts")
+    .select("version")
+    .eq("business_id", businessId)
+    .maybeSingle();
+  if (!contract) return;
+  await updateContractStatus(businessId, ["issued", "submitted", "signed", "void"], {
+    status: "draft",
+    version: Number(contract.version ?? 1) + 1,
+    signed_pdf_path: null,
+    signed_at: null,
+    verified_at: null,
+    issued_at: null,
+    rejection_reason: null,
+  });
+  redirect(`/panel/contratos/${businessId}`);
+}
+
+// Anula el contrato: deja de aplicarse a las promociones del negocio.
+export async function voidContractAction(formData: FormData) {
+  const businessId = formText(formData, "business_id");
+  await updateContractStatus(businessId, ["draft", "issued", "submitted", "signed"], {
+    status: "void",
+  });
 }

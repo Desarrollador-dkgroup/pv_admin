@@ -54,6 +54,7 @@ export function CreateOwnerForm({
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [businessName, setBusinessName] = useState("");
   const [password, setPassword] = useState("");
   const [items, setItems] = useState<Item[]>([]);
   const [error, setError] = useState("");
@@ -120,6 +121,7 @@ export function CreateOwnerForm({
       const result = await createOwnerAccountAction({
         name,
         email,
+        businessName,
         password,
         services: items.map((item) => ({
           categoryId: item.categoryId,
@@ -155,6 +157,14 @@ export function CreateOwnerForm({
               value={email}
               onChange={(event) => changeEmail(event.target.value)}
             />
+          </label>
+          <label className="field">
+            Nombre del negocio (opcional)
+            <input value={businessName} maxLength={80}
+              onChange={(event) => setBusinessName(event.target.value)} />
+            <small className="muted">
+              Si lo dejas vacío se llamará «Negocio de {name.trim() || "la persona"}».
+            </small>
           </label>
         </div>
       </section>

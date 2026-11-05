@@ -123,3 +123,23 @@ export async function removeCoOwnerAction(formData: FormData): Promise<void> {
 
   revalidatePath("/panel/cuenta");
 }
+
+// El propietario cambia su propio nombre visible (perfil y datos de la sesión).
+export async function updateOwnNameAction(
+  _previous: { error: string; saved?: boolean },
+  formData: FormData,
+): Promise<{ error: string; saved?: boolean }> {
+  const { supabase, user } = await getPanelIdentity();
+  const name = formText(formData, "display_name");
+  if (name.length < 2 || name.length > 80) {
+    return { error: "El nombre debe tener entre 2 y 80 caracteres." };
+  }
+  const { error } = await supabase
+    .from("profiles")
+    .update({ display_name: name, updated_at: new Date().toISOString() })
+    .eq("id", user.id);
+  if (error) return { error: "No se pudo guardar el nombre. Intenta de nuevo." };
+  await supabase.auth.updateUser({ data: { display_name: name } });
+  revalidatePath("/panel", "layout");
+  return { error: "", saved: true };
+}

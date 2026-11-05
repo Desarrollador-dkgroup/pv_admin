@@ -1,8 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PanelGalleryManager } from "@/components/panel-gallery-manager";
 import type { GalleryGroup } from "@/components/panel-gallery-manager";
+import { PageHeader, Tabs } from "@/components/ui";
 import { getPanelIdentity } from "@/lib/panel-access";
+import { serviceTabItems } from "@/lib/panel-service-tabs";
 
 // Galería general del servicio. Las fotos de habitaciones y áreas se suben en su tarjeta.
 export default async function ServiceGalleryPage({
@@ -47,24 +48,14 @@ export default async function ServiceGalleryPage({
 
   return (
     <>
-      <header className="page-heading">
-        <div>
-          <h1>Galería general de {service.name}</h1>
-          <p>
-            {isLodging
-              ? "Fotos generales del hospedaje. Las de cada habitación se añaden en su tarjeta."
-              : "Las imágenes se guardan en el almacenamiento de Supabase."}
-          </p>
-        </div>
-        <div className="actions">
-          <Link className="button secondary" href={`/panel/servicios/${id}/vista-previa`}>
-            Ver vista previa
-          </Link>
-          <Link className="button quiet" href={`/panel/servicios/${id}`}>
-            Volver al servicio
-          </Link>
-        </div>
-      </header>
+      <PageHeader
+        back={{ href: "/panel/servicios", label: "Volver a servicios" }}
+        title={`Galería general de ${service.name}`}
+        description={isLodging
+          ? "Fotos generales del hospedaje. Las de cada habitación se añaden en su tarjeta."
+          : "JPG, PNG o WebP de hasta 8 MB cada una. La primera marcada es la portada."}
+      />
+      <Tabs items={serviceTabItems(service)} active="galeria" />
       <PanelGalleryManager serviceId={id} groups={groups} />
     </>
   );

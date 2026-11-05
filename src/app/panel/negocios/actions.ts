@@ -160,3 +160,18 @@ export async function addServicePlanAction(
   refreshBusinessViews(businessId);
   return { error: "" };
 }
+
+// Quita una línea del plan de servicios. Los servicios ya creados no se borran.
+export async function removeServicePlanAction(formData: FormData): Promise<void> {
+  const { supabase, role } = await getPanelIdentity();
+  if (!canManageProviders(role)) throw new Error("Tu cuenta no puede cambiar el plan.");
+  const businessId = formText(formData, "business_id");
+  const planId = formText(formData, "plan_id");
+  const { error } = await supabase
+    .from("business_service_plans")
+    .delete()
+    .eq("id", planId)
+    .eq("business_id", businessId);
+  if (error) throw new Error(error.message);
+  refreshBusinessViews(businessId);
+}

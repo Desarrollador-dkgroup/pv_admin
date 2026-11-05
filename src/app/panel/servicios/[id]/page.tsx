@@ -1,37 +1,61 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { LodgingCatalogManager } from "@/components/lodging-catalog-manager";
 import { PanelServiceEditor } from "@/components/panel-service-editor";
+import { Badge, PageHeader, Tabs } from "@/components/ui";
 import { getPanelIdentity } from "@/lib/panel-access";
+import { ownerStateOf } from "@/lib/panel-labels";
 import { loadLodgingCatalog } from "@/lib/panel-lodging-catalog";
 
-// Muestra la ficha real, sus habitaciones (si es hospedaje) y accesos a datos relacionados.
+// Ficha del servicio por pestañas: ficha, habitaciones (hospedaje), galería, menú y vista previa.
 export default async function EditServicePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ seccion?: string }>;
 }) {
   const { id } = await params;
+  const { seccion = "ficha" } = await searchParams;
   if (id === "nuevo") notFound();
   const { supabase, role, businessIds } = await getPanelIdentity();
   const { data: service, error } = await supabase
     .from("services")
-    .select("id, category_id, hospedaje_type_id, business_id")
+    .select("id, name, status, review_status, category_id, hospedaje_type_id, business_id")
     .eq("id", id)
     .maybeSingle();
 
   if (error || !service) notFound();
 
-  // Las habitaciones viven en la misma página para añadir cada una con su galería.
   const canEditRooms = service.category_id === "hospedaje" && !!service.hospedaje_type_id &&
     role !== "collaborator" &&
     (role !== "propietario" || businessIds.includes(service.business_id));
-  const catalog = canEditRooms ? await loadLodgingCatalog(supabase, id) : null;
+  const tabItems = [
+    { id: "ficha", label: "Ficha del servicio", href: `/panel/servicios/${id}` },
+    ...(canEditRooms
+      ? [{ id: "habitaciones", label: "Habitaciones, tarifas y áreas",
+        href: `/panel/servicios/${id}?seccion=habitaciones` }]
+      : []),
+    { id: "galeria", label: "Galería", href: `/panel/servicios/${id}/galeria` },
+    ...(service.category_id === "restaurantes"
+      ? [{ id: "menu", label: "Menú", href: `/panel/servicios/${id}/menu` }]
+      : []),
+    { id: "vista", label: "Vista previa", href: `/panel/servicios/${id}/vista-previa` },
+  ];
+  const active = seccion === "habitaciones" && canEditRooms ? "habitaciones" : "ficha";
+  const tabs = <Tabs items={tabItems} active={active} />;
 
-  return (
-    <>
-      <PanelServiceEditor serviceId={id} />
-      {catalog && service.hospedaje_type_id && (
+  if (active === "habitaciones" && service.hospedaje_type_id) {
+    const catalog = await loadLodgingCatalog(supabase, id);
+    const state = ownerStateOf(service);
+    return (
+      <>
+        <PageHeader
+          back={{ href: "/panel/servicios", label: "Volver a servicios" }}
+          title={service.name}
+          description="Agrega cada tipo de habitación por separado, cuántas iguales tienes, sus fotos y sus tarifas."
+          actions={<Badge tone={state.tone}>{state.label}</Badge>}
+        />
+        {tabs}
         <LodgingCatalogManager
           serviceId={id}
           lodgingTypeId={service.hospedaje_type_id}
@@ -41,21 +65,9 @@ export default async function EditServicePage({
           rates={catalog.rates}
           photos={catalog.photos}
         />
-      )}
-      <nav className="actions" aria-label="Administrar contenido relacionado"
-        style={{ paddingBottom: 96 }}>
-        <Link className="button primary" href={`/panel/servicios/${id}/vista-previa`}>
-          Vista previa guardada
-        </Link>
-        <Link className="button secondary" href={`/panel/servicios/${id}/galeria`}>
-          Galería general
-        </Link>
-        {service.category_id === "restaurantes" && (
-          <Link className="button secondary" href={`/panel/servicios/${id}/menu`}>
-            Menú
-          </Link>
-        )}
-      </nav>
-    </>
-  );
+      </>
+    );
+  }
+
+  return <PanelServiceEditor serviceId={id} tabs={tabs} />;
 }

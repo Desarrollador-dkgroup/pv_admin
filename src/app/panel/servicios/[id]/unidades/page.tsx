@@ -7,5 +7,5 @@ export default async function LodgingUnitsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  redirect(`/panel/servicios/${id}#habitaciones`);
+  redirect(`/panel/servicios/${id}?seccion=habitaciones`);
 }

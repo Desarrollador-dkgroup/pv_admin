@@ -1,11 +1,12 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   RestaurantMenuManager,
   type Dish,
   type MenuSection,
 } from "@/components/restaurant-menu-manager";
+import { PageHeader, Tabs } from "@/components/ui";
 import { getPanelIdentity } from "@/lib/panel-access";
+import { serviceTabItems } from "@/lib/panel-service-tabs";
 
 // Carga platos y secciones reales para un servicio de restaurante.
 export default async function RestaurantMenuPage({
@@ -52,15 +53,12 @@ export default async function RestaurantMenuPage({
 
   return (
     <>
-      <header className="page-heading">
-        <div>
-          <h1>Menú de {service.name}</h1>
-          <p>Administra nombres, precios e información alimentaria del menú.</p>
-        </div>
-        <Link className="button quiet" href={`/panel/servicios/${id}`}>
-          Volver al servicio
-        </Link>
-      </header>
+      <PageHeader
+        back={{ href: "/panel/servicios", label: "Volver a servicios" }}
+        title={`Menú de ${service.name}`}
+        description="Administra secciones, platos, precios e información alimentaria del menú."
+      />
+      <Tabs items={serviceTabItems(service)} active="menu" />
       <RestaurantMenuManager serviceId={id} initialSections={grouped} />
     </>
   );

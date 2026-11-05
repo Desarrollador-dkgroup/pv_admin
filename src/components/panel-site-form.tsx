@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useRef, useState } from "react";
 import { deleteTouristSiteAction, saveTouristSiteAction } from "@/app/panel/sitios/actions";
-import { Button, Panel } from "@/components/ui";
+import { Button, Panel, confirmAction } from "@/components/ui";
 import { extractMapsEmbedUrl } from "@/lib/panel-maps";
 import {
   SITE_IMAGE_BUCKET,
@@ -217,9 +217,14 @@ export function SiteForm({
         {site && (
           <Button
             type="button"
-            tone="quiet"
+            tone="danger"
             onClick={async () => {
-              if (!confirm(`¿Eliminar "${site.name}"? Esta acción no se puede deshacer.`)) return;
+              if (!(await confirmAction({
+                title: `¿Eliminar «${site.name}»?`,
+                body: "Se quita de la web y de los servicios vinculados. No se puede deshacer.",
+                confirmLabel: "Eliminar sitio",
+                danger: true,
+              }))) return;
               await deleteTouristSiteAction(site.id);
             }}
           >

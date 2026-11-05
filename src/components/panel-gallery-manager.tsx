@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { Button, Panel } from "@/components/ui";
+import { Button, Panel, confirmAction } from "@/components/ui";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 export type Photo = {
@@ -147,7 +147,12 @@ export function PanelGalleryManager({
 
   async function removePhoto(photo: Photo) {
     if (!active) return;
-    if (!window.confirm("¿Eliminar esta foto de la galería?")) return;
+    if (!(await confirmAction({
+      title: "¿Eliminar esta foto de la galería?",
+      body: "No se puede deshacer.",
+      confirmLabel: "Eliminar foto",
+      danger: true,
+    }))) return;
     setBusy(true);
     setMessage("");
     const supabase = getSupabaseBrowserClient();

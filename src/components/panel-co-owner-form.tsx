@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { addCoOwnerAction, removeCoOwnerAction } from "@/app/panel/cuenta/actions";
-import { Button } from "@/components/ui";
+import { Button, ConfirmSubmit } from "@/components/ui";
 import { generateTemporaryPassword } from "@/lib/panel-password";
 
 // Formulario para crear un perfil adicional que administra el mismo negocio.
@@ -56,17 +56,14 @@ export function RemoveCoOwnerButton({ userId, name }: { userId: string; name: st
   return (
     <form action={removeCoOwnerAction}>
       <input type="hidden" name="user_id" value={userId} />
-      <Button
-        tone="quiet"
-        type="submit"
-        onClick={(event) => {
-          if (!window.confirm(`¿Quitar a ${name}? Su cuenta se borra y perderá el acceso.`)) {
-            event.preventDefault();
-          }
-        }}
-      >
+      <ConfirmSubmit tone="quiet" confirm={{
+        title: `¿Quitar a ${name}?`,
+        body: "Su cuenta se borra y perderá el acceso.",
+        confirmLabel: "Quitar",
+        danger: true,
+      }}>
         Quitar
-      </Button>
+      </ConfirmSubmit>
     </form>
   );
 }

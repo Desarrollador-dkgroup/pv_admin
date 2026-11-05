@@ -1,4 +1,5 @@
 import { AdForm } from "@/components/panel-ad-form";
+import { PageHeader } from "@/components/ui";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -24,12 +25,11 @@ export default async function NewAdPage() {
 
   return (
     <>
-      <header className="page-heading">
-        <div>
-          <h1>Nuevo anuncio</h1>
-          <p>La imagen se muestra al entrar a la página principal.</p>
-        </div>
-      </header>
+      <PageHeader
+        back={{ href: "/panel/anuncios", label: "Volver a anuncios" }}
+        title="Nuevo anuncio"
+        description="La imagen se muestra al entrar a la página principal."
+      />
       <AdForm promotions={options} />
     </>
   );

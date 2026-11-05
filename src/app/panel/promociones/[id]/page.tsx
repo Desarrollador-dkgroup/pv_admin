@@ -3,8 +3,10 @@ import {
   ServicePromotionForm,
   type ServicePromotionRecord,
 } from "@/components/panel-service-promotion-form";
+import { ConfirmSubmit, PageHeader } from "@/components/ui";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { loadPromotionFormData } from "@/lib/panel-service-promotions";
+import { deleteServicePromotionAction } from "../actions";
 
 // Edita una promoción de servicio existente.
 export default async function EditPromotionPage({
@@ -31,12 +33,24 @@ export default async function EditPromotionPage({
   };
   return (
     <>
-      <header className="page-heading">
-        <div>
-          <h1>{promotion.title}</h1>
-          <p>Edita el descuento, la vigencia o los días en los que aplica.</p>
-        </div>
-      </header>
+      <PageHeader
+        back={{ href: "/panel/promociones", label: "Volver a promociones" }}
+        title={promotion.title}
+        description="Edita el descuento, la vigencia o los días en los que aplica."
+        actions={
+          <form action={deleteServicePromotionAction}>
+            <input type="hidden" name="promotion_id" value={promotion.id} />
+            <ConfirmSubmit tone="quiet" confirm={{
+              title: `¿Eliminar «${promotion.title}»?`,
+              body: "Deja de verse en la web. No se puede deshacer.",
+              confirmLabel: "Eliminar promoción",
+              danger: true,
+            }}>
+              Eliminar promoción
+            </ConfirmSubmit>
+          </form>
+        }
+      />
       <ServicePromotionForm services={options} termsByBusiness={termsByBusiness} promotion={promotion} />
     </>
   );

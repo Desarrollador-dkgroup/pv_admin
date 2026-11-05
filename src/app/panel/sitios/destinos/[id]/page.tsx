@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { ConfirmSubmit } from "@/components/ui";
+import { deleteDestinationAction } from "../actions";
 import { notFound } from "next/navigation";
 import { Panel } from "@/components/ui";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
@@ -43,17 +45,31 @@ export default async function DestinationDetailPage({
     <>
       <header className="page-heading">
         <div>
-          <Link className="back-link" href="/panel/sitios">← Volver a destinos</Link>
+          <Link className="back-link" href="/panel/sitios">‹ Volver a destinos</Link>
           <h1>{item.name}</h1>
           <p>{item.subtitle || `Provincia: ${item.province_id}`}</p>
         </div>
-        <Link className="button secondary" href={`/panel/sitios/destinos/${item.id}/editar`}>
-          Editar destino
-        </Link>
+        <div className="actions">
+          <form action={deleteDestinationAction}>
+            <input type="hidden" name="destination_id" value={item.id} />
+            <ConfirmSubmit tone="quiet" confirm={{
+              title: `¿Eliminar el destino «${item.name}»?`,
+              body: "La tarjeta deja de verse en la web. Sus sitios turísticos se conservan y " +
+                "podrás crear el destino de nuevo para esta provincia.",
+              confirmLabel: "Eliminar destino",
+              danger: true,
+            }}>
+              Eliminar destino
+            </ConfirmSubmit>
+          </form>
+          <Link className="button secondary" href={`/panel/sitios/destinos/${item.id}/editar`}>
+            Editar destino
+          </Link>
+        </div>
       </header>
 
       <div className="destination-sites-heading">
-        <h2>Sitios turísticos</h2>
+        <h2>Sitios turísticos ({siteCards.length})</h2>
         <Link
           className="button primary"
           href={`/panel/sitios/nuevo?provincia=${encodeURIComponent(item.province_id)}`}

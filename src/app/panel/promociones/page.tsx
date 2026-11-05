@@ -1,14 +1,19 @@
 import Link from "next/link";
-import { Badge, Panel } from "@/components/ui";
+import { Badge, ConfirmSubmit, PageHeader, Panel } from "@/components/ui";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { formatCents } from "@/lib/panel-format";
 import { loadPromotionFormData, scheduleLabel } from "@/lib/panel-service-promotions";
 import { previewPromotion } from "@/lib/promotion-commission";
 import { canManageCatalog } from "@/types/panel";
-import { setServicePromotionActiveAction } from "./actions";
+import { deleteServicePromotionAction, setServicePromotionActiveAction } from "./actions";
 
 // Promociones de servicio del usuario. Cada una muestra su precio y su comisión.
-export default async function PromotionsPage() {
+export default async function PromotionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ estado?: string }>;
+}) {
+  const { estado = "" } = await searchParams;
   const { supabase, role } = await getPanelIdentity();
   requireRole(role, ["owner", "admin", "propietario"]);
 
@@ -21,21 +26,35 @@ export default async function PromotionsPage() {
   ]);
   if (error) throw new Error("No se pudieron cargar las promociones.");
 
-  const rows = data ?? [];
+  const all = data ?? [];
+  const rows = estado === "activas"
+    ? all.filter((promotion) => promotion.is_active)
+    : estado === "pausadas"
+      ? all.filter((promotion) => !promotion.is_active)
+      : all;
   const isStaff = canManageCatalog(role);
+  const filters = [
+    { key: "", label: "Todas", count: all.length },
+    { key: "activas", label: "Activas", count: all.filter((item) => item.is_active).length },
+    { key: "pausadas", label: "Pausadas", count: all.filter((item) => !item.is_active).length },
+  ];
   return (
     <>
-      <header className="page-heading">
-        <div>
-          <h1>{isStaff ? "Promociones" : "Mis promociones"}</h1>
-          <p>
-            {isStaff
-              ? "Promociones de todos los negocios. Se muestran en la categoría de promociones y en la ubicación del servicio."
-              : "Promociones de tus servicios. Se muestran en la categoría de promociones y en la ubicación del servicio."}
-          </p>
-        </div>
-        <Link className="button primary" href="/panel/promociones/nuevo">+ Nueva promoción</Link>
-      </header>
+      <PageHeader
+        title={isStaff ? "Promociones" : "Mis promociones"}
+        description={isStaff
+          ? "Promociones de todos los negocios. Se muestran en la categoría de promociones y en la ubicación del servicio."
+          : "Promociones de tus servicios. Se muestran en la categoría de promociones y en la ubicación del servicio."}
+        actions={<Link className="button primary" href="/panel/promociones/nuevo">+ Nueva promoción</Link>}
+      />
+      <nav className="chip-row" aria-label="Filtrar promociones">
+        {filters.map((item) => (
+          <Link key={item.key} className={`chip ${estado === item.key ? "active" : ""}`}
+            href={item.key ? `/panel/promociones?estado=${item.key}` : "/panel/promociones"}>
+            {item.label} <span>{item.count}</span>
+          </Link>
+        ))}
+      </nav>
       <Panel className="table-panel">
         <div className="table-scroll">
           <table>
@@ -78,11 +97,13 @@ export default async function PromotionsPage() {
                     </td>
                     <td>{scheduleLabel(promotion)}</td>
                     <td>
-                      <Badge>{promotion.is_active ? "Activa" : "Pausada"}</Badge>
+                      <Badge tone={promotion.is_active ? "success" : "neutral"}>
+                        {promotion.is_active ? "Activa" : "Pausada"}
+                      </Badge>
                     </td>
                     <td>
                       <div className="actions">
-                        <Link className="button secondary" href={`/panel/promociones/${promotion.id}`}>
+                        <Link className="button secondary small" href={`/panel/promociones/${promotion.id}`}>
                           Editar
                         </Link>
                         <form action={setServicePromotionActiveAction}>
@@ -92,9 +113,20 @@ export default async function PromotionsPage() {
                             name="next_active"
                             value={promotion.is_active ? "false" : "true"}
                           />
-                          <button className="button quiet" type="submit">
+                          <button className="button quiet small" type="submit">
                             {promotion.is_active ? "Pausar" : "Activar"}
                           </button>
+                        </form>
+                        <form action={deleteServicePromotionAction}>
+                          <input type="hidden" name="promotion_id" value={promotion.id} />
+                          <ConfirmSubmit tone="quiet" className="small" confirm={{
+                            title: `¿Eliminar «${promotion.title}»?`,
+                            body: "Deja de verse en la web y en los anuncios que la usen. No se puede deshacer.",
+                            confirmLabel: "Eliminar promoción",
+                            danger: true,
+                          }}>
+                            Eliminar
+                          </ConfirmSubmit>
                         </form>
                       </div>
                     </td>
@@ -104,7 +136,11 @@ export default async function PromotionsPage() {
             </tbody>
           </table>
         </div>
-        {!rows.length && <p className="muted">Aún no tienes promociones.</p>}
+        {!rows.length && (
+          <p className="muted">
+            {all.length ? "No hay promociones para este filtro." : "Aún no hay promociones."}
+          </p>
+        )}
       </Panel>
     </>
   );

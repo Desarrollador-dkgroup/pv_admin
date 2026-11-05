@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PromotionServiceOption } from "@/components/panel-service-promotion-form";
+import { ACTIVE_CONTRACT_STATUSES } from "@/lib/panel-contracts";
 import { formatPromotionSchedule } from "@/lib/promotion-schedule";
 import type { CommissionTerms } from "@/lib/promotion-commission";
 
@@ -25,6 +26,7 @@ export async function loadPromotionFormData(supabase: SupabaseClient) {
           .from("business_contracts")
           .select("business_id, base_commission_pct, discount_limit_pct, target_profit_cents, commission_cap_pct")
           .in("business_id", businessIds)
+          .in("status", [...ACTIVE_CONTRACT_STATUSES])
         : Promise.resolve({ data: [], error: null }),
     ]);
   if (roomsError || contractsError) throw new Error("No se pudieron cargar habitaciones o contratos.");

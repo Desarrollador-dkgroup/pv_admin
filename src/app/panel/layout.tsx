@@ -13,6 +13,7 @@ export default async function PanelLayout({ children }: { children: ReactNode })
     return (
       <main className="suspended-screen">
         <section className="panel suspended-card">
+          <span className="confirm-icon danger" aria-hidden="true">!</span>
           <h1>Tu cuenta está suspendida</h1>
           <p>
             El equipo de Panamá Viajero suspendió el acceso de esta cuenta.

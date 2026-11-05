@@ -24,7 +24,7 @@ function refreshReviewViews() {
   revalidatePath("/panel/notificaciones");
 }
 
-// Aprueba un servicio pendiente: el propietario decide cuándo publicarlo.
+// Aprueba un servicio pendiente y lo publica en la web.
 export async function approveServiceAction(formData: FormData): Promise<void> {
   const { supabase, role } = await requireReviewAccess();
   const serviceId = String(formData.get("service_id") ?? "");
@@ -43,7 +43,7 @@ export async function approveServiceAction(formData: FormData): Promise<void> {
   // Solo cambia servicios que siguen pendientes, para no pisar una revisión ya hecha.
   const { error } = await supabase
     .from("services")
-    .update({ review_status: "approved", review_comment: null })
+    .update({ review_status: "approved", status: "published", review_comment: null })
     .eq("id", serviceId)
     .eq("review_status", "pending");
   if (error) throw new Error(error.message);

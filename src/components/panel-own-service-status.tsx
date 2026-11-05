@@ -2,6 +2,7 @@
 
 import { startTransition } from "react";
 import { deleteOwnServiceAction, withdrawReviewAction } from "@/app/panel/actions";
+import { ConfirmSubmit, confirmAction } from "@/components/ui";
 import { ownerStateOf } from "@/lib/panel-labels";
 
 const NOTICES: Record<string, string> = {
@@ -43,19 +44,13 @@ export function OwnServiceStatusPanel({
       {pending && (
         <form action={withdrawReviewAction}>
           <input type="hidden" name="service_id" value={serviceId} />
-          <button
-            className="button secondary"
-            type="submit"
-            onClick={(event) => {
-              if (!window.confirm(
-                "¿Seguro que quieres cancelar la revisión? El servicio volverá a borrador."
-              )) {
-                event.preventDefault();
-              }
-            }}
-          >
+          <ConfirmSubmit tone="secondary" confirm={{
+            title: "¿Cancelar la revisión?",
+            body: "El servicio volverá a borrador.",
+            confirmLabel: "Cancelar revisión",
+          }}>
             Cancelar revisión
-          </button>
+          </ConfirmSubmit>
         </form>
       )}
     </section>
@@ -75,14 +70,16 @@ export function DeleteOwnServiceButton({
 }) {
   return (
     <button
-      className="button secondary"
+      className="button danger"
       type="button"
-      style={{ marginLeft: "auto" }}
-      onClick={() => {
+      onClick={async () => {
         const extra = status === "published" ? " Dejará de verse en la web." : "";
-        if (!window.confirm(
-          `¿Seguro que quieres eliminar "${name}"? No se puede deshacer.${extra}`
-        )) {
+        if (!(await confirmAction({
+          title: `¿Eliminar «${name}»?`,
+          body: `No se puede deshacer.${extra} Liberará un cupo de tu plan.`,
+          confirmLabel: "Eliminar servicio",
+          danger: true,
+        }))) {
           return;
         }
         const formData = new FormData();

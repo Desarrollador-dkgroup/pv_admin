@@ -1,8 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { Badge } from "@/components/ui";
+import { Badge, PageHeader, Tabs } from "@/components/ui";
 import { getPanelIdentity } from "@/lib/panel-access";
+import { serviceTabItems } from "@/lib/panel-service-tabs";
 import { formatCents } from "@/lib/panel-format";
 import { ownerStateOf } from "@/lib/panel-labels";
 
@@ -77,13 +78,17 @@ export default async function ServicePreviewPage({
 
   return (
     <>
-      <header className="page-heading">
-        <div>
-          <h1>Vista previa de tu ficha</h1>
-          <p>Solo tú y el equipo pueden ver esta pantalla mientras trabajas.</p>
-        </div>
-        <Link className="button secondary" href={editHref}>Volver a editar</Link>
-      </header>
+      <PageHeader
+        back={role === "collaborator"
+          ? { href: "/panel/revision", label: "Volver a revisión" }
+          : { href: "/panel/servicios", label: "Volver a servicios" }}
+        title="Vista previa de la ficha"
+        description="Solo tú y el equipo pueden ver esta pantalla mientras trabajas."
+        actions={role !== "collaborator" && (
+          <Link className="button secondary" href={editHref}>Volver a editar</Link>
+        )}
+      />
+      {role !== "collaborator" && <Tabs items={serviceTabItems(service)} active="vista" />}
       <div className="merchant-preview-callout">
         <div>
           <strong>Contenido guardado · {state.label}</strong>
@@ -171,7 +176,7 @@ export default async function ServicePreviewPage({
             <Link className="button primary" href={editHref}>Editar información</Link>
             <Link className="button secondary" href={`/panel/servicios/${id}/galeria`}>Agregar imágenes</Link>
             {service.category_id === "hospedaje" &&
-              <Link className="button secondary" href={`/panel/servicios/${id}#habitaciones`}>Habitaciones y tarifas</Link>}
+              <Link className="button secondary" href={`/panel/servicios/${id}?seccion=habitaciones`}>Habitaciones y tarifas</Link>}
             {service.category_id === "restaurantes" &&
               <Link className="button secondary" href={`/panel/servicios/${id}/menu`}>Editar menú</Link>}
           </div>

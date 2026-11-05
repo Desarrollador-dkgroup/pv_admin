@@ -16,6 +16,7 @@ import {
   type SiteOption,
 } from "@/components/panel-service-site-picker";
 import { saveServiceAction } from "@/app/panel/actions";
+import { DeleteOwnServiceButton } from "@/components/panel-own-service-status";
 import { extractMapsEmbedUrl } from "@/lib/panel-maps";
 import { canManageCatalog, type PanelRole } from "@/types/panel";
 
@@ -92,6 +93,16 @@ export function ServiceEditorForm(props: Props) {
   };
 
   const isTour = categoryId === "tour-operador";
+  // Pestañas de la ficha: los bloques ocultos siguen en el formulario y se envían igual.
+  const [section, setSection] = useState("general");
+  const sections = [
+    { id: "general", label: "Información general" },
+    ...(categoryId === "hospedaje" ? [{ id: "operacion", label: "Operación del hospedaje" }] : []),
+    ...(categoryId === "restaurantes" ? [{ id: "restaurante", label: "Restaurante y reservas" }] : []),
+    ...(isTour ? [{ id: "tour", label: "Datos del tour y paradas" }] : []),
+    ...(categoryId === "actividades" ? [{ id: "actividad", label: "Horarios y atracciones" }] : []),
+  ];
+  const activeSection = sections.some((item) => item.id === section) ? section : "general";
   const activityDetailsForForm = categoryId === "actividades" || isTour ? {
     attractions,
     schedule,
@@ -100,7 +111,27 @@ export function ServiceEditorForm(props: Props) {
   } : null;
 
   return (
-    <form onSubmit={handleSubmitWithAttractions}>
+    <form
+      onSubmit={handleSubmitWithAttractions}
+      onInvalidCapture={(event) => {
+        // Si falta un dato obligatorio en otra pestaña, se abre esa pestaña para mostrarlo.
+        const owner = (event.target as HTMLElement).closest<HTMLElement>("[data-section]");
+        const target = owner?.dataset.section;
+        if (target && target !== activeSection) setSection(target);
+      }}
+    >
+      {sections.length > 1 && (
+        <nav className="segmented" aria-label="Secciones de la ficha">
+          {sections.map((item) => (
+            <button key={item.id} type="button"
+              className={item.id === activeSection ? "active" : undefined}
+              aria-pressed={item.id === activeSection}
+              onClick={() => setSection(item.id)}>
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      )}
       {activityDetailsForForm && (
         <input
           type="hidden"
@@ -109,6 +140,8 @@ export function ServiceEditorForm(props: Props) {
         />
       )}
       <input type="hidden" name="service_id" value={String(service.id ?? "")} />
+      <div className="editor-section" data-section="general"
+        hidden={activeSection !== "general"}>
       <Panel>
         <h2>Información general</h2>
         <label className="field">
@@ -258,8 +291,11 @@ export function ServiceEditorForm(props: Props) {
           </>
         )}
       </Panel>
+      </div>
 
       {categoryId === "hospedaje" && (
+        <div className="editor-section" data-section="operacion"
+          hidden={activeSection !== "operacion"}>
         <Panel>
           <h2>Operación del hospedaje</h2>
           <TextField
@@ -349,17 +385,23 @@ export function ServiceEditorForm(props: Props) {
             />
           ))}
         </Panel>
+        </div>
       )}
 
       {categoryId === "restaurantes" && (
+        <div className="editor-section" data-section="restaurante"
+          hidden={activeSection !== "restaurante"}>
         <RestaurantFields
           restaurant={restaurant}
           features={props.restaurantFeatures}
           selectedFeatureIds={props.selectedFeatureIds}
         />
+        </div>
       )}
 
       {isTour && (
+        <div className="editor-section" data-section="tour"
+          hidden={activeSection !== "tour"}>
         <>
           <Panel>
             <h2>Datos del tour</h2>
@@ -407,9 +449,12 @@ export function ServiceEditorForm(props: Props) {
             />
           </Panel>
         </>
+        </div>
       )}
 
       {categoryId === "actividades" && (
+        <div className="editor-section" data-section="actividad"
+          hidden={activeSection !== "actividad"}>
         <>
           <Panel>
             <h2>Horarios</h2>
@@ -447,6 +492,7 @@ export function ServiceEditorForm(props: Props) {
             />
           </Panel>
         </>
+        </div>
       )}
 
       <footer className="sticky-actions">
@@ -488,6 +534,13 @@ export function ServiceEditorForm(props: Props) {
           </small>
         )}
         {isNew && <small>El nuevo servicio se guardará como borrador.</small>}
+        {!isStaff && !isNew && (
+          <DeleteOwnServiceButton
+            serviceId={String(service.id)}
+            name={String(service.name ?? "este servicio")}
+            status={String(service.status ?? "")}
+          />
+        )}
       </footer>
     </form>
   );

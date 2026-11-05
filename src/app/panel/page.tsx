@@ -3,10 +3,17 @@ import { getPanelIdentity } from "@/lib/panel-access";
 
 // Muestra la portada que corresponde al rol validado: equipo, colaborador o propietario.
 export default async function PanelHome() {
-  const { supabase, role, businessIds } = await getPanelIdentity();
+  const { supabase, role, businessIds, user } = await getPanelIdentity();
 
   if (role === "propietario") {
-    return <OwnerOverview supabase={supabase} businessIds={businessIds} />;
+    const display = user.user_metadata?.display_name;
+    return (
+      <OwnerOverview
+        supabase={supabase}
+        businessIds={businessIds}
+        profileName={typeof display === "string" ? display : undefined}
+      />
+    );
   }
   if (role === "collaborator") {
     return <CollaboratorOverview supabase={supabase} />;

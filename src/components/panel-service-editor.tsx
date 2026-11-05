@@ -1,6 +1,8 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { notFound, redirect } from "next/navigation";
-import { Panel } from "@/components/ui";
+import { Badge, PageHeader, Panel } from "@/components/ui";
+import { ownerStateOf } from "@/lib/panel-labels";
 import { ServiceEditorForm } from "@/components/service-editor-form";
 import { OwnServiceStatusPanel } from "@/components/panel-own-service-status";
 import { getPanelIdentity } from "@/lib/panel-access";
@@ -12,9 +14,11 @@ import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 export async function PanelServiceEditor({
   serviceId,
   preset = {},
+  tabs,
 }: {
   serviceId?: string;
   preset?: { categoryId?: string; lodgingTypeId?: string; businessId?: string };
+  tabs?: ReactNode;
 }) {
   const { supabase, role, businessIds, user } = await getPanelIdentity();
   const ownerName = String(user.user_metadata?.display_name ?? user.email ?? "");
@@ -138,10 +142,13 @@ export async function PanelServiceEditor({
   let businesses = businessResult.data ?? [];
   if (!businesses.length) {
     return (
-      <Panel>
-        <h1>Falta asignar un negocio</h1>
-        <p>Un administrador debe asociar esta cuenta con un negocio antes de crear servicios.</p>
-      </Panel>
+      <>
+        <PageHeader title="Falta asignar un negocio" />
+        <div className="callout warning" role="alert">
+          <strong>Sin negocio asignado</strong>
+          <span>Un administrador debe asociar esta cuenta con un negocio antes de crear servicios.</span>
+        </div>
+      </>
     );
   }
 
@@ -162,27 +169,25 @@ export async function PanelServiceEditor({
     );
     if (!open.length) {
       return (
-        <Panel>
-          <h1>Sin servicios disponibles</h1>
-          <p>
-            Tu plan no tiene servicios libres para añadir. Escribe al equipo de
-            Panamá Viajero para ampliarlo.
-          </p>
-          <Link className="button secondary" href="/panel/servicios">Volver a servicios</Link>
-        </Panel>
+        <>
+          <PageHeader back={{ href: "/panel/servicios", label: "Volver a servicios" }}
+            title="Sin servicios disponibles" />
+          <Panel className="empty-state">
+            <h2>Tu plan no tiene servicios libres para añadir</h2>
+            <p className="muted">Escribe al equipo de Panamá Viajero para ampliarlo.</p>
+          </Panel>
+        </>
       );
     }
     if (!preset.categoryId) {
       return (
         <>
-          <header className="page-heading">
-            <div>
-              <h1>¿Qué deseas añadir?</h1>
-              <p>Elige el tipo de servicio. Solo aparecen los que tu plan tiene disponibles.</p>
-            </div>
-            <Link className="button quiet" href="/panel/servicios">Volver a servicios</Link>
-          </header>
-          <div className="dashboard-grid">
+          <PageHeader
+            back={{ href: "/panel/servicios", label: "Volver a servicios" }}
+            title="¿Qué deseas añadir?"
+            description="Elige el tipo de servicio. Solo aparecen los que tu plan tiene disponibles."
+          />
+          <div className="type-grid">
             {open.map((item) => {
               const query = new URLSearchParams({
                 categoria: item.category_id, negocio: item.businessId,
@@ -190,17 +195,22 @@ export async function PanelServiceEditor({
               if (item.hospedaje_type_id) query.set("tipo", item.hospedaje_type_id);
               const key = `${item.businessId}-${item.category_id}-${item.hospedaje_type_id ?? ""}`;
               return (
-                <Panel key={key}>
+                <Panel key={key} className="type-card">
                   <h2>{item.type_label ?? item.category_label}</h2>
-                  <p className="muted">{item.businessName}</p>
-                  {item.type_label && <p className="muted">{item.category_label}</p>}
-                  <p>Disponibles: <b>{item.remaining}</b> de {item.quantity}</p>
+                  <p className="muted">
+                    {item.type_label ? `${item.category_label} · ` : ""}{item.businessName}
+                  </p>
+                  <Badge tone="success">Disponibles: {item.remaining} de {item.quantity}</Badge>
                   <Link className="button primary" href={`/panel/servicios/nuevo?${query}`}>
-                    Añadir
+                    + Añadir
                   </Link>
                 </Panel>
               );
             })}
+          </div>
+          <div className="callout">
+            <strong>¿Necesitas otro tipo de servicio?</strong>
+            <span>Escribe al equipo de Panamá Viajero para ampliar tu plan.</span>
           </div>
         </>
       );
@@ -228,15 +238,32 @@ export async function PanelServiceEditor({
 
   return (
     <>
-      <header className="page-heading">
-        <div>
-          <h1>{serviceId ? "Editar servicio" : "Crear servicio"}</h1>
-          <p>La ficha se guarda en la base de datos de Panamá Viajero.</p>
-        </div>
-        <Link className="button quiet" href="/panel/servicios">
-          Volver a servicios
-        </Link>
-      </header>
+      <PageHeader
+        back={{ href: "/panel/servicios", label: "Volver a servicios" }}
+        title={serviceId
+          ? String((service as Record<string, unknown>).name ?? "Editar servicio")
+          : "Crear servicio"}
+        description={serviceId
+          ? "La ficha se guarda en la base de datos de Panamá Viajero."
+          : "Completa la ficha. Se guardará como borrador."}
+        actions={serviceId && (
+          <>
+            <Badge tone={ownerStateOf({
+              status: String((service as Record<string, unknown>).status ?? ""),
+              review_status: String((service as Record<string, unknown>).review_status ?? ""),
+            }).tone}>
+              {ownerStateOf({
+                status: String((service as Record<string, unknown>).status ?? ""),
+                review_status: String((service as Record<string, unknown>).review_status ?? ""),
+              }).label}
+            </Badge>
+            <Link className="button secondary" href={`/panel/servicios/${serviceId}/vista-previa`}>
+              Vista previa
+            </Link>
+          </>
+        )}
+      />
+      {tabs}
       {!isStaff && serviceId && (
         <OwnServiceStatusPanel
           serviceId={serviceId}

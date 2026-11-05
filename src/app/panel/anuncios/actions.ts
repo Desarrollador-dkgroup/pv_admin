@@ -17,11 +17,12 @@ const IMAGE_EXTENSIONS: Record<string, string> = {
   "image/webp": "webp",
 };
 
-// Crea un anuncio. Solo el equipo puede administrar anuncios.
+// Crea o edita un anuncio. Al editar, la imagen es opcional. Solo el equipo los administra.
 export async function createAdAction(_previous: FormState, formData: FormData): Promise<FormState> {
   const { role } = await getPanelIdentity();
   if (!canManageCatalog(role)) return { error: "Tu cuenta no puede administrar anuncios." };
 
+  const adId = formText(formData, "ad_id");
   const title = formText(formData, "title");
   const promotionId = formText(formData, "service_promotion_id") || null;
   const startsOn = formText(formData, "starts_on") || null;
@@ -29,10 +30,13 @@ export async function createAdAction(_previous: FormState, formData: FormData): 
   const image = formData.get("image");
 
   if (!title) return { error: "Escribe un título para el anuncio." };
-  if (!(image instanceof File) || image.size === 0) return { error: "Selecciona la imagen del anuncio." };
-  const extension = IMAGE_EXTENSIONS[image.type];
-  if (!extension) return { error: "La imagen debe ser JPG, PNG o WEBP." };
-  if (image.size > MAX_IMAGE_BYTES) return { error: "La imagen no puede pesar más de 5 MB." };
+  const hasImage = image instanceof File && image.size > 0;
+  if (!hasImage && !adId) return { error: "Selecciona la imagen del anuncio." };
+  const extension = hasImage ? IMAGE_EXTENSIONS[image.type] : "";
+  if (hasImage && !extension) return { error: "La imagen debe ser JPG, PNG o WEBP." };
+  if (hasImage && image.size > MAX_IMAGE_BYTES) {
+    return { error: "La imagen no puede pesar más de 5 MB." };
+  }
   if (startsOn && endsOn && endsOn < startsOn) {
     return { error: "La fecha de fin debe ser posterior a la de inicio." };
   }
@@ -47,12 +51,42 @@ export async function createAdAction(_previous: FormState, formData: FormData): 
     if (!promotion) return { error: "La promoción seleccionada no existe." };
   }
 
-  const path = `${randomUUID()}.${extension}`;
-  const upload = await admin.storage.from("ads-media").upload(path, image, {
-    contentType: image.type,
-    upsert: false,
-  });
-  if (upload.error) return { error: upload.error.message };
+  let path: string | null = null;
+  if (hasImage) {
+    path = `${randomUUID()}.${extension}`;
+    const upload = await admin.storage.from("ads-media").upload(path, image, {
+      contentType: image.type,
+      upsert: false,
+    });
+    if (upload.error) return { error: upload.error.message };
+  }
+
+  if (adId) {
+    const { data: previous } = await admin
+      .from("ads")
+      .select("image_path")
+      .eq("id", adId)
+      .maybeSingle();
+    if (!previous) return { error: "El anuncio ya no existe." };
+    const { error: updateError } = await admin
+      .from("ads")
+      .update({
+        title,
+        service_promotion_id: promotionId,
+        starts_on: startsOn,
+        ends_on: endsOn,
+        is_active: formChecked(formData, "is_active"),
+        ...(path ? { image_path: path } : {}),
+      })
+      .eq("id", adId);
+    if (updateError) return { error: updateError.message };
+    if (path && previous.image_path) {
+      await admin.storage.from("ads-media").remove([previous.image_path]);
+    }
+    revalidatePath("/panel/anuncios");
+    revalidatePath("/");
+    redirect("/panel/anuncios");
+  }
 
   const { data: last } = await admin
     .from("ads")

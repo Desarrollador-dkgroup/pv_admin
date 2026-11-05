@@ -20,9 +20,26 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
   (razón social, RUC, representante, correo, dirección) y vigencia en el formulario, en la
   vista previa y en la impresión. Marcadores nuevos: razon_social, ruc, representante,
   direccion, vigencia_inicio, vigencia_fin.
-- Pendiente del rediseño: pantallas nuevas (A07, A08, A13–A16, A18–A32, C01–C06, P01–P12) y
-  el ciclo de contratos (migración con campos legales, vigencia, estado «por verificar» y
-  versiones). No se han aplicado todavía.
+- Rediseño completo aplicado al código (2026-11-05, parte 3):
+  - Migración `202611050002_redesign_backend.sql` aplicada en producción (prueba previa con
+    ROLLBACK). «Aprobar y publicar» publica de verdad, también para el colaborador. Contratos
+    con estados submitted (por verificar) y void (anulado), versión, issued_at, verified_at y
+    rejection_reason.
+  - Contratos: asistente con datos legales, condiciones explicadas, simulador, plantilla con
+    datos insertables y validación de marcadores. Emitir pide confirmación. Ficha del
+    contrato emitido con verificación o rechazo de la firma, nueva versión y anulación. Las
+    condiciones solo limitan promociones si el contrato está emitido, por verificar o vigente.
+  - Pantallas: resúmenes por rol, revisión en bandeja, editor de servicio con pestañas,
+    servicios, negocios, promociones, anuncios (ahora se pueden editar), destinos,
+    sugerencias, notificaciones, Mi contrato (varios negocios) y Mi cuenta (nombre propio y
+    cambio de contraseña).
+  - Acciones nuevas: eliminar promoción, destino y línea del plan, editar anuncio, eliminar
+    servicio propio, y nombre del negocio al crear un propietario. Todo lo destructivo usa un
+    diálogo propio (`confirmAction` y `ConfirmSubmit` en `ui.tsx`), ya no `window.confirm`.
+  - Notificaciones y métricas leen `service_promotions`, ya no la tabla vieja `promotions`.
+    Avisos nuevos: copias por verificar, contratos por firmar o rechazados, sugerencias.
+  - `tsconfig.json` excluye `supabase/functions`: el código de Deno rompía `next build`.
+- Pendiente: revisar el panel en el navegador con cada rol (no se pudo sin sesión).
 
 - Archivo `ofwwJbkLCJ7DWhDLe2Y2On` (Panamá Viajero), página «REDISEÑO-PANEL». El diseño viejo
   sigue en la página «Panel administrativo».

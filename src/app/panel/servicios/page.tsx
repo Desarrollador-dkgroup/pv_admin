@@ -1,26 +1,55 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Badge, Panel } from "@/components/ui";
+import { Badge, PageHeader, Panel } from "@/components/ui";
 import { getPanelIdentity } from "@/lib/panel-access";
+import { formatDate } from "@/lib/panel-format";
 import { loadOwnerPlanUsage } from "@/lib/panel-service-plan";
 import { REVIEW_STATUS, SERVICE_STATUS, ownerStateOf, statusOf } from "@/lib/panel-labels";
 import { publishOwnServiceAction } from "@/app/panel/actions";
 import { related } from "@/lib/panel-relations";
 import { canManageCatalog } from "@/types/panel";
 
-// Lista servicios de Supabase dentro del alcance del equipo o del propietario.
-export default async function ServicesPage() {
+type Row = {
+  id: string;
+  name: string;
+  status: string | null;
+  review_status: string | null;
+  category_id: string;
+  updated_at: string;
+  businesses: { name: string } | { name: string }[] | null;
+};
+
+// Filtros de estado de la lista (clave de la URL → condición).
+const FILTERS: Array<{ key: string; label: string; match: (row: Row) => boolean }> = [
+  { key: "", label: "Todos", match: () => true },
+  { key: "publicados", label: "Publicados", match: (row) => row.status === "published" },
+  { key: "borradores", label: "Borradores", match: (row) => row.status === "draft" },
+  { key: "pendientes", label: "Pendientes", match: (row) => row.review_status === "pending" },
+  { key: "devueltos", label: "Devueltos", match: (row) => row.review_status === "rejected" },
+  { key: "suspendidos", label: "Suspendidos", match: (row) => row.status === "suspended" },
+];
+
+// Lista servicios dentro del alcance del equipo o del propietario, con filtros y búsqueda.
+export default async function ServicesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ estado?: string; categoria?: string; q?: string }>;
+}) {
   const { supabase, role, businessIds } = await getPanelIdentity();
   if (role === "collaborator") redirect("/panel");
   const isStaff = canManageCatalog(role);
+  const { estado = "", categoria = "", q = "" } = await searchParams;
 
   // Sin negocio asignado, el propietario no tiene servicios que consultar.
   if (!isStaff && !businessIds.length) {
     return (
-      <Panel>
-        <h1>Mis servicios</h1>
-        <p role="alert">La cuenta no tiene un negocio asignado.</p>
-      </Panel>
+      <>
+        <PageHeader title="Mis servicios" />
+        <div className="callout warning" role="alert">
+          <strong>Sin negocio asignado</strong>
+          <span>La cuenta no tiene un negocio asignado.</span>
+        </div>
+      </>
     );
   }
 
@@ -30,7 +59,7 @@ export default async function ServicesPage() {
 
   let query = supabase
     .from("services")
-    .select("id, name, status, review_status, category_id, businesses(name)")
+    .select("id, name, status, review_status, category_id, updated_at, businesses(name)")
     .order("updated_at", { ascending: false });
   if (!isStaff) query = query.in("business_id", businessIds);
 
@@ -41,60 +70,103 @@ export default async function ServicesPage() {
   if (error) throw new Error("No se pudo consultar la lista de servicios.");
 
   const categoryLabels = new Map((categories ?? []).map((item) => [item.id, item.label]));
+  const all = (data ?? []) as unknown as Row[];
+  const filter = FILTERS.find((item) => item.key === estado) ?? FILTERS[0];
+  const term = q.trim().toLowerCase();
+  const rows = all.filter((row) => filter.match(row)
+    && (!categoria || row.category_id === categoria)
+    && (!term || row.name.toLowerCase().includes(term)
+      || (related(row.businesses)?.name ?? "").toLowerCase().includes(term)));
+  const params = (next: Record<string, string>) => {
+    const search = new URLSearchParams({ estado, categoria, q, ...next });
+    for (const [key, value] of [...search.entries()]) if (!value) search.delete(key);
+    const text = search.toString();
+    return text ? `/panel/servicios?${text}` : "/panel/servicios";
+  };
 
   return (
     <>
-      <header className="page-heading">
-        <div>
-          <h1>{isStaff ? "Servicios" : "Mis servicios"}</h1>
-          <p>Los cambios se guardan en la base de datos compartida.</p>
-        </div>
-        <Link href="/panel/servicios/nuevo" className="button primary">
-          + Crear servicio
-        </Link>
-      </header>
+      <PageHeader
+        title={isStaff ? "Servicios" : "Mis servicios"}
+        description={isStaff
+          ? "Todas las fichas del catálogo. Filtra por estado o revisión y entra a editar."
+          : "Crea, edita y publica los servicios de tu negocio."}
+        actions={<Link href="/panel/servicios/nuevo" className="button primary">+ Crear servicio</Link>}
+      />
       {!isStaff && (
         <Panel>
-          <h2>Disponibles para añadir</h2>
-          {planUsage.map((item) => (
-            <div className="queue-item" key={`${item.category_id}-${item.hospedaje_type_id ?? ""}`}>
-              <b>{item.type_label ?? item.category_label}</b>
-              <small>
-                {item.remaining} disponibles de {item.quantity} · {item.used} creados
-              </small>
-            </div>
-          ))}
+          <div>
+            <h2>Disponibles en tu plan</h2>
+            <p className="muted">Para ampliar tu plan escribe al equipo de Panamá Viajero.</p>
+          </div>
+          <div className="plan-grid">
+            {planUsage.map((item) => (
+              <div className="plan-card" key={`${item.category_id}-${item.hospedaje_type_id ?? ""}`}>
+                <b>{item.type_label ?? item.category_label}</b>
+                <span className="progress">
+                  <span style={{ width: `${item.quantity ? (item.used / item.quantity) * 100 : 0}%` }} />
+                </span>
+                <small>{item.remaining} disponibles de {item.quantity} · {item.used} creados</small>
+              </div>
+            ))}
+          </div>
           {!planUsage.length && <p className="muted">Tu plan aún no tiene servicios asignados.</p>}
         </Panel>
       )}
+      <div className="toolbar">
+        <nav className="chip-row" aria-label="Filtrar por estado">
+          {FILTERS.map((item) => (
+            <Link key={item.key} href={params({ estado: item.key })}
+              className={`chip ${item.key === filter.key ? "active" : ""}`}>
+              {item.label} <span>{all.filter(item.match).length}</span>
+            </Link>
+          ))}
+        </nav>
+        <form className="search-form" role="search">
+          {estado && <input type="hidden" name="estado" value={estado} />}
+          <select name="categoria" defaultValue={categoria} aria-label="Categoría">
+            <option value="">Todas las categorías</option>
+            {(categories ?? []).map((category) => (
+              <option key={category.id} value={category.id}>{category.label}</option>
+            ))}
+          </select>
+          <input name="q" defaultValue={q} placeholder="Buscar servicio o negocio"
+            aria-label="Buscar servicio o negocio" />
+          <button type="submit" className="button secondary small">Filtrar</button>
+        </form>
+      </div>
       <Panel className="table-panel">
         <div className="table-scroll">
           <table>
             <thead>
               <tr>
                 <th>Servicio</th>
-                <th>Tipo</th>
                 {isStaff && <th>Negocio</th>}
                 {isStaff ? (
                   <>
-                    <th>Estado</th>
+                    <th>Publicación</th>
                     <th>Revisión</th>
                   </>
                 ) : (
                   <th>Estado</th>
                 )}
+                <th>Actualizado</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {(data ?? []).map((service) => {
+              {rows.map((service) => {
                 const status = statusOf(SERVICE_STATUS, service.status);
                 const review = statusOf(REVIEW_STATUS, service.review_status);
                 const ownerState = ownerStateOf(service);
                 return (
                   <tr key={service.id}>
-                    <td>{service.name}</td>
-                    <td>{categoryLabels.get(service.category_id) ?? service.category_id}</td>
+                    <td>
+                      <b>{service.name}</b>
+                      <small className="table-subtitle">
+                        {categoryLabels.get(service.category_id) ?? service.category_id}
+                      </small>
+                    </td>
                     {isStaff && <td>{related(service.businesses)?.name ?? "—"}</td>}
                     {isStaff ? (
                       <>
@@ -104,17 +176,24 @@ export default async function ServicesPage() {
                     ) : (
                       <td><Badge tone={ownerState.tone}>{ownerState.label}</Badge></td>
                     )}
+                    <td>{formatDate(service.updated_at)}</td>
                     <td>
-                      <Link className="button secondary" href={`/panel/servicios/${service.id}`}>
-                        Editar
-                      </Link>
-                      {!isStaff && service.review_status === "approved" &&
-                        service.status !== "published" && (
-                        <form action={publishOwnServiceAction} style={{ display: "inline" }}>
-                          <input type="hidden" name="service_id" value={service.id} />
-                          <button className="button primary" type="submit">Publicar</button>
-                        </form>
-                      )}
+                      <div className="actions">
+                        <Link className="button secondary small" href={`/panel/servicios/${service.id}`}>
+                          {service.review_status === "rejected" && !isStaff ? "Ver correcciones" : "Editar"}
+                        </Link>
+                        <Link className="button quiet small"
+                          href={`/panel/servicios/${service.id}/vista-previa`}>
+                          Vista previa
+                        </Link>
+                        {!isStaff && service.review_status === "approved" &&
+                          service.status !== "published" && (
+                          <form action={publishOwnServiceAction}>
+                            <input type="hidden" name="service_id" value={service.id} />
+                            <button className="button primary small" type="submit">Publicar</button>
+                          </form>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -122,7 +201,7 @@ export default async function ServicesPage() {
             </tbody>
           </table>
         </div>
-        {!data?.length && <p className="muted">No hay servicios disponibles para mostrar.</p>}
+        {!rows.length && <p className="muted">No hay servicios para este filtro.</p>}
       </Panel>
     </>
   );

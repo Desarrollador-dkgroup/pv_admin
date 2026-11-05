@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Panel } from "@/components/ui";
+import { Button, Panel, confirmAction } from "@/components/ui";
 import {
   PanelGalleryManager,
   uploadPhotosToGroup,
@@ -383,10 +383,12 @@ export function LodgingCatalogManager({
   }
 
   async function deleteRoom(room: Room) {
-    if (!window.confirm(
-      `¿Eliminar «${room.name}»? También se eliminan sus tarifas y fotos. ` +
-        "No se puede deshacer.",
-    )) return;
+    if (!(await confirmAction({
+      title: `¿Eliminar «${room.name}»?`,
+      body: "También se eliminan sus tarifas y fotos. No se puede deshacer.",
+      confirmLabel: "Eliminar habitación",
+      danger: true,
+    }))) return;
     setBusy(true);
     setError("");
     setNotice("");

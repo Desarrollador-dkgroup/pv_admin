@@ -8,7 +8,7 @@ import {
   resetTemporaryPasswordAction,
   updateTeamRoleAction,
 } from "@/app/panel/permisos/actions";
-import { Button } from "@/components/ui";
+import { Button, ConfirmSubmit } from "@/components/ui";
 
 type TeamRole = "admin" | "collaborator";
 type Message = { tone: "ok" | "error"; text: string } | null;
@@ -187,17 +187,15 @@ export function DeleteTeamAccountForm({ userId, name }: { userId: string; name: 
   const question = `¿Eliminar la cuenta de ${name}? Esta acción no se puede deshacer.`;
 
   return (
-    <form
-      action={action}
-      className="team-delete"
-      onSubmit={(event) => {
-        if (!window.confirm(question)) event.preventDefault();
-      }}
-    >
+    <form action={action} className="team-delete">
       <input type="hidden" name="user_id" value={userId} />
-      <button type="submit" className="button danger-button" disabled={pending}>
+      <ConfirmSubmit tone="danger" disabled={pending} confirm={{
+        title: question,
+        confirmLabel: "Eliminar cuenta",
+        danger: true,
+      }}>
         {pending ? "Eliminando…" : "Eliminar cuenta"}
-      </button>
+      </ConfirmSubmit>
       {state.error && <small role="alert" className="form-error">{state.error}</small>}
     </form>
   );

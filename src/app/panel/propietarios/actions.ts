@@ -66,6 +66,8 @@ type OwnerServiceInput = {
 type OwnerAccountInput = {
   name: string;
   email: string;
+  // Opcional: si llega vacío se usa «Negocio de {nombre}».
+  businessName?: string;
   password: string;
   services: OwnerServiceInput[];
 };
@@ -189,7 +191,7 @@ export async function createOwnerAccountAction(
     .from("businesses")
     .insert({
       slug: `negocio-${crypto.randomUUID().slice(0, 8)}`,
-      name: `Negocio de ${name}`,
+      name: input.businessName?.trim().slice(0, 80) || `Negocio de ${name}`,
       is_active: true,
     })
     .select("id")
