@@ -6,6 +6,28 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 > **Regla estricta de sincronización.** Antes de empezar: pull en ambos repos y leer esta
 > bitácora. Al terminar: actualizarla, commit y push. Claude debe recordarlo siempre.
 
+## Pendientes para presentar (2026-11-05)
+
+1. Promociones en restaurantes y actividades: la reserva por fecha (`create_request_reservation`)
+   aún no aplica la promo; hay que añadirlo en la base y en la pantalla de reserva.
+2. Vista previa del panel (`src/lib/public-service/`): sincronizar con la web (promociones
+   próximas y descuento por noche).
+3. Promoción de prueba «10% de descuento en habitación estándar» con `discount_pct` 9.99:
+   confirmar si debe ser 10.
+4. Migración `202611050003_owner_update_business_name_only.sql`: en el repo, no aplicada en
+   producción (pendiente de confirmación).
+5. Formulario de solicitud de cliente en la app (pendiente de diseño).
+6. Plantilla de contrato: revisión por abogado panameño antes de usarla con clientes.
+7. Revisar en navegador las pantallas nuevas con cada rol (no se pudo por falta de sesión).
+
+## Documento de anuncio que no se veía (2026-11-05)
+
+- El documento se subía y se guardaba (bucket `contracts`, ruta en `ad_requests`), pero el
+  enlace «Ver documento actual» llevaba una URL firmada creada al cargar la página y no se
+  abría al hacer clic.
+- Corrección: el enlace apunta a `/panel/anuncios/[id]/documento`, que firma el archivo en
+  el momento del clic (solo equipo). La página se refresca al subir el documento.
+
 ## Promociones en reservas de hospedaje (2026-11-05)
 
 - Migración `202611050004_stay_promotion_pricing.sql` aplicada en producción (prueba previa

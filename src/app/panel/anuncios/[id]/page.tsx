@@ -23,9 +23,6 @@ export default async function EditAdPage({ params }: { params: Promise<{ id: str
     .select("id, document_path")
     .eq("ad_id", id)
     .maybeSingle();
-  const documentUrl = request?.document_path
-    ? (await admin.storage.from("contracts").createSignedUrl(request.document_path, 600)).data?.signedUrl ?? null
-    : null;
 
   return (
     <>
@@ -53,8 +50,9 @@ export default async function EditAdPage({ params }: { params: Promise<{ id: str
             El documento que firmó el propietario, donde confirma el pago por la publicación. Se guarda también en
             su sección de contrato.
           </p>
-          {documentUrl && (
-            <a className="text-link" href={documentUrl} target="_blank" rel="noreferrer">Ver documento actual</a>
+          {request.document_path && (
+            <a className="text-link" href={`/panel/anuncios/${id}/documento`} target="_blank"
+              rel="noreferrer">Ver documento actual</a>
           )}
           <AdDocumentForm requestId={request.id} hasDocument={Boolean(request.document_path)} />
         </Panel>

@@ -15,7 +15,7 @@ export function AdDocumentForm({ requestId, hasDocument }: { requestId: string; 
         <small className="muted">Un solo PDF de hasta 10 MB.</small>
       </label>
       {state.error && <p className="form-error" role="alert">{state.error}</p>}
-      {state.saved && <p className="form-success" role="status">Documento guardado. Ya puedes crear el anuncio.</p>}
+      {state.saved && <p className="form-success" role="status">Documento guardado.</p>}
       <button type="submit" className="button secondary small" disabled={pending}>
         {pending ? "Subiendo…" : "Subir documento"}
       </button>

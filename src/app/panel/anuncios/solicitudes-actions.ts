@@ -136,7 +136,7 @@ export async function uploadAdDocumentAction(_previous: FormState, formData: For
   const admin = getSupabaseAdminClient();
   const { data: request } = await admin
     .from("ad_requests")
-    .select("id, status")
+    .select("id, status, ad_id")
     .eq("id", requestId)
     .maybeSingle();
   if (!request || request.status === "rechazado" || request.status === "solicitado") {
@@ -160,6 +160,7 @@ export async function uploadAdDocumentAction(_previous: FormState, formData: For
     .eq("id", requestId);
   if (error) return { error: "No se pudo guardar el documento." };
   refreshAdViews();
+  if (request.ad_id) revalidatePath(`/panel/anuncios/${request.ad_id}`);
   return { error: "", saved: true };
 }
 
