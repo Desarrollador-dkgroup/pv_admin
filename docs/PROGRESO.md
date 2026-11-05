@@ -6,6 +6,27 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 > **Regla estricta de sincronización.** Antes de empezar: pull en ambos repos y leer esta
 > bitácora. Al terminar: actualizarla, commit y push. Claude debe recordarlo siempre.
 
+## Rediseño del panel en Figma (2026-11-05)
+
+- Archivo `ofwwJbkLCJ7DWhDLe2Y2On` (Panamá Viajero), página «REDISEÑO-PANEL». El diseño viejo
+  sigue en la página «Panel administrativo».
+- Hay 3 vistas, no 4: owner y admin ven lo mismo (solo cambia Permisos). Pantallas:
+  owner/admin A01–A32, colaborador C01–C06 y propietario P01–P12. Hay además un sistema de
+  diseño (variables «PV Rediseño», estilos `PV/*`, componentes `pv/*`) y un marco
+  «Índice y notas».
+- Generador de contratos (A20–A25, P07, P08, P12):
+  - Asistente de 4 pasos con vista previa en vivo.
+  - Datos legales nuevos y vigencia.
+  - Simulador de comisión.
+  - Cláusulas con datos insertables.
+  - Emitir con confirmación.
+  - Verificación de la firma, con opción de rechazar o crear una versión nueva.
+  - Hoja de impresión limpia.
+- Pendiente: el usuario aprueba el diseño y después se programa. El generador necesita una
+  migración: campos legales, fechas, estado «por verificar» y versiones. También necesita CSS
+  de impresión y aplicar los límites solo con el contrato emitido. Los demás problemas
+  detectados están en el marco «Índice y notas».
+
 ## Estado actual (2026-10-28)
 
 - **Agregar servicios al plan después de crear cuenta** (2026-10-28):
