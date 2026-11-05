@@ -3314,10 +3314,36 @@ a.callout:hover {
 
 /* Maqueta del anuncio: escritorio y celular. */
 .ad-preview-set {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 20px;
-  grid-template-columns: minmax(0, 1fr) 240px;
-  align-items: start;
+  align-items: stretch;
+}
+.ad-frame-desktop {
+  width: 100%;
+}
+.ad-frame-mobile {
+  width: 280px;
+  max-width: 100%;
+  align-self: center;
+}
+.ad-frame-desktop .ad-card-body {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.ad-frame-desktop .ad-card-body small {
+  flex: 1;
+}
+.ad-frame-desktop .ad-card-button {
+  align-self: center;
+  width: 180px;
+  margin-top: 0;
+}
+.ad-frame-desktop .ad-card-close {
+  top: 12px;
+  right: 12px;
 }
 .ad-frame {
   margin: 0;
@@ -3345,7 +3371,7 @@ a.callout:hover {
   box-shadow: 0 10px 30px rgb(0 0 0 / 30%);
 }
 .ad-frame-desktop .ad-card-image {
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16 / 7;
 }
 .ad-frame-mobile .ad-card-image {
   aspect-ratio: 4 / 5;
@@ -3398,8 +3424,4 @@ a.callout:hover {
   font-weight: 600;
   font-size: 14px;
 }
-@media (max-width: 1000px) {
-  .ad-preview-set {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
+

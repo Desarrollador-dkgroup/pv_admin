@@ -109,7 +109,11 @@ export default async function AdsPage() {
               )}
               {isStaff && request.status === "en_gestion" && (
                 <div className="stack compact">
-                  <small className="muted">Falta el documento: súbelo en Contratos.</small>
+                  <small className="muted">
+                    Para aprobarla, sube el documento del anuncio en{" "}
+                    <Link className="text-link" href="/panel/contratos">Contratos ›</Link>.
+                    Después podrás crear el anuncio desde aquí.
+                  </small>
                   <AdRequestReject requestId={request.id} />
                 </div>
               )}
