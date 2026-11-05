@@ -161,10 +161,12 @@ export default async function MyContractPage() {
                     </a>
                   )}
                 </div>
-                <div className="contract-paper">
-                  <h3>{contract.title}</h3>
-                  <pre className="contract-preview">{text}</pre>
-                </div>
+                {contract.status !== "signed" && (
+                  <div className="contract-paper">
+                    <h3>{contract.title}</h3>
+                    <pre className="contract-preview">{text}</pre>
+                  </div>
+                )}
               </Panel>
               <div className="stack">
                 {contract.status === "issued" && (
