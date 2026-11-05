@@ -124,17 +124,30 @@ export async function getPanelNotifications(
       });
     }
   }
-  // Solicitudes de anuncio nuevas, para el equipo.
+  // Solicitudes de anuncio nuevas: una por solicitud, con quién la pidió para contactarlo.
   if (isStaff) {
-    const { count: newAdRequests } = await supabase
+    const { data: pendingAds } = await supabase
       .from("ad_requests")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "solicitado");
-    if (newAdRequests) {
+      .select("id, title, requested_by, businesses(name)")
+      .eq("status", "solicitado")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    const requesterIds = [...new Set((pendingAds ?? []).map((request) => request.requested_by))];
+    const { data: requesters } = requesterIds.length
+      ? await supabase.from("profiles").select("id, display_name, email").in("id", requesterIds)
+      : { data: [] };
+    const who = new Map((requesters ?? []).map((person) => [person.id, person]));
+    for (const request of pendingAds ?? []) {
+      const business = Array.isArray(request.businesses) ? request.businesses[0] : request.businesses;
+      const person = who.get(request.requested_by);
       notifications.push({
-        id: "ad-requests-new",
-        title: newAdRequests === 1 ? "1 solicitud de anuncio nueva" : `${newAdRequests} solicitudes de anuncio nuevas`,
-        detail: "Los propietarios pidieron anuncios para sus promociones.",
+        id: `ad-request-${request.id}`,
+        title: `Solicitud de anuncio: ${request.title}`,
+        detail: [
+          business?.name ?? "Negocio",
+          person?.display_name ? `Contacto: ${person.display_name}` : null,
+          person?.email ?? null,
+        ].filter(Boolean).join(" · "),
         href: "/panel/anuncios",
         tone: "alert",
       });
@@ -147,7 +160,7 @@ export async function getPanelNotifications(
       .from("ad_requests")
       .select("id, title, status, rejection_reason")
       .in("business_id", businessIds)
-      .in("status", ["publicado", "rechazado"])
+      .in("status", ["en_gestion", "documento_listo", "publicado", "rechazado"])
       .order("updated_at", { ascending: false })
       .limit(limit);
     for (const request of adResults ?? []) {
@@ -155,10 +168,12 @@ export async function getPanelNotifications(
         id: `ad-${request.id}-${request.status}`,
         title: request.status === "publicado"
           ? "Tu anuncio se publicó"
-          : "Tu solicitud de anuncio fue rechazada",
-        detail: request.status === "publicado"
-          ? request.title
-          : request.rejection_reason || request.title,
+          : request.status === "rechazado"
+            ? "Tu solicitud de anuncio fue rechazada"
+            : "Tu solicitud de anuncio fue aprobada",
+        detail: request.status === "rechazado"
+          ? request.rejection_reason || request.title
+          : request.title,
         href: "/panel/anuncios",
         tone: "info",
       });

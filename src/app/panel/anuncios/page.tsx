@@ -9,12 +9,13 @@ import { canManageCatalog } from "@/types/panel";
 import { deleteAdAction, moveAdAction, setAdActiveAction } from "./actions";
 import { takeAdRequestAction } from "./solicitudes-actions";
 
+// Estado que ve cada rol: lo aprobado por el equipo se muestra como «Aprobada».
 const REQUEST_STATUS: Record<string, { label: string; tone: "neutral" | "info" | "warning" | "success" | "danger" }> = {
-  solicitado: { label: "Solicitado", tone: "warning" },
-  en_gestion: { label: "En gestión", tone: "info" },
-  documento_listo: { label: "Documento listo", tone: "success" },
-  publicado: { label: "Publicado", tone: "success" },
-  rechazado: { label: "Rechazado", tone: "danger" },
+  solicitado: { label: "Solicitada", tone: "warning" },
+  en_gestion: { label: "Aprobada", tone: "success" },
+  documento_listo: { label: "Aprobada", tone: "success" },
+  publicado: { label: "Publicada", tone: "success" },
+  rechazado: { label: "Rechazada", tone: "danger" },
 };
 
 type RequestRow = {
@@ -27,6 +28,7 @@ type RequestRow = {
   notes: string | null;
   created_at: string;
   business_id: string;
+  requested_by: string;
   businesses: { name: string } | { name: string }[] | null;
   service_promotions: { title: string } | { title: string }[] | null;
 };
@@ -52,7 +54,7 @@ export default async function AdsPage() {
   const admin = getSupabaseAdminClient();
   const requestsQuery = admin
     .from("ad_requests")
-    .select("id, title, status, starts_on, ends_on, rejection_reason, notes, created_at, business_id, businesses(name), service_promotions(title)")
+    .select("id, title, status, starts_on, ends_on, rejection_reason, notes, created_at, business_id, requested_by, businesses(name), service_promotions(title)")
     .order("created_at", { ascending: false });
   const scopedRequests = isOwner ? requestsQuery.in("business_id", businessIds) : requestsQuery;
 
@@ -66,6 +68,12 @@ export default async function AdsPage() {
   const [{ data: requests }, { data: ads, error }] = await Promise.all([scopedRequests, scopedAds]);
   if (error) throw new Error("No se pudieron cargar los anuncios.");
   const requestRows = (requests ?? []) as unknown as RequestRow[];
+  // Datos de contacto de quien pidió cada anuncio (solo lo ve el equipo).
+  const requesterIds = [...new Set(requestRows.map((request) => request.requested_by))];
+  const { data: requesters } = isStaff && requesterIds.length
+    ? await admin.from("profiles").select("id, display_name, email").in("id", requesterIds)
+    : { data: [] };
+  const who = new Map((requesters ?? []).map((person) => [person.id, person]));
   const adRows = ads ?? [];
 
   return (
@@ -94,6 +102,12 @@ export default async function AdsPage() {
                   {isStaff ? `${business?.name ?? "Negocio"} · ` : ""}
                   {promotion?.title ?? "Promoción"} · {dates(request.starts_on, request.ends_on)}
                 </small>
+                {isStaff && (
+                  <small>
+                    Contacto: {who.get(request.requested_by)?.display_name ?? "Sin nombre"} ·{" "}
+                    {who.get(request.requested_by)?.email ?? "Sin correo"}
+                  </small>
+                )}
                 {request.notes && <small>Notas: {request.notes}</small>}
                 {request.rejection_reason && <small>Motivo: {request.rejection_reason}</small>}
               </div>
@@ -102,7 +116,7 @@ export default async function AdsPage() {
                 <div className="stack compact">
                   <form action={takeAdRequestAction}>
                     <input type="hidden" name="request_id" value={request.id} />
-                    <button type="submit" className="button primary small">Tomar solicitud</button>
+                    <button type="submit" className="button primary small">Aprobar solicitud</button>
                   </form>
                   <AdRequestReject requestId={request.id} />
                 </div>

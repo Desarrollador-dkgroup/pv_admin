@@ -124,7 +124,7 @@ export default async function ContractsPage({
                 <div className="list-row-text">
                   <b>{request.title}</b>
                   <small>{business?.name ?? "Negocio"} · {request.status === "documento_listo"
-                    ? "Documento listo" : "En gestión"}</small>
+                    ? "Documento listo" : "Aprobada, falta el documento"}</small>
                 </div>
                 <AdDocumentForm requestId={request.id} hasDocument={Boolean(request.document_path)} />
               </div>
