@@ -139,8 +139,8 @@ export async function uploadAdDocumentAction(_previous: FormState, formData: For
     .select("id, status")
     .eq("id", requestId)
     .maybeSingle();
-  if (!request || !["en_gestion", "documento_listo"].includes(request.status)) {
-    return { error: "Esta solicitud no está en gestión." };
+  if (!request || request.status === "rechazado" || request.status === "solicitado") {
+    return { error: "Aprueba la solicitud antes de adjuntar su documento." };
   }
 
   const path = `anuncios/${requestId}.pdf`;
@@ -152,7 +152,11 @@ export async function uploadAdDocumentAction(_previous: FormState, formData: For
 
   const { error } = await admin
     .from("ad_requests")
-    .update({ document_path: path, status: "documento_listo", updated_at: new Date().toISOString() })
+    .update({
+      document_path: path,
+      ...(request.status === "en_gestion" ? { status: "documento_listo" } : {}),
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", requestId);
   if (error) return { error: "No se pudo guardar el documento." };
   refreshAdViews();

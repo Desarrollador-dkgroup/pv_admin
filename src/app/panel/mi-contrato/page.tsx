@@ -54,6 +54,16 @@ export default async function MyContractPage() {
   const contracts = (rows ?? []) as Contract[];
   const nameOf = new Map((businesses ?? []).map((business) => [business.id, business.name]));
 
+  // Documentos de anuncios firmados por el propietario (confirman el pago por la publicación).
+  const { data: adDocs } = businessIds.length
+    ? await admin.from("ad_requests").select("id, title, document_path, created_at, status")
+      .in("business_id", businessIds).not("document_path", "is", null).order("created_at", { ascending: false })
+    : { data: [] };
+  const adDocLinks = await Promise.all((adDocs ?? []).map(async (doc) => ({
+    ...doc,
+    url: (await admin.storage.from("contracts").createSignedUrl(doc.document_path ?? "", 600)).data?.signedUrl ?? null,
+  })));
+
   const signedUrls = new Map<string, string>();
   for (const contract of contracts) {
     if (!contract.signed_pdf_path) continue;
@@ -194,6 +204,25 @@ export default async function MyContractPage() {
           </section>
         );
       })}
+      {adDocLinks.length > 0 && (
+        <Panel>
+          <h2>Documentos de anuncios</h2>
+          <p className="muted">Documentos firmados para la publicación de tus anuncios.</p>
+          {adDocLinks.map((doc) => (
+            <div className="list-row" key={doc.id}>
+              <div className="list-row-text">
+                <b>{doc.title}</b>
+                <small>Subido el {formatDate(doc.created_at)}</small>
+              </div>
+              {doc.url && (
+                <a className="button secondary small" href={doc.url} target="_blank" rel="noreferrer">
+                  Ver documento
+                </a>
+              )}
+            </div>
+          ))}
+        </Panel>
+      )}
     </>
   );
 }

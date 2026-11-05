@@ -113,7 +113,7 @@ export function AdForm({ promotions, ad, request }: {
         </span>
         <Link className="button quiet" href="/panel/anuncios">Cancelar</Link>
         <Button type="submit" tone="primary" disabled={pending}>
-          {pending ? "Guardando..." : "Guardar anuncio"}
+          {pending ? "Publicando..." : ad ? "Guardar cambios" : "Publicar anuncio"}
         </Button>
       </footer>
     </form>
