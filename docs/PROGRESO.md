@@ -8,6 +8,17 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 
 ## Rediseño del panel en Figma (2026-11-05)
 
+- Aplicado al código (2026-11-05), parte 1:
+  - Menú lateral oscuro agrupado por secciones (General, Catálogo, Gestión; en propietario,
+    Mi negocio y Cuenta). «Servicios» entra al menú del equipo.
+  - Barra superior con la ruta real (sección › página).
+  - Contratos: vista previa al lado del formulario; fecha y formato de ganancia iguales en
+    vista previa e impresión; hoja de impresión sin menú ni barra.
+  - Promociones: el equipo ve «Promociones», no «Mis promociones».
+- Pendiente del rediseño: pantallas nuevas (A07, A08, A13–A16, A18–A32, C01–C06, P01–P12) y
+  el ciclo de contratos (migración con campos legales, vigencia, estado «por verificar» y
+  versiones). No se han aplicado todavía.
+
 - Archivo `ofwwJbkLCJ7DWhDLe2Y2On` (Panamá Viajero), página «REDISEÑO-PANEL». El diseño viejo
   sigue en la página «Panel administrativo».
 - Hay 3 vistas, no 4: owner y admin ven lo mismo (solo cambia Permisos). Pantallas:

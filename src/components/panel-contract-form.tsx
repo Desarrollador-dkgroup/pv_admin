@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { saveContractAction } from "@/app/panel/contratos/actions";
 import { Button, Panel } from "@/components/ui";
+import { formatCents } from "@/lib/panel-format";
 import {
   CONTRACT_PLACEHOLDERS,
   renderContract,
@@ -20,6 +21,8 @@ export type ContractFormValues = {
   discountLimitPct: number;
   targetProfitUsd: number;
   commissionCapPct: number;
+  // Fecha de emisión ya formateada en el servidor; la misma usa la impresión.
+  dateLabel: string;
 };
 
 // Formulario del contrato con vista previa del texto ya llenado.
@@ -32,15 +35,16 @@ export function ContractForm({ initial }: { initial: ContractFormValues }) {
     negocio: values.businessName,
     comision_base: String(values.baseCommissionPct),
     limite_descuento: String(values.discountLimitPct),
-    ganancia_objetivo: `$${values.targetProfitUsd.toFixed(2)}`,
+    ganancia_objetivo: formatCents(Math.round(values.targetProfitUsd * 100)),
     tope_comision: String(values.commissionCapPct),
-    fecha: new Date().toLocaleDateString("es-PA"),
+    fecha: initial.dateLabel,
   };
 
   return (
     <form action={action}>
       <input type="hidden" name="business_id" value={initial.businessId} />
-
+      <div className="contract-layout">
+      <div className="contract-main">
       <Panel>
         <h2>Condiciones</h2>
         <label className="field">
@@ -98,10 +102,15 @@ export function ContractForm({ initial }: { initial: ContractFormValues }) {
         </label>
       </Panel>
 
-      <Panel>
-        <h2>Vista previa</h2>
-        <pre className="contract-preview">{renderContract(body, previewValues)}</pre>
-      </Panel>
+      </div>
+      <aside className="contract-side">
+        <Panel>
+          <h2>Vista previa</h2>
+          <p className="contract-hint">Así se verá el documento impreso.</p>
+          <pre className="contract-preview">{renderContract(body, previewValues)}</pre>
+        </Panel>
+      </aside>
+      </div>
 
       {state.error && <p className="form-error" role="alert">{state.error}</p>}
 

@@ -4,6 +4,7 @@ import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { formatCents } from "@/lib/panel-format";
 import { loadPromotionFormData, scheduleLabel } from "@/lib/panel-service-promotions";
 import { previewPromotion } from "@/lib/promotion-commission";
+import { canManageCatalog } from "@/types/panel";
 import { setServicePromotionActiveAction } from "./actions";
 
 // Promociones de servicio del usuario. Cada una muestra su precio y su comisión.
@@ -21,12 +22,17 @@ export default async function PromotionsPage() {
   if (error) throw new Error("No se pudieron cargar las promociones.");
 
   const rows = data ?? [];
+  const isStaff = canManageCatalog(role);
   return (
     <>
       <header className="page-heading">
         <div>
-          <h1>Mis promociones</h1>
-          <p>Promociones de tus servicios. Se muestran en la categoría de promociones y en la ubicación del servicio.</p>
+          <h1>{isStaff ? "Promociones" : "Mis promociones"}</h1>
+          <p>
+            {isStaff
+              ? "Promociones de todos los negocios. Se muestran en la categoría de promociones y en la ubicación del servicio."
+              : "Promociones de tus servicios. Se muestran en la categoría de promociones y en la ubicación del servicio."}
+          </p>
         </div>
         <Link className="button primary" href="/panel/promociones/nuevo">+ Nueva promoción</Link>
       </header>

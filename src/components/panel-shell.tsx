@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 import { Menu, X } from "lucide-react";
 import { PanelNotifications } from "@/components/panel-notifications";
 import { SignOut } from "@/components/sign-out";
@@ -30,12 +30,17 @@ export function PanelShell({ role, notifications, profileName, children }: Props
     return href === "/panel" ? pathname === "/panel" : pathname.startsWith(href);
   }
 
+  // Sección actual para las migas; la página más específica gana.
+  const current = links
+    .filter((link) => isActive(link.href))
+    .sort((a, b) => b.href.length - a.href.length)[0];
+
   return (
     <div className="app-shell">
       <aside className={`sidebar ${menuOpen ? "open" : ""}`} aria-label="Menú principal">
         <Link href="/panel" aria-label="Panamá Viajero, panel" onClick={() => setMenuOpen(false)}>
           <Image
-            src="/Logo-rectangular.svg"
+            src="/Logo-rectangular-blanco.svg"
             width={1062}
             height={339}
             alt="Panamá Viajero"
@@ -43,21 +48,21 @@ export function PanelShell({ role, notifications, profileName, children }: Props
           />
         </Link>
         <span className="role-chip">{ROLE_LABELS[role]}</span>
-        {profileName && (
-          <p style={{ margin: "8px 0 0 4px", fontWeight: 600 }}>{profileName}</p>
-        )}
+        {profileName && <p className="sidebar-profile">{profileName}</p>}
         <nav className="navigation">
-          {links.map(({ href, label, icon: Icon }) => (
-            <Link
-              href={href}
-              key={href}
-              className={isActive(href) ? "active" : undefined}
-              aria-current={isActive(href) ? "page" : undefined}
-              onClick={() => setMenuOpen(false)}
-            >
-              <Icon size={18} aria-hidden="true" />
-              {label}
-            </Link>
+          {links.map(({ href, label, icon: Icon, group }, index) => (
+            <Fragment key={href}>
+              {group !== links[index - 1]?.group && <p className="nav-group">{group}</p>}
+              <Link
+                href={href}
+                className={isActive(href) ? "active" : undefined}
+                aria-current={isActive(href) ? "page" : undefined}
+                onClick={() => setMenuOpen(false)}
+              >
+                <Icon size={18} aria-hidden="true" />
+                {label}
+              </Link>
+            </Fragment>
           ))}
         </nav>
         <div className="sidebar-footer">
@@ -83,7 +88,15 @@ export function PanelShell({ role, notifications, profileName, children }: Props
           >
             {menuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
           </button>
-          <p className="breadcrumb">Panel del propietario · {ROLE_LABELS[role]}</p>
+          <p className="breadcrumb">
+            {current ? (
+              <>
+                {current.group} <span aria-hidden="true">›</span> <b>{current.label}</b>
+              </>
+            ) : (
+              ROLE_LABELS[role]
+            )}
+          </p>
           <PanelNotifications items={notifications} />
         </header>
         <main id="contenido" className="workspace-content">

@@ -31,6 +31,11 @@ export default async function EditContractPage({
     discountLimitPct: Number(contract?.discount_limit_pct ?? 30),
     targetProfitUsd: Number(contract?.target_profit_cents ?? 700) / 100,
     commissionCapPct: Number(contract?.commission_cap_pct ?? 40),
+    // Misma fecha que usa la impresión: la de la última actualización del contrato.
+    // Un contrato nuevo no tiene fecha hasta guardarse.
+    dateLabel: contract?.updated_at
+      ? new Date(contract.updated_at).toLocaleDateString("es-PA")
+      : "se asigna al guardar",
   };
 
   return (

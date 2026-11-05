@@ -2306,3 +2306,124 @@ fieldset.choice-group .checkbox-option {
   object-fit: cover;
   border-radius: 8px;
 }
+
+/* Rediseño del panel: menú lateral oscuro por secciones y migas reales. */
+.sidebar {
+  background: #161b36;
+  border-right: 0;
+  color: #ffffff;
+}
+.sidebar-profile {
+  margin: 10px 0 0 4px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #ffffff;
+}
+.sidebar .role-chip {
+  background: rgba(255, 255, 255, 0.1);
+  color: #dfe3f5;
+}
+.nav-group {
+  margin: 20px 0 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a90ad;
+}
+.navigation a {
+  color: #b4b9d3;
+}
+.navigation a:hover {
+  background: #232a4d;
+  color: #ffffff;
+}
+.navigation a.active {
+  background: var(--brand);
+  color: #ffffff;
+}
+.sidebar .button.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+.sidebar-footer {
+  border-top-color: rgba(255, 255, 255, 0.12);
+}
+.topbar .breadcrumb b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.topbar .breadcrumb span {
+  margin: 0 4px;
+}
+
+/* Contratos: formulario con vista previa al lado (sticky) en pantallas anchas. */
+.contract-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 440px);
+  gap: 24px;
+  align-items: start;
+}
+.contract-side {
+  position: sticky;
+  top: 0;
+}
+.contract-side .contract-preview {
+  max-height: 70vh;
+  overflow: auto;
+  background: var(--surface);
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  white-space: pre-wrap;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.contract-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+@media (max-width: 1100px) {
+  .contract-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .contract-side {
+    position: static;
+  }
+}
+
+/* Impresión: solo el documento, sin menú, barra ni botones. */
+@media print {
+  .sidebar,
+  .topbar,
+  .no-print,
+  .sticky-actions,
+  .page-heading {
+    display: none !important;
+  }
+  .app-shell,
+  .workspace,
+  .workspace-content {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  .contract-print {
+    padding: 0;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  .contract-print h1 {
+    font-size: 18px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .contract-print pre {
+    white-space: pre-wrap;
+    font-family: inherit;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+}
