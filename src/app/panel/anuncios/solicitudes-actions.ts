@@ -2,6 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { formText } from "@/lib/panel-form";
 import { canManageProviders } from "@/lib/panel-permissions";
@@ -89,7 +90,7 @@ export async function requestAdAction(_previous: FormState, formData: FormData):
   return { error: "", saved: true };
 }
 
-// El equipo toma la solicitud para gestionarla con el departamento correspondiente.
+// El equipo aprueba la solicitud y se abre el editor para publicar el anuncio.
 export async function takeAdRequestAction(formData: FormData) {
   const { role } = await getPanelIdentity();
   if (!canManageProviders(role)) throw new Error("Tu cuenta no gestiona anuncios.");
@@ -101,6 +102,7 @@ export async function takeAdRequestAction(formData: FormData) {
     .eq("id", requestId)
     .eq("status", "solicitado");
   refreshAdViews();
+  redirect(`/panel/anuncios/nuevo?solicitud=${requestId}`);
 }
 
 // El equipo rechaza una solicitud con un motivo que verá el propietario.

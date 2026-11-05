@@ -5,7 +5,7 @@ import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { loadAdPromotionOptions } from "@/lib/panel-ad-options";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
-// Crea un anuncio. Si viene de una solicitud del propietario (?solicitud=ID), se llena solo.
+// Crea y publica un anuncio. Si viene de una solicitud aprobada (?solicitud=ID), se llena solo.
 export default async function NewAdPage({
   searchParams,
 }: {
@@ -25,7 +25,7 @@ export default async function NewAdPage({
       .select("id, title, image_path, service_promotion_id, starts_on, ends_on, status")
       .eq("id", solicitud)
       .maybeSingle();
-    if (!data || data.status !== "documento_listo") notFound();
+    if (!data || !["en_gestion", "documento_listo"].includes(data.status)) notFound();
     request = {
       id: data.id,
       title: data.title,

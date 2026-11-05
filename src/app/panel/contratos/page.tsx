@@ -114,8 +114,8 @@ export default async function ContractsPage({
         <Panel>
           <h2>Documentos de anuncios</h2>
           <p className="muted">
-            Sube aquí el documento del anuncio que gestionó el departamento. Después el administrador
-            crea el anuncio desde Anuncios.
+            Opcional: guarda aquí el documento del anuncio que gestionó el departamento, como archivo.
+            La publicación se hace desde Anuncios.
           </p>
           {(adRequests ?? []).map((request) => {
             const business = Array.isArray(request.businesses) ? request.businesses[0] : request.businesses;

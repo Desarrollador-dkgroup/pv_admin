@@ -137,16 +137,14 @@ export default async function AdsPage() {
               {isStaff && request.status === "en_gestion" && (
                 <div className="stack compact">
                   <small className="muted">
-                    Para aprobarla, sube el documento del anuncio en{" "}
-                    <Link className="text-link" href="/panel/contratos">Contratos ›</Link>.
-                    Después podrás crear el anuncio desde aquí.
+                    Al aprobarla se abre el editor para publicar el anuncio.
                   </small>
                   <AdRequestReject requestId={request.id} />
                 </div>
               )}
-              {isStaff && request.status === "documento_listo" && (
+              {isStaff && ["en_gestion", "documento_listo"].includes(request.status) && (
                 <Link className="button primary small" href={`/panel/anuncios/nuevo?solicitud=${request.id}`}>
-                  Crear anuncio
+                  Abrir editor
                 </Link>
               )}
             </div>
