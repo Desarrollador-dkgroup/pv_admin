@@ -3,6 +3,7 @@ import { AdForm } from "@/components/panel-ad-form";
 import { PageHeader } from "@/components/ui";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { loadAdPromotionOptions } from "@/lib/panel-ad-options";
 
 // Edita un anuncio existente: título, imagen, promoción, fechas y estado.
 export default async function EditAdPage({ params }: { params: Promise<{ id: string }> }) {
@@ -11,16 +12,9 @@ export default async function EditAdPage({ params }: { params: Promise<{ id: str
   requireRole(role, ["owner", "admin"]);
 
   const admin = getSupabaseAdminClient();
-  const [{ data: ad }, { data: promotions }] = await Promise.all([
-    admin.from("ads").select("*").eq("id", id).maybeSingle(),
-    admin.from("service_promotions").select("id, title, services(name)").order("title"),
-  ]);
+  const { data: ad } = await admin.from("ads").select("*").eq("id", id).maybeSingle();
   if (!ad) notFound();
-
-  const options = (promotions ?? []).map((promotion) => {
-    const service = Array.isArray(promotion.services) ? promotion.services[0] : promotion.services;
-    return { id: promotion.id, label: `${promotion.title} · ${service?.name ?? "servicio"}` };
-  });
+  const options = await loadAdPromotionOptions(admin);
 
   return (
     <>

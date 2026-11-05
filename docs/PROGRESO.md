@@ -44,6 +44,15 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
   de servicio (`src/lib/public-service/service-detail.ts`) y muestra promociones, precios con
   descuento, habitaciones y la galería con flechas, arrastre y deslizamiento. Los enlaces no
   navegan. Si cambia la ficha pública, hay que copiar otra vez esos archivos.
+- Anuncios por solicitud (2026-11-11): migración `202611110001_ad_requests.sql` aplicada en
+  producción. El propietario pide un anuncio (imagen, promoción, fechas) en Mis anuncios. El
+  equipo la toma, la gestiona fuera del panel, sube el PDF en Contratos y el administrador crea
+  el anuncio desde la solicitud. El propietario recibe el resultado en Notificaciones.
+- Alcance de promociones de hospedaje: todo el hospedaje o una habitación. En restaurantes y
+  demás servicios la promoción aplica al servicio completo.
+- Anuncios en la web: el botón «Descubrir» lleva a la habitación o al servicio de la promoción.
+- Plantilla de contrato: versión profesional, pendiente de revisión por abogado.
+- Scripts: `scripts/crear-admin.mjs` (crea administradores desde la terminal).
 - Pendiente: revisar el panel en el navegador con cada rol (no se pudo sin sesión).
 
 - Archivo `ofwwJbkLCJ7DWhDLe2Y2On` (Panamá Viajero), página «REDISEÑO-PANEL». El diseño viejo

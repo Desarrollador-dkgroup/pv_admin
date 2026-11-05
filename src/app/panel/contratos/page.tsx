@@ -4,6 +4,7 @@ import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { contractStatusLabel, contractStatusTone } from "@/lib/panel-contracts";
 import { formatCents, formatDate } from "@/lib/panel-format";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
+import { AdDocumentForm } from "@/components/panel-ad-document-form";
 
 type Row = {
   business_id: string;
@@ -64,6 +65,12 @@ export default async function ContractsPage({
     business,
     contract: byBusiness.get(business.id),
   }));
+  // Solicitudes de anuncio que el departamento gestiona: aquí se sube su documento.
+  const { data: adRequests } = await admin
+    .from("ad_requests")
+    .select("id, title, status, document_path, businesses(name)")
+    .in("status", ["en_gestion", "documento_listo"])
+    .order("created_at");
   const count = (key: string) =>
     list.filter((item) => FILTERS.find((f) => f.key === key)?.match(item.contract?.status)).length;
   const filter = FILTERS.find((item) => item.key === estado) ?? FILTERS[0];
@@ -103,6 +110,28 @@ export default async function ContractsPage({
           <input name="q" defaultValue={q} placeholder="Buscar negocio" aria-label="Buscar negocio" />
         </form>
       </div>
+      {(adRequests ?? []).length > 0 && (
+        <Panel>
+          <h2>Documentos de anuncios</h2>
+          <p className="muted">
+            Sube aquí el documento del anuncio que gestionó el departamento. Después el administrador
+            crea el anuncio desde Anuncios.
+          </p>
+          {(adRequests ?? []).map((request) => {
+            const business = Array.isArray(request.businesses) ? request.businesses[0] : request.businesses;
+            return (
+              <div className="list-row" key={request.id}>
+                <div className="list-row-text">
+                  <b>{request.title}</b>
+                  <small>{business?.name ?? "Negocio"} · {request.status === "documento_listo"
+                    ? "Documento listo" : "En gestión"}</small>
+                </div>
+                <AdDocumentForm requestId={request.id} hasDocument={Boolean(request.document_path)} />
+              </div>
+            );
+          })}
+        </Panel>
+      )}
       <Panel className="table-panel">
         <div className="table-scroll">
           <table>

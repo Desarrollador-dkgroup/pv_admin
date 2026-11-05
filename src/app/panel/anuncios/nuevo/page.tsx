@@ -1,27 +1,40 @@
+import { notFound } from "next/navigation";
 import { AdForm } from "@/components/panel-ad-form";
 import { PageHeader } from "@/components/ui";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
+import { loadAdPromotionOptions } from "@/lib/panel-ad-options";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
-// Crea un anuncio que lleva a una promoción de servicio.
-export default async function NewAdPage() {
+// Crea un anuncio. Si viene de una solicitud del propietario (?solicitud=ID), se llena solo.
+export default async function NewAdPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ solicitud?: string }>;
+}) {
   const { role } = await getPanelIdentity();
   requireRole(role, ["owner", "admin"]);
+  const { solicitud } = await searchParams;
 
   const admin = getSupabaseAdminClient();
-  const { data: promotions, error } = await admin
-    .from("service_promotions")
-    .select("id, title, services(name)")
-    .order("title");
-  if (error) throw new Error("No se pudieron cargar las promociones.");
+  const options = await loadAdPromotionOptions(admin);
 
-  const options = (promotions ?? []).map((promotion) => {
-    const service = Array.isArray(promotion.services) ? promotion.services[0] : promotion.services;
-    return {
-      id: promotion.id,
-      label: `${promotion.title} · ${service?.name ?? "servicio"}`,
+  let request;
+  if (solicitud) {
+    const { data } = await admin
+      .from("ad_requests")
+      .select("id, title, image_path, service_promotion_id, starts_on, ends_on, status")
+      .eq("id", solicitud)
+      .maybeSingle();
+    if (!data || data.status !== "documento_listo") notFound();
+    request = {
+      id: data.id,
+      title: data.title,
+      imageUrl: admin.storage.from("ads-media").getPublicUrl(data.image_path).data.publicUrl,
+      service_promotion_id: data.service_promotion_id,
+      starts_on: data.starts_on,
+      ends_on: data.ends_on,
     };
-  });
+  }
 
   return (
     <>
@@ -30,7 +43,7 @@ export default async function NewAdPage() {
         title="Nuevo anuncio"
         description="La imagen se muestra al entrar a la página principal."
       />
-      <AdForm promotions={options} />
+      <AdForm promotions={options} request={request} />
     </>
   );
 }

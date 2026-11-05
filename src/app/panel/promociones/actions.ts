@@ -41,17 +41,29 @@ export async function saveServicePromotionAction(
   let regularCents: number | null = service.base_price_cents;
   let targetRoomId: string | null = null;
   if (service.category_id === "hospedaje") {
-    if (!roomTypeId) return { error: "Selecciona la habitación a la que aplica el descuento." };
-    const { data: room } = await supabase
-      .from("room_types")
-      .select("id, price_cents, service_id")
-      .eq("id", roomTypeId)
-      .maybeSingle();
-    if (!room || room.service_id !== service.id) {
-      return { error: "Esa habitación no pertenece a este servicio." };
+    if (roomTypeId) {
+      // Promoción de una habitación específica.
+      const { data: room } = await supabase
+        .from("room_types")
+        .select("id, price_cents, service_id")
+        .eq("id", roomTypeId)
+        .maybeSingle();
+      if (!room || room.service_id !== service.id) {
+        return { error: "Esa habitación no pertenece a este servicio." };
+      }
+      regularCents = room.price_cents;
+      targetRoomId = room.id;
+    } else {
+      // Promoción general: aplica a todo el hospedaje; el precio regular es el más bajo.
+      const { data: rooms } = await supabase
+        .from("room_types")
+        .select("price_cents")
+        .eq("service_id", service.id)
+        .not("price_cents", "is", null)
+        .order("price_cents", { ascending: true })
+        .limit(1);
+      regularCents = rooms?.[0]?.price_cents ?? null;
     }
-    regularCents = room.price_cents;
-    targetRoomId = room.id;
   }
   if (!regularCents || regularCents <= 0) {
     return { error: "Antes de crear promociones, el servicio necesita un precio regular." };

@@ -57,13 +57,22 @@ export function ServicePromotionForm({
     promotion?.service_id ?? firstPriced?.id ?? services[0]?.id ?? "",
   );
   const [roomId, setRoomId] = useState(promotion?.room_type_id ?? "");
+  // Alcance del descuento en hospedajes: todo el hospedaje o una habitación concreta.
+  const [scope, setScope] = useState<"all" | "room">(promotion?.room_type_id ? "room" : "all");
   const [discount, setDiscount] = useState(promotion ? String(promotion.discount_pct) : "");
   const [mode, setMode] = useState<"range" | "weekdays">(promotion?.schedule_mode ?? "range");
 
   const service = services.find((item) => item.id === serviceId);
   const isHotel = service?.categoryId === "hospedaje";
   const room = service?.rooms.find((item) => item.id === roomId);
-  const regularCents = isHotel ? (room?.priceCents ?? null) : (service?.priceCents ?? null);
+  // Hospedaje: habitación elegida, o la más barata si la promoción es de todo el hospedaje.
+  const cheapestRoom = service?.rooms
+    .map((item) => item.priceCents)
+    .filter((cents): cents is number => typeof cents === "number" && cents > 0)
+    .sort((a, b) => a - b)[0] ?? null;
+  const regularCents = isHotel
+    ? (scope === "room" ? (room?.priceCents ?? null) : cheapestRoom)
+    : (service?.priceCents ?? null);
   const terms = service ? (termsByBusiness[service.businessId] ?? null) : null;
   const discountValue = Number(discount);
   const validDiscount = discountValue > 0 && discountValue < 100;
@@ -71,7 +80,7 @@ export function ServicePromotionForm({
     ? previewPromotion(regularCents, discountValue, terms)
     : null;
   const blocked = !regularCents || !validDiscount || Boolean(preview?.blocked)
-    || (isHotel && !roomId);
+    || (isHotel && scope === "room" && !roomId);
 
   return (
     <form action={action} className="promotion-form">
@@ -93,21 +102,44 @@ export function ServicePromotionForm({
         </label>
 
         {isHotel && (
-          <label className="field">
-            Habitación con descuento
-            <select
-              name="room_type_id"
-              value={roomId}
-              onChange={(e) => setRoomId(e.target.value)}
-            >
-              <option value="">Selecciona una habitación</option>
-              {service?.rooms.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name} · {formatCents(item.priceCents)}
-                </option>
-              ))}
-            </select>
-          </label>
+          <fieldset className="field">
+            <legend>¿A qué aplica el descuento?</legend>
+            <label className="checkbox-option">
+              <input type="radio" name="promotion_scope" value="all" checked={scope === "all"}
+                onChange={() => { setScope("all"); setRoomId(""); }} />
+              Todo el hospedaje (todas las habitaciones)
+            </label>
+            <label className="checkbox-option">
+              <input type="radio" name="promotion_scope" value="room" checked={scope === "room"}
+                onChange={() => setScope("room")} />
+              Solo una habitación
+            </label>
+            {scope === "room" && (
+              <select
+                name="room_type_id"
+                value={roomId}
+                onChange={(e) => setRoomId(e.target.value)}
+                aria-label="Habitación con descuento"
+              >
+                <option value="">Selecciona una habitación</option>
+                {service?.rooms.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name} · {formatCents(item.priceCents)}
+                  </option>
+                ))}
+              </select>
+            )}
+            {scope === "all" && (
+              <small className="muted">
+                La promoción se muestra en el hospedaje y aplica a todas sus habitaciones.
+              </small>
+            )}
+          </fieldset>
+        )}
+        {!isHotel && (
+          <small className="muted">
+            La promoción aplica a todo el servicio, sin elegir habitación.
+          </small>
         )}
 
         <label className="field">
@@ -219,7 +251,9 @@ export function ServicePromotionForm({
               : "Este servicio no tiene precio regular. Agrégalo antes de crear promociones."}
           </p>
         )}
-        {isHotel && !roomId && <p className="muted">Selecciona la habitación para ver el cálculo.</p>}
+        {isHotel && scope === "room" && !roomId && (
+          <p className="muted">Selecciona la habitación para ver el cálculo.</p>
+        )}
         {!validDiscount && discount !== "" && (
           <p className="form-error" role="alert">El descuento debe ser mayor que 0% y menor que 100%.</p>
         )}

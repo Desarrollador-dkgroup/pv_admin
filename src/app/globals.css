@@ -3311,3 +3311,95 @@ a.callout:hover {
 .public-preview .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Maqueta del anuncio: escritorio y celular. */
+.ad-preview-set {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  align-items: start;
+}
+.ad-frame {
+  margin: 0;
+}
+.ad-frame figcaption {
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.ad-frame-screen {
+  padding: 14px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, #161b36, #3a4588);
+}
+.ad-frame-mobile .ad-frame-screen {
+  border-radius: 28px;
+  padding: 18px 10px;
+}
+.ad-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 30%);
+}
+.ad-frame-desktop .ad-card-image {
+  aspect-ratio: 16 / 9;
+}
+.ad-frame-mobile .ad-card-image {
+  aspect-ratio: 4 / 5;
+}
+.ad-card-image {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+  background: #dfe3f3;
+}
+.ad-card-empty {
+  display: grid;
+  place-items: center;
+  min-height: 120px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.ad-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px 14px;
+}
+.ad-card-body small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.ad-card-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 45%);
+  color: #ffffff;
+  font-size: 18px;
+}
+.ad-card-button {
+  align-self: stretch;
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--brand);
+  color: #ffffff;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+@media (max-width: 1000px) {
+  .ad-preview-set {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

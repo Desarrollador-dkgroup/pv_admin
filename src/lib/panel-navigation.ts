@@ -59,6 +59,7 @@ const NAVIGATION: Record<PanelRole, PanelNavItem[]> = {
     { href: "/panel", label: "Mi panel", icon: LayoutDashboard, group: "Mi negocio" },
     { href: "/panel/servicios", label: "Mis servicios", icon: Layers, group: "Mi negocio" },
     { href: "/panel/promociones", label: "Mis promociones", icon: Tag, group: "Mi negocio" },
+    { href: "/panel/anuncios", label: "Mis anuncios", icon: Megaphone, group: "Mi negocio" },
     { href: "/panel/mi-contrato", label: "Mi contrato", icon: FileText, group: "Mi negocio" },
     { href: "/panel/notificaciones", label: "Notificaciones", icon: Bell, group: "Cuenta" },
     { href: "/panel/cuenta", label: "Mi cuenta", icon: UserRound, group: "Cuenta" },

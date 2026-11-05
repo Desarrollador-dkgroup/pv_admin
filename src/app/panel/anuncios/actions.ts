@@ -23,6 +23,8 @@ export async function createAdAction(_previous: FormState, formData: FormData): 
   if (!canManageCatalog(role)) return { error: "Tu cuenta no puede administrar anuncios." };
 
   const adId = formText(formData, "ad_id");
+  // Si el anuncio viene de una solicitud del propietario, se reutiliza su imagen.
+  const requestId = formText(formData, "ad_request_id");
   const title = formText(formData, "title");
   const promotionId = formText(formData, "service_promotion_id") || null;
   const startsOn = formText(formData, "starts_on") || null;
@@ -31,7 +33,7 @@ export async function createAdAction(_previous: FormState, formData: FormData): 
 
   if (!title) return { error: "Escribe un título para el anuncio." };
   const hasImage = image instanceof File && image.size > 0;
-  if (!hasImage && !adId) return { error: "Selecciona la imagen del anuncio." };
+  if (!hasImage && !adId && !requestId) return { error: "Selecciona la imagen del anuncio." };
   const extension = hasImage ? IMAGE_EXTENSIONS[image.type] : "";
   if (hasImage && !extension) return { error: "La imagen debe ser JPG, PNG o WEBP." };
   if (hasImage && image.size > MAX_IMAGE_BYTES) {
@@ -51,7 +53,18 @@ export async function createAdAction(_previous: FormState, formData: FormData): 
     if (!promotion) return { error: "La promoción seleccionada no existe." };
   }
 
-  let path: string | null = null;
+  let requestImage: string | null = null;
+  if (requestId && !hasImage) {
+    const { data: request } = await admin
+      .from("ad_requests")
+      .select("image_path")
+      .eq("id", requestId)
+      .maybeSingle();
+    if (!request) return { error: "La solicitud ya no existe." };
+    requestImage = request.image_path;
+  }
+
+  let path: string | null = requestImage;
   if (hasImage) {
     path = `${randomUUID()}.${extension}`;
     const upload = await admin.storage.from("ads-media").upload(path, image, {
@@ -94,16 +107,25 @@ export async function createAdAction(_previous: FormState, formData: FormData): 
     .order("position", { ascending: false })
     .limit(1)
     .maybeSingle();
-  const { error } = await admin.from("ads").insert({
+  const { data: created, error } = await admin.from("ads").insert({
     title,
-    image_path: path,
+    image_path: path ?? "",
     service_promotion_id: promotionId,
     starts_on: startsOn,
     ends_on: endsOn,
     is_active: formChecked(formData, "is_active"),
     position: (last?.position ?? 0) + 1,
-  });
+  }).select("id").single();
   if (error) return { error: error.message };
+
+  // La solicitud queda publicada y enlazada al anuncio creado.
+  if (requestId && created) {
+    await admin
+      .from("ad_requests")
+      .update({ status: "publicado", ad_id: created.id, updated_at: new Date().toISOString() })
+      .eq("id", requestId);
+    revalidatePath("/panel/notificaciones");
+  }
 
   revalidatePath("/panel/anuncios");
   revalidatePath("/");

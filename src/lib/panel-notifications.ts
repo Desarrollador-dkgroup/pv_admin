@@ -124,6 +124,47 @@ export async function getPanelNotifications(
       });
     }
   }
+  // Solicitudes de anuncio nuevas, para el equipo.
+  if (isStaff) {
+    const { count: newAdRequests } = await supabase
+      .from("ad_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "solicitado");
+    if (newAdRequests) {
+      notifications.push({
+        id: "ad-requests-new",
+        title: newAdRequests === 1 ? "1 solicitud de anuncio nueva" : `${newAdRequests} solicitudes de anuncio nuevas`,
+        detail: "Los propietarios pidieron anuncios para sus promociones.",
+        href: "/panel/anuncios",
+        tone: "alert",
+      });
+    }
+  }
+
+  // Resultado de las solicitudes de anuncio, para el propietario.
+  if (role === "propietario" && businessIds.length) {
+    const { data: adResults } = await supabase
+      .from("ad_requests")
+      .select("id, title, status, rejection_reason")
+      .in("business_id", businessIds)
+      .in("status", ["publicado", "rechazado"])
+      .order("updated_at", { ascending: false })
+      .limit(limit);
+    for (const request of adResults ?? []) {
+      notifications.push({
+        id: `ad-${request.id}-${request.status}`,
+        title: request.status === "publicado"
+          ? "Tu anuncio se publicó"
+          : "Tu solicitud de anuncio fue rechazada",
+        detail: request.status === "publicado"
+          ? request.title
+          : request.rejection_reason || request.title,
+        href: "/panel/anuncios",
+        tone: "info",
+      });
+    }
+  }
+
   if (role === "propietario" && businessIds.length) {
     const { data: issued } = await supabase
       .from("business_contracts")
