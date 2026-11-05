@@ -1,0 +1,810 @@
+/* Ficha de servicio (src/app/service/[id].tsx y restaurant-ficha.tsx). */
+
+.screen {
+  position: relative;
+  padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  background: var(--surface);
+}
+
+.heroWrap {
+  position: relative;
+}
+
+.gallery {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  overflow: hidden;
+  background: var(--photo-empty);
+}
+
+.hero {
+  height: 320px;
+}
+
+.heroTall {
+  height: 300px;
+}
+
+.galleryTrack {
+  display: flex;
+  height: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  cursor: grab;
+  user-select: none;
+}
+
+/* Flechas solo para ratón: en el teléfono se desliza con el dedo. */
+.arrow {
+  display: none;
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  margin-top: -20px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 92%);
+  color: var(--text-strong);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
+}
+
+.arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.arrowPrev {
+  left: 14px;
+}
+
+.arrowNext {
+  right: 14px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .arrow {
+    display: block;
+  }
+}
+
+.galleryImage {
+  flex: none;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  scroll-snap-align: start;
+}
+
+.counter {
+  position: absolute;
+  right: 16px;
+  bottom: 40px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 50%);
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dots {
+  position: absolute;
+  right: 0;
+  bottom: 12px;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 50%);
+}
+
+.dotActive {
+  width: 16px;
+  background: #FFFFFF;
+}
+
+.fixedBack {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 12px);
+  left: 16px;
+  z-index: 30;
+}
+
+.fixedBack button {
+  width: 40px;
+  height: 40px;
+}
+
+.heroFavorite {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 12px);
+  right: 16px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 15%);
+}
+
+.sheetRounded .sheet {
+  position: relative;
+  margin-top: -28px;
+  padding-top: 22px;
+  border-radius: 28px 28px 0 0;
+  background: var(--surface);
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 20px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-strong);
+  font-size: 22px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.pricePill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--indigo);
+  color: var(--surface);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.locationRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ratingText {
+  color: var(--text-strong);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.infoPill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #F2F2F2;
+  color: #6B6B6B;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tag {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #E8F5E9;
+  color: #2E7D32;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.payment {
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 18px;
+}
+
+.payment strong {
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+.divider {
+  height: 0.5px;
+  margin: 4px 0;
+  background: var(--line);
+}
+
+.band {
+  height: 8px;
+  margin: 6px -20px;
+  background: #F4F4F4;
+}
+
+.description {
+  color: var(--text-dark);
+  font-size: 14px;
+  line-height: 21px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionTight {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.heading {
+  color: var(--text-strong);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.headingLarge {
+  color: var(--text-strong);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.detailText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.detailLabel {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.detailValue {
+  color: var(--text-strong);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px 12px;
+}
+
+.featureTile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.featureBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--pill);
+}
+
+.featureLabel {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--text-dark);
+  font-size: 11px;
+  text-align: center;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.mapCard {
+  width: 100%;
+  height: 180px;
+  border: 0;
+  border-radius: 16px;
+}
+
+.approxNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: #6B6B6B;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.mapsButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 999px;
+  background: var(--pill);
+  color: var(--indigo);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.roomList,
+.reviewList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.roomCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.roomCard:active {
+  opacity: 0.85;
+}
+
+.roomThumb {
+  position: relative;
+  flex: none;
+  width: 76px;
+  height: 76px;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+}
+
+.roomInfo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.roomName {
+  color: var(--text-strong);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.roomCapacity,
+.roomDescription {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.roomDescription {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 2px;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.roomPrice {
+  margin-top: 4px;
+  color: var(--indigo);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.roomPrice small {
+  color: #6B6B6B;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.linkedRow {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+}
+
+.linkedCard {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 6px;
+  width: 160px;
+}
+
+.linkedPhoto {
+  position: relative;
+  height: 104px;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.linkedName {
+  overflow: hidden;
+  color: var(--text-strong);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.reviewCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--pill);
+}
+
+.reviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reviewAuthor {
+  color: var(--text-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.reviewRating {
+  color: var(--text-strong);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reviewComment {
+  color: var(--text-dark);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.policyList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+}
+
+.policyItem dt {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.policyItem dd {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 14px;
+  line-height: 20px;
+  white-space: pre-line;
+}
+
+.contactRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.contactChip {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  min-width: 0;
+}
+
+.contactValue {
+  overflow: hidden;
+  color: var(--indigo);
+  font-size: 14px;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.menuCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 14px 8px 8px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 2px 8px rgb(var(--shadow-ink) / 8%);
+}
+
+.menuThumb {
+  width: 64px;
+  height: 56px;
+  border-radius: 8px;
+  background: var(--photo-empty);
+  object-fit: cover;
+}
+
+.menuLabel {
+  flex: 1;
+  color: var(--text-strong);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Barra inferior de reserva */
+.barSlot {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+}
+
+.bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 20px calc(env(safe-area-inset-bottom) + 12px);
+  border-top: 0.5px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 -2px 8px rgb(0 0 0 / 8%);
+}
+
+.barLines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.barSummary {
+  color: var(--text-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.barPriceLine {
+  color: #6B6B6B;
+  font-size: 12px;
+}
+
+.reserveButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 999px;
+  background: var(--indigo);
+  color: var(--surface);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.reserveButton:active {
+  opacity: 0.9;
+}
+
+@media (min-width: 768px) {
+  .hero,
+  .heroTall,
+  .gallery {
+    height: 420px;
+  }
+
+  .layout {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .featureGrid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .mapCard {
+    height: 260px;
+  }
+}
+
+/* Escritorio: foto ancha, contenido a la izquierda y la reserva fija a la derecha. */
+@media (min-width: 1024px) {
+  .screen {
+    padding-bottom: 48px;
+  }
+
+  .heroWrap {
+    max-width: var(--content-max);
+    margin: 24px auto 0;
+    padding: 0 24px;
+  }
+
+  .hero,
+  .heroTall,
+  .gallery {
+    height: 460px;
+    border-radius: 24px;
+  }
+
+  .fixedBack {
+    position: absolute;
+    top: 16px;
+    left: 40px;
+  }
+
+  .heroFavorite {
+    top: 16px;
+    right: 40px;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 32px;
+    align-items: start;
+    max-width: var(--content-max);
+    padding: 0 24px;
+  }
+
+  .sheetRounded .sheet {
+    margin-top: 0;
+    border-radius: 0;
+  }
+
+  .sheet {
+    padding: 28px 0 0;
+    gap: 16px;
+  }
+
+  .name {
+    font-size: 32px;
+  }
+
+  .band {
+    margin: 8px 0;
+    border-radius: 4px;
+  }
+
+  .mapCard {
+    height: 320px;
+  }
+
+  .barSlot {
+    position: sticky;
+    top: 92px;
+    margin-top: 28px;
+  }
+
+  .bar {
+    gap: 12px;
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgb(var(--shadow-ink) / 10%);
+  }
+
+  .barSummary {
+    font-size: 15px;
+  }
+
+  .barPriceLine {
+    font-size: 14px;
+  }
+}
+
+/* Habitación (src/app/room/[roomId].tsx) */
+.roomPill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--pill);
+  color: var(--indigo);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.roomPriceLarge {
+  color: var(--indigo);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.promoBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.promoTitle {
+  color: var(--text-strong);
+  font-size: 15px;
+}
+
+.infoItem {
+  color: var(--text-dark);
+  font-size: 14px;
+  line-height: 21px;
+  overflow-wrap: anywhere;
+}
+
+.scheduleGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.scheduleItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-dark);
+  font-size: 14px;
+}
+
+.roomAmenities {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.roomAmenity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text-dark);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 1024px) {
+  .roomAmenities {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

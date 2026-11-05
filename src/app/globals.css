@@ -3265,3 +3265,49 @@ a.callout:hover {
   color: var(--muted);
   font-size: 12px;
 }
+
+/* Vista previa de la ficha: mismas variables que la página pública, solo dentro de .public-preview. */
+.public-preview {
+  --coral: #CD2E4C;
+  --indigo: #4956A2;
+  --text-dark: #4D4C4C;
+  --text-strong: #1A1A1A;
+  --text-muted: #8A8A8A;
+  --placeholder: #9B9B9B;
+  --page-gray: #EBEBEB;
+  --surface: #FFFFFF;
+  --pill: #EEF1FC;
+  --badge: #E4933F;
+  --star: #F5B400;
+  --line: #E5E5E5;
+  --line-soft: #E3E3E3;
+  --photo-empty: #DCDFF2;
+  --photo-empty-icon: #B9BEDB;
+  --search-border: #C7CEEC;
+  --shadow-ink: 15 27 51;
+
+  --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  --font-rounded: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+
+  --tab-bar-height: 56px;
+  --page-padding: 16px;
+  --content-max: 1200px;
+
+  /* Nombres del diseño anterior, usados por legacy.css. */
+  --ink: #000000;
+  --muted: rgb(0 0 0 / 65%);
+  --brand: var(--indigo);
+  --accent: var(--coral);
+  --border: rgb(73 86 162 / 18%);
+
+  font-family: var(--font-system);
+  color: var(--text-dark);
+}
+.public-preview .no-scrollbar {
+  scrollbar-width: none;
+}
+.public-preview .no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

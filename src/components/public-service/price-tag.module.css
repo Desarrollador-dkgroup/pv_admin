@@ -1,0 +1,11 @@
+.wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.regular {
+  font-size: 0.9em;
+  opacity: 0.55;
+  text-decoration: line-through;
+}

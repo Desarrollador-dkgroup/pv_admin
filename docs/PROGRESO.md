@@ -39,6 +39,11 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
   - Notificaciones y métricas leen `service_promotions`, ya no la tabla vieja `promotions`.
     Avisos nuevos: copias por verificar, contratos por firmar o rechazados, sugerencias.
   - `tsconfig.json` excluye `supabase/functions`: el código de Deno rompía `next build`.
+- Vista previa de la ficha (2026-11-05): usa los mismos componentes de la web
+  (`src/components/public-service/`, copiados de panama-viajero). Lee borradores con la clave
+  de servicio (`src/lib/public-service/service-detail.ts`) y muestra promociones, precios con
+  descuento, habitaciones y la galería con flechas, arrastre y deslizamiento. Los enlaces no
+  navegan. Si cambia la ficha pública, hay que copiar otra vez esos archivos.
 - Pendiente: revisar el panel en el navegador con cada rol (no se pudo sin sesión).
 
 - Archivo `ofwwJbkLCJ7DWhDLe2Y2On` (Panamá Viajero), página «REDISEÑO-PANEL». El diseño viejo
