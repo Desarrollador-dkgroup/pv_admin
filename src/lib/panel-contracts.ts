@@ -395,6 +395,23 @@ export function renderContract(body: string, values: ContractValues) {
   return body.replace(/\{\{(\w+)\}\}/g, (match, key: string) => values[key] ?? match);
 }
 
+// Trozos del contrato para mostrarlos con color: texto fijo, dato llenado o marcador vacío.
+export type ContractPart = { text: string; kind: "text" | "data" | "missing" };
+
+export function renderContractParts(body: string, values: ContractValues): ContractPart[] {
+  const parts: ContractPart[] = [];
+  let last = 0;
+  for (const match of body.matchAll(/\{\{(\w+)\}\}/g)) {
+    const index = match.index ?? 0;
+    if (index > last) parts.push({ text: body.slice(last, index), kind: "text" });
+    const value = values[match[1]];
+    parts.push(value ? { text: value, kind: "data" } : { text: match[0], kind: "missing" });
+    last = index + match[0].length;
+  }
+  if (last < body.length) parts.push({ text: body.slice(last), kind: "text" });
+  return parts;
+}
+
 // Claves usadas en la plantilla que todavía no tienen valor (en el orden de aparición).
 export function missingContractKeys(body: string, values: ContractValues): string[] {
   const used = [...body.matchAll(/\{\{(\w+)\}\}/g)].map((match) => match[1]);

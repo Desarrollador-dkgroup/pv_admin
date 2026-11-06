@@ -15,7 +15,7 @@ import {
   DEFAULT_CONTRACT_TITLE,
   contractValuesFor,
   missingContractKeys,
-  renderContract,
+  renderContractParts,
   type ContractValues,
 } from "@/lib/panel-contracts";
 import { previewPromotion } from "@/lib/promotion-commission";
@@ -354,7 +354,17 @@ export function ContractForm({ initial }: { initial: ContractFormValues }) {
                 </div>
               </header>
               <h3>{values.title}</h3>
-              <pre className="contract-preview">{renderContract(body, previewValues)}</pre>
+              <pre className="contract-preview">
+                {renderContractParts(body, previewValues).map((part, index) => (
+                  part.kind === "text" ? (
+                    <span key={index}>{part.text}</span>
+                  ) : (
+                    <span key={index} className={part.kind === "data" ? "contract-data" : "contract-missing"}>
+                      {part.text}
+                    </span>
+                  )
+                ))}
+              </pre>
             </div>
           </Panel>
         </aside>
