@@ -3,6 +3,8 @@ import { Badge, PageHeader, Panel } from "@/components/ui";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { contractStatusLabel, contractStatusTone } from "@/lib/panel-contracts";
 import { getAccountNames } from "@/lib/panel-people";
+import { canManageProviders } from "@/lib/panel-permissions";
+import { AddOwnerBusinessForm } from "@/components/panel-owner-business-add-form";
 import { canManageCatalog } from "@/types/panel";
 
 type SearchParams = Promise<{ categoria?: string; filtro?: string; q?: string }>;
@@ -24,12 +26,16 @@ export default async function BusinessesPage({ searchParams }: { searchParams: S
     .order("name");
   if (!isTeam) query = query.in("id", businessIds);
 
-  const [{ data: businesses, error }, { data: categories }, { data: contracts }] = await Promise.all([
+  const [{ data: businesses, error }, { data: categories }, { data: contracts }, { data: lodgingTypes }] =
+    await Promise.all([
     query,
     supabase.from("categories").select("id, label").order("sort_order"),
     isStaff
       ? supabase.from("business_contracts").select("business_id, status")
       : Promise.resolve({ data: [] as Array<{ business_id: string; status: string }> }),
+    isTeam
+      ? supabase.from("hospedaje_types").select("id, label").order("sort_order")
+      : Promise.resolve({ data: [] as Array<{ id: string; label: string }> }),
   ]);
   if (error) throw new Error("No se pudieron cargar los negocios.");
 
@@ -53,6 +59,9 @@ export default async function BusinessesPage({ searchParams }: { searchParams: S
         (names.get(member.user_id) ?? "").toLowerCase().includes(term))));
   const count = (id: string) =>
     all.filter((business) => business.services.some((service) => service.category_id === id)).length;
+  const ownerOptions = ownerIds
+    .map((id) => ({ id, label: names.get(id) ?? "Propietario" }))
+    .sort((a, b) => a.label.localeCompare(b.label));
 
   return (
     <>
@@ -70,6 +79,37 @@ export default async function BusinessesPage({ searchParams }: { searchParams: S
           </>
         )}
       />
+
+      {isTeam && (
+        <Panel>
+          <div className="section-heading">
+            <h2>Negocios por categoría</h2>
+            <small className="muted">{all.length} negocios en total</small>
+          </div>
+          {(categories ?? []).map((category) => (
+            <div className="list-row" key={category.id}>
+              <div className="list-row-text">
+                <b>{category.label}</b>
+              </div>
+              <Badge tone={count(category.id) ? "info" : "neutral"}>
+                {count(category.id)} {count(category.id) === 1 ? "negocio" : "negocios"}
+              </Badge>
+            </div>
+          ))}
+        </Panel>
+      )}
+
+      {canManageProviders(role) && (
+        <Panel>
+          <h2>Agregar otro negocio a un propietario</h2>
+          <p className="muted">Amplía el plan del propietario con un negocio nuevo.</p>
+          <AddOwnerBusinessForm
+            owners={ownerOptions}
+            categories={(categories ?? []).map((item) => ({ id: item.id, label: item.label }))}
+            lodgingTypes={(lodgingTypes ?? []).map((item) => ({ id: item.id, label: item.label }))}
+          />
+        </Panel>
+      )}
 
       {isTeam && (
         <div className="toolbar">
