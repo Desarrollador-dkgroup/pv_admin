@@ -47,13 +47,18 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 ## Pendientes (actualizado 2026-11-06)
 
 Por decidir (lo contesta el dueño del proyecto):
-1. Servicio de correo para las solicitudes de «Quiero publicar mi negocio» (Resend, plan gratuito:
-   100 correos al día y 3,000 al mes). Falta crear la cuenta, la clave y el remitente.
-   Destino: desarrollo.dkgroup@gmail.com.
+1. Correo de solicitudes: ya llega, pero a spam (remitente `onboarding@resend.dev`). Falta
+   verificar un dominio propio en Resend y guardar `LEADS_FROM` con ese remitente.
 2. Revisión del contrato por el jefe, incluido el tope de responsabilidad (cláusula 13.4).
 
+Código pendiente:
+3. Anuncios con 2 imágenes:
+   - Celular (390×844): listo.
+   - Escritorio, adaptable a tablet: pendiente (imagen propia y vista en el banner y en la
+     maqueta del panel).
+
 Por verificar:
-3. Pantallas nuevas del panel con cada rol, y el enlace «Ver documento actual» de anuncios.
+4. Pantallas nuevas del panel con cada rol, y el enlace «Ver documento actual» de anuncios.
    No hubo sesión para probarlas en el navegador.
 
 ## Documento de anuncio que no se veía (2026-11-05)
