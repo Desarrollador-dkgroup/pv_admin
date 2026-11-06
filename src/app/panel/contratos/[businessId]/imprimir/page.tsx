@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PrintContractButton } from "@/components/print-contract-button";
+import { PrintSheet } from "@/components/print-sheet";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { contractValuesFor, renderContract } from "@/lib/panel-contracts";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -41,16 +42,15 @@ export default async function PrintContractPage({
         </div>
         <PrintContractButton />
       </div>
-      <article className="contract-print contract-paper">
-        <header>
-                <img src="/Logo-rectangular-contrato.svg" alt="Panamá Viajero" className="contract-logo" />
-              </header>
-        <h1>{contract.title}</h1>
-        <pre>{text}</pre>
-        <p className="no-print muted">
-          Al imprimir o guardar como PDF solo sale la hoja, sin menú ni barra.
-        </p>
-      </article>
+      <PrintSheet>
+        <article className="contract-print contract-paper">
+          <header>
+            <img src="/Logo-rectangular-contrato.svg" alt="Panamá Viajero" className="contract-logo" />
+          </header>
+          <h1>{contract.title}</h1>
+          <pre>{text}</pre>
+        </article>
+      </PrintSheet>
     </>
   );
 }

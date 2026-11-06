@@ -6,6 +6,7 @@ import {
   rejectSignedContractAction,
   saveContractAction,
 } from "@/app/panel/contratos/actions";
+import { PrintSheet } from "@/components/print-sheet";
 import { ConfirmSubmit, Panel } from "@/components/ui";
 import { formatCents } from "@/lib/panel-format";
 import {
@@ -368,13 +369,15 @@ export function ContractForm({ initial }: { initial: ContractFormValues }) {
               </pre>
             </div>
             {/* Hoja de impresión: solo se ve al imprimir, en negro y sin la vista previa del panel. */}
-            <article className="contract-print contract-print-live contract-paper" aria-hidden="true">
-              <header>
-                <img src="/Logo-rectangular-contrato.svg" alt="Panamá Viajero" className="contract-logo" />
-              </header>
-              <h1>{values.title}</h1>
-              <pre>{renderContract(body, previewValues)}</pre>
-            </article>
+            <PrintSheet>
+              <article className="contract-print contract-paper">
+                <header>
+                  <img src="/Logo-rectangular-contrato.svg" alt="Panamá Viajero" className="contract-logo" />
+                </header>
+                <h1>{values.title}</h1>
+                <pre>{renderContract(body, previewValues)}</pre>
+              </article>
+            </PrintSheet>
           </Panel>
         </aside>
       </div>

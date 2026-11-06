@@ -190,24 +190,30 @@ select {
 input[readonly] {
   color: var(--muted);
 }
-/* Hoja de impresión del generador: oculta en pantalla; al imprimir es lo único que sale. */
+/* Hoja de impresión de contratos: va en un nodo propio al final de <body> (ver PrintSheet).
+   Al imprimir se oculta todo lo demás con display: none, para que el panel no ocupe páginas. */
 .contract-print-live {
   display: none;
 }
 @media print {
-  body * {
-    visibility: hidden !important;
-  }
-  .contract-print-live,
-  .contract-print-live * {
-    visibility: visible !important;
+  body > *:not(.contract-print-live) {
+    display: none !important;
   }
   .contract-print-live {
     display: block !important;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+    position: static;
+    width: auto;
+    margin: 0;
+    padding: 0;
+  }
+  .contract-print-live .contract-print {
+    padding: 0;
+  }
+  .contract-print-live .contract-logo {
+    margin-bottom: 14px;
+  }
+  @page {
+    margin: 18mm 20mm;
   }
 }
 /* Vista previa del generador: datos llenados en azul; marcadores sin dato, en ámbar. */
