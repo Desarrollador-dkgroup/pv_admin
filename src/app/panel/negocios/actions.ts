@@ -206,7 +206,8 @@ export async function createBusinessAction(
 // Suma 1 servicio al plan de una categoría (y tipo de hospedaje, si lo tiene).
 // Si la línea ya existe, sube su cantidad; si no, la crea con cantidad 1.
 export async function addPlanServiceAction(formData: FormData): Promise<void> {
-  const { supabase, role } = await getPanelIdentity();
+  const { role } = await getPanelIdentity();
+  const admin = getSupabaseAdminClient();
   if (!canManageProviders(role)) throw new Error("Tu cuenta no puede ampliar el plan.");
   const businessId = formText(formData, "business_id");
   const categoryId = formText(formData, "category_id");
@@ -214,7 +215,7 @@ export async function addPlanServiceAction(formData: FormData): Promise<void> {
   if (!categoryId) throw new Error("Falta la categoría.");
   if (categoryId === "hospedaje" && !typeId) throw new Error("Elige el tipo de hospedaje.");
 
-  const base = supabase
+  const base = admin
     .from("business_service_plans")
     .select("id, quantity")
     .eq("business_id", businessId)
@@ -227,11 +228,11 @@ export async function addPlanServiceAction(formData: FormData): Promise<void> {
   if (readError) throw new Error(readError.message);
 
   const { error } = existing
-    ? await supabase
+    ? await admin
       .from("business_service_plans")
       .update({ quantity: existing.quantity + 1 })
       .eq("id", existing.id)
-    : await supabase.from("business_service_plans").insert({
+    : await admin.from("business_service_plans").insert({
       business_id: businessId,
       category_id: categoryId,
       hospedaje_type_id: typeId,
@@ -243,11 +244,12 @@ export async function addPlanServiceAction(formData: FormData): Promise<void> {
 
 // Quita todas las líneas del plan de una categoría. Los servicios ya creados no se borran.
 export async function removeServicePlanCategoryAction(formData: FormData): Promise<void> {
-  const { supabase, role } = await getPanelIdentity();
+  const { role } = await getPanelIdentity();
+  const admin = getSupabaseAdminClient();
   if (!canManageProviders(role)) throw new Error("Tu cuenta no puede cambiar el plan.");
   const businessId = formText(formData, "business_id");
   const categoryId = formText(formData, "category_id");
-  const { error } = await supabase
+  const { error } = await admin
     .from("business_service_plans")
     .delete()
     .eq("business_id", businessId)
