@@ -190,6 +190,26 @@ select {
 input[readonly] {
   color: var(--muted);
 }
+/* Hoja de impresión del generador: oculta en pantalla; al imprimir es lo único que sale. */
+.contract-print-live {
+  display: none;
+}
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .contract-print-live,
+  .contract-print-live * {
+    visibility: visible !important;
+  }
+  .contract-print-live {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
 /* Vista previa del generador: datos llenados en azul; marcadores sin dato, en ámbar. */
 .contract-data {
   color: #1d4ed8;

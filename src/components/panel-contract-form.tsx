@@ -15,6 +15,7 @@ import {
   DEFAULT_CONTRACT_TITLE,
   contractValuesFor,
   missingContractKeys,
+  renderContract,
   renderContractParts,
   type ContractValues,
 } from "@/lib/panel-contracts";
@@ -345,6 +346,10 @@ export function ContractForm({ initial }: { initial: ContractFormValues }) {
               <h2>Vista previa</h2>
               <span className="badge tone-success">Se actualiza al escribir</span>
             </div>
+            <button type="button" className="button secondary small"
+              onClick={() => window.print()}>
+              Vista de impresión (PDF)
+            </button>
             <div className="contract-paper">
               <header>
                 <span className="paper-logo">PV</span>
@@ -366,6 +371,18 @@ export function ContractForm({ initial }: { initial: ContractFormValues }) {
                 ))}
               </pre>
             </div>
+            {/* Hoja de impresión: solo se ve al imprimir, en negro y sin la vista previa del panel. */}
+            <article className="contract-print contract-print-live contract-paper" aria-hidden="true">
+              <header>
+                <span className="paper-logo">PV</span>
+                <div>
+                  <b>Panamá Viajero</b>
+                  <small>Versión {initial.version}</small>
+                </div>
+              </header>
+              <h1>{values.title}</h1>
+              <pre>{renderContract(body, previewValues)}</pre>
+            </article>
           </Panel>
         </aside>
       </div>
