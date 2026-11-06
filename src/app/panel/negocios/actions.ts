@@ -8,7 +8,7 @@ import { formText, formChecked } from "@/lib/panel-form";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { canManageCatalog } from "@/types/panel";
 
-type FormState = { error: string; saved?: boolean };
+type FormState = { error: string };
 
 // Actualiza las pantallas que muestran negocios y sus miembros.
 function refreshBusinessViews(businessId: string) {
@@ -203,74 +203,24 @@ export async function createBusinessAction(
   redirect(`/panel/negocios/${data.id}`);
 }
 
-// Agrega otro negocio a un propietario existente y amplía su plan con las cantidades elegidas.
-// Las cantidades llegan como `cat__<categoría>` (sin hospedaje) y `type__<tipo de hospedaje>`.
-export async function addOwnerBusinessAction(
-  _previous: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  const { role } = await getPanelIdentity();
-  if (!canManageProviders(role)) return { error: "Tu cuenta no puede agregar negocios." };
-
-  const ownerId = formText(formData, "owner_id");
-  const name = formText(formData, "name");
-  if (!ownerId) return { error: "Selecciona al propietario." };
-  if (name.length < 2 || name.length > 80) {
-    return { error: "El nombre debe tener entre 2 y 80 caracteres." };
-  }
-
-  const plan: { category_id: string; hospedaje_type_id: string | null; quantity: number }[] = [];
-  for (const [key, raw] of formData.entries()) {
-    if (typeof raw !== "string" || !raw.trim()) continue;
-    const quantity = Number(raw);
-    if (!Number.isInteger(quantity) || quantity < 0 || quantity > 20) {
-      return { error: "Las cantidades del plan deben ser números enteros entre 0 y 20." };
-    }
-    if (quantity === 0) continue;
-    if (key.startsWith("cat__")) {
-      plan.push({ category_id: key.slice(5), hospedaje_type_id: null, quantity });
-    } else if (key.startsWith("type__")) {
-      plan.push({ category_id: "hospedaje", hospedaje_type_id: key.slice(6), quantity });
-    }
-  }
-  if (!plan.length) return { error: "Elige al menos un servicio para el plan del negocio." };
-
-  const admin = getSupabaseAdminClient();
-  const { data: owned } = await admin
-    .from("business_members")
-    .select("business_id")
-    .eq("user_id", ownerId)
-    .eq("role", "owner")
-    .limit(1);
-  if (!owned?.length) return { error: "Esa cuenta no es propietaria de ningún negocio." };
-
-  const business = await admin
-    .from("businesses")
-    .insert({
-      slug: `negocio-${crypto.randomUUID().slice(0, 8)}`,
-      name,
-      is_active: true,
-    })
-    .select("id")
+// Amplía una línea del plan en 1: el propietario puede crear un servicio más de esa categoría.
+export async function expandServicePlanAction(formData: FormData): Promise<void> {
+  const { supabase, role } = await getPanelIdentity();
+  if (!canManageProviders(role)) throw new Error("Tu cuenta no puede ampliar el plan.");
+  const businessId = formText(formData, "business_id");
+  const planId = formText(formData, "plan_id");
+  const { data: plan, error: readError } = await supabase
+    .from("business_service_plans")
+    .select("quantity")
+    .eq("id", planId)
+    .eq("business_id", businessId)
     .single();
-  if (business.error || !business.data) {
-    return { error: "No se pudo crear el negocio. Intenta de nuevo." };
-  }
-  const businessId = business.data.id;
-
-  const membership = await admin
-    .from("business_members")
-    .insert({ business_id: businessId, user_id: ownerId, role: "owner" });
-  const planRows = await admin.from("business_service_plans").insert(
-    plan.map((row) => ({ business_id: businessId, ...row })),
-  );
-  if (membership.error || planRows.error) {
-    await admin.from("business_members").delete().eq("business_id", businessId);
-    await admin.from("business_service_plans").delete().eq("business_id", businessId);
-    await admin.from("businesses").delete().eq("id", businessId);
-    return { error: "No se pudo agregar el negocio al propietario. Intenta de nuevo." };
-  }
-
+  if (readError || !plan) throw new Error("No se encontró esa línea del plan.");
+  const { error } = await supabase
+    .from("business_service_plans")
+    .update({ quantity: plan.quantity + 1 })
+    .eq("id", planId)
+    .eq("business_id", businessId);
+  if (error) throw new Error(error.message);
   refreshBusinessViews(businessId);
-  return { error: "", saved: true };
 }

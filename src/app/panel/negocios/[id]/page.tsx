@@ -13,6 +13,7 @@ import { getAccountNames } from "@/lib/panel-people";
 import { related } from "@/lib/panel-relations";
 import { canManageCatalog } from "@/types/panel";
 import {
+  expandServicePlanAction,
   removeBusinessMemberAction,
   removeServicePlanAction,
   setBusinessActiveAction,
@@ -186,6 +187,19 @@ export default async function BusinessDetailPage({
                     <b>{category?.label ?? "Servicio"}{lodging ? ` · ${lodging.label}` : ""}</b>
                     <small>{usedOf(plan.category_id)} creados</small>
                   </div>
+                  {isTeam && (
+                    <form action={expandServicePlanAction}>
+                      <input type="hidden" name="business_id" value={id} />
+                      <input type="hidden" name="plan_id" value={plan.id} />
+                      <ConfirmSubmit tone="secondary" className="small" confirm={{
+                        title: `¿Ampliar el plan en 1 × ${category?.label ?? "servicio"}${lodging ? ` · ${lodging.label}` : ""}?`,
+                        body: `El negocio podrá crear ${plan.quantity + 1} servicios de este tipo en lugar de ${plan.quantity}.`,
+                        confirmLabel: "Sí, ampliar",
+                      }}>
+                        Ampliar +1
+                      </ConfirmSubmit>
+                    </form>
+                  )}
                   {isTeam && (
                     <form action={removeServicePlanAction}>
                       <input type="hidden" name="business_id" value={id} />
