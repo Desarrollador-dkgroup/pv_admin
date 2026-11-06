@@ -31,6 +31,9 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 - Migración de owner_update_business aplicada; el panel ya solo edita el nombre.
 - Vista previa del panel sincronizada con promociones próximas y precios.
 - Solicitudes de negocios: formulario público, tabla `business_leads` y vista del equipo.
+- Correo de solicitudes: función `notify-business-lead` desplegada y disparador al insertar. Falta
+  guardar el secreto `RESEND_API_KEY` en Supabase (Project Settings → Edge Functions → Secrets).
+  Hasta entonces la solicitud se guarda y el correo no sale.
 - Sombra oscura del hero quitada.
 - Negocios: botón «Nuevo negocio» en el panel del equipo; el propietario se asigna desde «Personas» en la ficha.
 - Plan del negocio por categoría: «+ Agregar nuevo servicio» (pide el tipo en hospedaje y confirmación)
