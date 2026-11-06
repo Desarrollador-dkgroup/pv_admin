@@ -21,34 +21,29 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 - Pendiente: revisión legal por abogado panameño (referencias y tope de responsabilidad).
   Las preguntas abiertas de la plantilla se contestan en el generador por contrato.
 
+## Hecho en esta sesión (2026-11-06)
+
+- Plantilla de contrato nueva con datos editables, vista previa en azul, impresión limpia y logo.
+- Documento de anuncio: el enlace abre el archivo al hacer clic.
+- Promociones: día y rango en la reserva; próximas visibles; descuento por noche.
+- Restaurantes y actividades: promo general del servicio en la fecha de la reserva.
+- Precios siempre con dos decimales (`formatPrice`), web y vista previa del panel.
+- Migración de owner_update_business aplicada; el panel ya solo edita el nombre.
+- Vista previa del panel sincronizada con promociones próximas y precios.
+- Solicitudes de negocios: formulario público, tabla `business_leads` y vista del equipo.
+- Sombra oscura del hero quitada.
+
 ## Pendientes (actualizado 2026-11-06)
 
 Por decidir (lo contesta el dueño del proyecto):
-1. Servicio de correo para las solicitudes de «Quiero publicar mi negocio» (Resend recomendado),
-   clave de API y remitente. Destino: desarrollo.dkgroup@gmail.com.
-2. Confirmar si la promoción «10% de descuento en habitación estándar» debe ser 10 y no 9.99.
-3. Aplicar en producción la migración `202611050003_owner_update_business_name_only.sql`
-   (en el repo, pendiente de confirmación).
-4. Revisión del contrato por abogado panameño, incluido el tope de responsabilidad (cláusula 13.4).
+1. Servicio de correo para las solicitudes de «Quiero publicar mi negocio» (Resend, plan gratuito:
+   100 correos al día y 3,000 al mes). Falta crear la cuenta, la clave y el remitente.
+   Destino: desarrollo.dkgroup@gmail.com.
+2. Revisión del contrato por el jefe, incluido el tope de responsabilidad (cláusula 13.4).
 
-Código pendiente:
-5. Promociones en restaurantes y actividades: la reserva por fecha (`create_request_reservation`)
-   no aplica la promo todavía.
-6. Vista previa del panel (`src/lib/public-service/`): sincronizar con la web (promociones
-   próximas y descuento por noche).
-7. Vista del equipo para leer las solicitudes de `business_leads` en el panel (hoy solo se
-   guardan en la base; el correo está pendiente de la decisión 1).
-8. Contratos ya emitidos conservan su texto original; los borradores se actualizan con
-   «Usar la plantilla nueva».
-
-Por desplegar (el código ya está en `main`; el sitio muestra la versión anterior):
-9. `pv_admin`: `npm run deploy`. Incluye contratos, documento de anuncios, vista de impresión y logo.
-10. `panama-viajero`: `npm run deploy`. Incluye reservas con promoción, promociones próximas,
-    formulario «Quiero publicar mi negocio» y quitar la sombra del hero.
-
-Sin verificar en navegador:
-11. Pantallas nuevas del panel con cada rol, y el documento de anuncio desde el enlace
-    «Ver documento actual» (no hubo sesión para probarlo).
+Por verificar:
+3. Pantallas nuevas del panel con cada rol, y el enlace «Ver documento actual» de anuncios.
+   No hubo sesión para probarlas en el navegador.
 
 ## Documento de anuncio que no se veía (2026-11-05)
 

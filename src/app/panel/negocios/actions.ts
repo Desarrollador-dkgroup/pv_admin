@@ -103,18 +103,13 @@ export async function updateOwnBusinessAction(
   if (!businessIds.includes(businessId)) return { error: "No puedes editar este negocio." };
 
   const name = formText(formData, "name");
-  const description = formText(formData, "description");
   if (name.length < 2 || name.length > 80) {
     return { error: "El nombre debe tener entre 2 y 80 caracteres." };
-  }
-  if (description.length > 1200) {
-    return { error: "La descripción no puede pasar de 1200 caracteres." };
   }
 
   const { error } = await supabase.rpc("owner_update_business", {
     p_business_id: businessId,
     p_name: name,
-    p_description: description,
   });
   if (error) return { error: error.message };
 

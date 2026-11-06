@@ -109,8 +109,7 @@ export default async function BusinessDetailPage({
         <Panel>
           <h2>Datos del negocio</h2>
           <p className="muted">Completa la información que verán los visitantes.</p>
-          <OwnBusinessForm businessId={id} name={business.name}
-            description={business.description ?? ""} />
+          <OwnBusinessForm businessId={id} name={business.name} />
         </Panel>
       )}
 

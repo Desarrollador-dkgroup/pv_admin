@@ -426,11 +426,7 @@ export async function OwnerOverview({
                 <Badge tone={business.is_active ? "success" : "neutral"}>
                   {business.is_active ? "Activo" : "Inactivo"}
                 </Badge>
-                <OwnBusinessForm
-                  businessId={business.id}
-                  name={business.name}
-                  description={business.description ?? ""}
-                />
+                <OwnBusinessForm businessId={business.id} name={business.name} />
               </div>
             ))}
           </Panel>
