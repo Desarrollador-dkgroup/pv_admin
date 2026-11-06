@@ -158,7 +158,8 @@ export function ContractForm({ initial }: { initial: ContractFormValues }) {
             <p className="contract-hint">Aparecen en el encabezado y en las cláusulas del documento.</p>
             <label className="field">
               Nombre comercial
-              <input value={values.businessName} readOnly aria-readonly="true" />
+              <input className="contract-readonly-value" value={values.businessName} readOnly
+                aria-readonly="true" />
               <small className="muted">Viene de la ficha del negocio.</small>
             </label>
             <div className="form-grid">

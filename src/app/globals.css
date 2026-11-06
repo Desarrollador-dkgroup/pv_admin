@@ -190,6 +190,11 @@ select {
 input[readonly] {
   color: var(--muted);
 }
+/* Dato fijo del negocio dentro del generador: se lee como valor, no como texto de ayuda. */
+.contract-readonly-value {
+  color: var(--ink);
+  font-weight: 600;
+}
 input[type="checkbox"] {
   width: 18px;
   height: 18px;
