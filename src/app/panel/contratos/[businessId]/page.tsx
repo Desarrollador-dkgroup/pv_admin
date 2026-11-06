@@ -6,8 +6,10 @@ import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import {
   DEFAULT_CONTRACT_BODY,
   DEFAULT_CONTRACT_TITLE,
+  contractFieldDefaults,
   contractStatusLabel,
   contractStatusTone,
+  contractValuesFor,
   formatContractDate,
   renderContract,
 } from "@/lib/panel-contracts";
@@ -41,6 +43,7 @@ type Contract = {
   rejection_reason: string | null;
   version: number;
   updated_at: string;
+  contract_fields: Record<string, unknown> | null;
 };
 
 // Línea de tiempo del contrato: borrador, emitido, firma subida, verificado.
@@ -104,6 +107,7 @@ export default async function EditContractPage({
       contactEmail: contract?.contact_email ?? "",
       startsOn: contract?.starts_on ?? "",
       endsOn: contract?.ends_on ?? "",
+      fields: contractFieldDefaults(contract?.contract_fields),
       dateLabel,
       version: contract?.version ?? 1,
     };
@@ -126,20 +130,10 @@ export default async function EditContractPage({
       .createSignedUrl(contract.signed_pdf_path, 600);
     signedUrl = data?.signedUrl ?? null;
   }
-  const text = renderContract(contract.template_body, {
-    negocio: business.name,
-    razon_social: contract.legal_name ?? business.name,
-    ruc: contract.tax_id ?? "",
-    representante: contract.legal_representative ?? "",
-    direccion: contract.legal_address ?? "",
-    vigencia_inicio: formatContractDate(contract.starts_on),
-    vigencia_fin: formatContractDate(contract.ends_on),
-    comision_base: String(Number(contract.base_commission_pct)),
-    limite_descuento: String(Number(contract.discount_limit_pct)),
-    ganancia_objetivo: formatCents(Number(contract.target_profit_cents)),
-    tope_comision: String(Number(contract.commission_cap_pct)),
-    fecha: dateLabel,
-  });
+  const text = renderContract(
+    contract.template_body,
+    contractValuesFor(contract, business.name, dateLabel),
+  );
 
   return (
     <>

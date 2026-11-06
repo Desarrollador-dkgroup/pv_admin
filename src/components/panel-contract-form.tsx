@@ -9,8 +9,12 @@ import {
 import { ConfirmSubmit, Panel } from "@/components/ui";
 import { formatCents } from "@/lib/panel-format";
 import {
+  CONTRACT_FIELDS,
   CONTRACT_PLACEHOLDERS,
-  formatContractDate,
+  DEFAULT_CONTRACT_BODY,
+  DEFAULT_CONTRACT_TITLE,
+  contractValuesFor,
+  missingContractKeys,
   renderContract,
   type ContractValues,
 } from "@/lib/panel-contracts";
@@ -33,6 +37,8 @@ export type ContractFormValues = {
   contactEmail: string;
   startsOn: string;
   endsOn: string;
+  // Valores de los datos del contrato sin columna propia (CONTRACT_FIELDS).
+  fields: Record<string, string>;
   // Fecha de emisión ya formateada en el servidor; la misma usa la impresión.
   dateLabel: string;
   version: number;
@@ -65,31 +71,44 @@ const KNOWN_KEYS = new Set<string>(CONTRACT_PLACEHOLDERS.map((item) => item.key)
 export function ContractForm({ initial }: { initial: ContractFormValues }) {
   const [state, action, pending] = useActionState(saveContractAction, { error: "" });
   const [values, setValues] = useState(initial);
+  const [fields, setFields] = useState(initial.fields);
   const [body, setBody] = useState(initial.templateBody);
   const [simPrice, setSimPrice] = useState(100);
   const [simDiscount, setSimDiscount] = useState(40);
   const template = useRef<HTMLTextAreaElement>(null);
 
+  // Los números vacíos no se muestran como «NaN»: quedan en blanco y cuentan como faltantes.
+  const blankIfNaN = (value: number) => (Number.isFinite(value) ? String(value) : "");
   const previewValues: ContractValues = {
-    razon_social: values.legalName,
-    ruc: values.taxId,
-    representante: values.legalRepresentative,
-    direccion: values.legalAddress,
-    vigencia_inicio: formatContractDate(values.startsOn),
-    vigencia_fin: formatContractDate(values.endsOn),
-    negocio: values.businessName,
-    comision_base: String(values.baseCommissionPct),
-    limite_descuento: String(values.discountLimitPct),
-    ganancia_objetivo: formatCents(Math.round(values.targetProfitUsd * 100)),
-    tope_comision: String(values.commissionCapPct),
-    fecha: initial.dateLabel,
+    ...contractValuesFor({
+      legal_name: values.legalName || null,
+      tax_id: values.taxId || null,
+      legal_representative: values.legalRepresentative || null,
+      legal_address: values.legalAddress || null,
+      contact_email: values.contactEmail || null,
+      starts_on: values.startsOn || null,
+      ends_on: values.endsOn || null,
+      base_commission_pct: values.baseCommissionPct,
+      discount_limit_pct: values.discountLimitPct,
+      target_profit_cents: Math.round(values.targetProfitUsd * 100),
+      commission_cap_pct: values.commissionCapPct,
+      contract_fields: fields,
+    }, values.businessName, initial.dateLabel),
+    comision_base: blankIfNaN(values.baseCommissionPct),
+    limite_descuento: blankIfNaN(values.discountLimitPct),
+    tope_comision: blankIfNaN(values.commissionCapPct),
+    ganancia_objetivo: Number.isFinite(values.targetProfitUsd)
+      ? formatCents(Math.round(values.targetProfitUsd * 100))
+      : "",
   };
 
   // Marcadores escritos a mano que no existen, y datos usados que están vacíos.
   const used = [...body.matchAll(/\{\{(\w+)\}\}/g)].map((match) => match[1]);
   const unknown = [...new Set(used.filter((key) => !KNOWN_KEYS.has(key)))];
-  const empty = [...new Set(used.filter((key) => KNOWN_KEYS.has(key) && !previewValues[key]))]
+  const empty = missingContractKeys(body, previewValues)
+    .filter((key) => KNOWN_KEYS.has(key))
     .map((key) => CONTRACT_PLACEHOLDERS.find((item) => item.key === key)?.label ?? key);
+  const fieldsReady = CONTRACT_FIELDS.every((field) => Boolean(fields[field.key]?.trim()));
 
   const simulation = previewPromotion(Math.round(simPrice * 100), simDiscount, {
     baseCommissionPct: values.baseCommissionPct,
@@ -125,7 +144,7 @@ export function ContractForm({ initial }: { initial: ContractFormValues }) {
       <input type="hidden" name="business_id" value={initial.businessId} />
       <ol className="stepper-line" aria-label="Pasos del contrato">
         <li data-step="1" className={legalReady ? "done" : "current"}>Datos del negocio</li>
-        <li data-step="2" className={termsReady ? "done" : "current"}>Condiciones</li>
+        <li data-step="2" className={termsReady && fieldsReady ? "done" : "current"}>Condiciones</li>
         <li data-step="3" className={documentReady ? "done" : "current"}>Documento</li>
         <li data-step="4" className={legalReady && termsReady && documentReady ? "current" : ""}>
           Revisar y emitir
@@ -228,9 +247,64 @@ export function ContractForm({ initial }: { initial: ContractFormValues }) {
             </div>
           </Panel>
 
+          <Panel id="datos-contrato">
+            <h2>3 · Datos del contrato</h2>
+            <p className="contract-hint">
+              Cada dato aparece en la cláusula que le corresponde. Revisa los valores por defecto.
+            </p>
+            {[...new Set(CONTRACT_FIELDS.map((field) => field.group))].map((group) => (
+              <div key={group} className="stack compact">
+                <h3>{group}</h3>
+                <div className="form-grid">
+                  {CONTRACT_FIELDS.filter((field) => field.group === group).map((field) => (
+                    <label className="field" key={field.key}>
+                      {field.label}
+                      {field.kind === "select" ? (
+                        <select name={`field_${field.key}`} value={fields[field.key] ?? ""}
+                          onChange={(e) => setFields({ ...fields, [field.key]: e.target.value })}>
+                          {field.options?.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      ) : field.kind === "textarea" ? (
+                        <textarea name={`field_${field.key}`} rows={3} value={fields[field.key] ?? ""}
+                          onChange={(e) => setFields({ ...fields, [field.key]: e.target.value })} />
+                      ) : (
+                        <input name={`field_${field.key}`}
+                          type={field.kind === "number" ? "number" : "text"}
+                          min={field.kind === "number" ? "0" : undefined}
+                          step={field.kind === "number" ? "any" : undefined}
+                          value={fields[field.key] ?? ""}
+                          onChange={(e) => setFields({ ...fields, [field.key]: e.target.value })} />
+                      )}
+                      {field.help && <small className="muted">{field.help}</small>}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+            {!fieldsReady && (
+              <p className="form-error" role="alert">Completa todos los datos del contrato.</p>
+            )}
+          </Panel>
+
           <Panel id="documento">
-            <h2>3 · Documento</h2>
+            <h2>4 · Documento</h2>
             <p className="contract-hint">Inserta datos con un clic en la posición del cursor.</p>
+            {initial.status === "draft" && (
+              <div className="stack compact">
+                <button type="button" className="button quiet small"
+                  onClick={() => {
+                    setBody(DEFAULT_CONTRACT_BODY);
+                    setValues({ ...values, title: DEFAULT_CONTRACT_TITLE });
+                  }}>
+                  Usar la plantilla nueva
+                </button>
+                <small className="muted">
+                  Reemplaza el texto actual por la plantilla vigente. Los datos que ya llenaste se conservan.
+                </small>
+              </div>
+            )}
             <div className="chip-row">
               {CONTRACT_PLACEHOLDERS.map((item) => (
                 <button type="button" key={item.key} className="chip insert-chip"
@@ -297,7 +371,7 @@ export function ContractForm({ initial }: { initial: ContractFormValues }) {
           {pending ? "Guardando…" : "Guardar borrador"}
         </button>
         <ConfirmSubmit tone="primary" name="status" value="issued"
-          disabled={pending || !termsReady || unknown.length > 0}
+          disabled={pending || !termsReady || !fieldsReady || unknown.length > 0 || empty.length > 0}
           confirm={{
             title: `¿Emitir el contrato a ${values.businessName}?`,
             body: "El negocio recibirá un aviso y lo verá en «Mi contrato». Las condiciones " +

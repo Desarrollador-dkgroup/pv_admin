@@ -6,6 +6,21 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 > **Regla estricta de sincronización.** Antes de empezar: pull en ambos repos y leer esta
 > bitácora. Al terminar: actualizarla, commit y push. Claude debe recordarlo siempre.
 
+## Contrato de colaboración (plantilla nueva, 2026-11-06)
+
+- Migración `202611060001_contract_fields.sql` aplicada en producción (prueba previa con
+  ROLLBACK). Columna `contract_fields` (jsonb) en `business_contracts` para los datos del
+  contrato sin columna propia (plazos, liquidación, planes, jurisdicción, etc.).
+- Plantilla nueva en `src/lib/panel-contracts.ts` (`DEFAULT_CONTRACT_BODY`), 18 cláusulas,
+  todos los datos como marcadores. `CONTRACT_FIELDS` define los campos del generador.
+- Generador: sección «3 · Datos del contrato» con todos los campos; emitir exige que
+  todos los datos de la plantilla tengan valor. Los borradores pueden guardarse a medias.
+  Botón «Usar la plantilla nueva» para borradores existentes.
+- Un solo constructor de valores (`contractValuesFor`) para generador, impresión y
+  «Mi contrato». Contratos ya emitidos conservan su texto original.
+- Pendiente: revisión legal por abogado panameño (referencias y tope de responsabilidad).
+  Las preguntas abiertas de la plantilla se contestan en el generador por contrato.
+
 ## Pendientes para presentar (2026-11-05)
 
 1. Promociones en restaurantes y actividades: la reserva por fecha (`create_request_reservation`)

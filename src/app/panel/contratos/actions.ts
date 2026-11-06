@@ -4,10 +4,30 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { formText } from "@/lib/panel-form";
+import { CONTRACT_FIELDS, missingContractKeys, type ContractValues } from "@/lib/panel-contracts";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { canManageCatalog } from "@/types/panel";
 
 type FormState = { error: string; saved?: boolean };
+
+// Valores de los campos del generador (`field_<clave>`) validados según su tipo.
+function readContractFields(formData: FormData): { values: Record<string, string>; error: string } {
+  const values: Record<string, string> = {};
+  for (const field of CONTRACT_FIELDS) {
+    const value = formText(formData, `field_${field.key}`);
+    if (field.kind === "number" && value !== "") {
+      const number = Number(value);
+      if (!Number.isFinite(number) || number < 0) {
+        return { values, error: `«${field.label}» debe ser un número igual o mayor que cero.` };
+      }
+    }
+    if (field.kind === "select" && value && !field.options?.includes(value)) {
+      return { values, error: `«${field.label}» tiene una opción no válida.` };
+    }
+    values[field.key] = value;
+  }
+  return { values, error: "" };
+}
 
 const MAX_SIGNED_BYTES = 10 * 1024 * 1024;
 
@@ -51,6 +71,32 @@ export async function saveContractAction(_previous: FormState, formData: FormDat
     return { error: "La fecha de inicio no puede ser posterior a la de fin." };
   }
 
+  const fields = readContractFields(formData);
+  if (fields.error) return { error: fields.error };
+  // Para emitir, todo dato que la plantilla usa debe tener valor. Un borrador puede quedar a medias.
+  const filled: ContractValues = {
+    ...fields.values,
+    fecha: "fecha",
+    negocio: "negocio",
+    razon_social: legalName ?? "",
+    ruc: taxId ?? "",
+    direccion: legalAddress ?? "",
+    representante: legalRepresentative ?? "",
+    correo_negocio: contactEmail ?? "",
+    vigencia_inicio: startsOn ?? "",
+    vigencia_fin: endsOn ?? "",
+    comision_base: String(base),
+    limite_descuento: String(limit),
+    ganancia_objetivo: String(targetUsd),
+    tope_comision: String(cap),
+  };
+  const missing = status === "issued" ? missingContractKeys(templateBody, filled) : [];
+  if (missing.length) {
+    const labels = missing.map((key) =>
+      CONTRACT_FIELDS.find((field) => field.key === key)?.label ?? key);
+    return { error: `Faltan datos en el contrato: ${labels.join(", ")}.` };
+  }
+
   const admin = getSupabaseAdminClient();
   const { data: existing } = await admin
     .from("business_contracts")
@@ -78,6 +124,7 @@ export async function saveContractAction(_previous: FormState, formData: FormDat
       contact_email: contactEmail,
       starts_on: startsOn,
       ends_on: endsOn,
+      contract_fields: fields.values,
       issued_at: status === "issued" ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     },
