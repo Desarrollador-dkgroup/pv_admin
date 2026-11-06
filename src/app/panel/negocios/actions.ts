@@ -126,7 +126,7 @@ export async function addServicePlanAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const { supabase, role } = await getPanelIdentity();
+  const { role } = await getPanelIdentity();
   if (!canManageProviders(role)) {
     return { error: "Tu cuenta no puede agregar servicios al plan." };
   }
@@ -141,18 +141,34 @@ export async function addServicePlanAction(
     return { error: "La cantidad debe ser un número mayor a 0." };
   }
 
-  const { error } = await supabase.from("business_service_plans").insert({
-    business_id: businessId,
-    category_id: categoryId,
-    hospedaje_type_id: categoryId === "hospedaje" ? hospedajeTypeId : null,
-    quantity: Number(quantity),
-  });
+  // Si la categoría (y el tipo, en hospedaje) ya está en el plan, se suma a esa línea.
+  // Así no se crean líneas repetidas.
+  const typeId = categoryId === "hospedaje" ? hospedajeTypeId || null : null;
+  const admin = getSupabaseAdminClient();
+  const base = admin
+    .from("business_service_plans")
+    .select("id, quantity")
+    .eq("business_id", businessId)
+    .eq("category_id", categoryId)
+    .order("created_at")
+    .limit(1);
+  const { data: existing, error: readError } = await (typeId
+    ? base.eq("hospedaje_type_id", typeId)
+    : base.is("hospedaje_type_id", null)).maybeSingle();
+  if (readError) return { error: readError.message };
 
-  if (error) {
-    return { error: error.message.includes("duplicate")
-      ? "Este tipo de servicio ya está en el plan."
-      : error.message };
-  }
+  const { error } = existing
+    ? await admin
+      .from("business_service_plans")
+      .update({ quantity: existing.quantity + Number(quantity) })
+      .eq("id", existing.id)
+    : await admin.from("business_service_plans").insert({
+      business_id: businessId,
+      category_id: categoryId,
+      hospedaje_type_id: typeId,
+      quantity: Number(quantity),
+    });
+  if (error) return { error: error.message };
 
   refreshBusinessViews(businessId);
   return { error: "" };
