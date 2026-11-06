@@ -240,3 +240,18 @@ export async function addPlanServiceAction(formData: FormData): Promise<void> {
   if (error) throw new Error(error.message);
   refreshBusinessViews(businessId);
 }
+
+// Quita todas las líneas del plan de una categoría. Los servicios ya creados no se borran.
+export async function removeServicePlanCategoryAction(formData: FormData): Promise<void> {
+  const { supabase, role } = await getPanelIdentity();
+  if (!canManageProviders(role)) throw new Error("Tu cuenta no puede cambiar el plan.");
+  const businessId = formText(formData, "business_id");
+  const categoryId = formText(formData, "category_id");
+  const { error } = await supabase
+    .from("business_service_plans")
+    .delete()
+    .eq("business_id", businessId)
+    .eq("category_id", categoryId);
+  if (error) throw new Error(error.message);
+  refreshBusinessViews(businessId);
+}

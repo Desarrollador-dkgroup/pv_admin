@@ -15,7 +15,7 @@ import { related } from "@/lib/panel-relations";
 import { canManageCatalog } from "@/types/panel";
 import {
   removeBusinessMemberAction,
-  removeServicePlanAction,
+  removeServicePlanCategoryAction,
   setBusinessActiveAction,
 } from "../actions";
 
@@ -194,43 +194,30 @@ export default async function BusinessDetailPage({
               <p className="muted">Cuántos servicios de cada tipo puede crear el negocio.</p>
             </div>
             {planGroups.map((group) => (
-              <div key={group.categoryId} className="stack compact">
-                <div className="list-row">
-                  <div className="list-row-text">
-                    <b>{group.label}</b>
-                    <small>{group.quantity} servicios en el plan · {usedOf(group.categoryId)} creados</small>
-                  </div>
-                  {isTeam && (
-                    <PlanAddServiceForm businessId={id} categoryId={group.categoryId}
-                      categoryLabel={group.label}
-                      types={group.categoryId === "hospedaje" ? (types.data ?? []) : []} />
-                  )}
+              <div className="list-row" key={group.categoryId}>
+                <div className="list-row-text">
+                  <b>{group.label}</b>
+                  <small>{group.quantity} servicios en el plan · {usedOf(group.categoryId)} creados</small>
                 </div>
-                {group.lines.map((plan) => {
-                  const lodging = related(plan.hospedaje_types);
-                  return (
-                    <div className="list-row" key={plan.id}>
-                      <span className="badge tone-info">{plan.quantity} ×</span>
-                      <div className="list-row-text">
-                        <b>{lodging ? lodging.label : group.label}</b>
-                      </div>
-                      {isTeam && (
-                        <form action={removeServicePlanAction}>
-                          <input type="hidden" name="business_id" value={id} />
-                          <input type="hidden" name="plan_id" value={plan.id} />
-                          <ConfirmSubmit tone="quiet" className="small" confirm={{
-                            title: `¿Quitar ${plan.quantity} × ${lodging?.label ?? group.label} del plan?`,
-                            body: "Los servicios ya creados no se borran, pero el negocio no podrá crear más de este tipo.",
-                            confirmLabel: "Quitar del plan",
-                            danger: true,
-                          }}>
-                            Quitar
-                          </ConfirmSubmit>
-                        </form>
-                      )}
-                    </div>
-                  );
-                })}
+                {isTeam && (
+                  <PlanAddServiceForm businessId={id} categoryId={group.categoryId}
+                    categoryLabel={group.label}
+                    types={group.categoryId === "hospedaje" ? (types.data ?? []) : []} />
+                )}
+                {isTeam && (
+                  <form action={removeServicePlanCategoryAction}>
+                    <input type="hidden" name="business_id" value={id} />
+                    <input type="hidden" name="category_id" value={group.categoryId} />
+                    <ConfirmSubmit tone="quiet" className="small" confirm={{
+                      title: `¿Quitar ${group.label} del plan?`,
+                      body: "Se quitan todos los cupos de esta categoría. Los servicios ya creados no se borran.",
+                      confirmLabel: "Quitar del plan",
+                      danger: true,
+                    }}>
+                      Quitar
+                    </ConfirmSubmit>
+                  </form>
+                )}
               </div>
             ))}
             {!plans.data?.length && (

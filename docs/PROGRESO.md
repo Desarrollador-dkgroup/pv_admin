@@ -35,6 +35,8 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 - Negocios: botón «Nuevo negocio» en el panel del equipo; el propietario se asigna desde «Personas» en la ficha.
 - Plan del negocio por categoría: «+ Agregar nuevo servicio» (pide el tipo en hospedaje y confirmación)
   sube el cupo del propietario; el propietario lo ve al recargar su panel.
+  La ficha muestra solo categorías con su conteo. Se borró la línea repetida de Hospedaje ·
+  Hoteles del negocio de prueba (quedó una).
 
 ## Pendientes (actualizado 2026-11-06)
 
