@@ -45,7 +45,7 @@ export default async function BusinessDetailPage({
     supabase.from("business_members").select("user_id, role").eq("business_id", id).order("role"),
     supabase
       .from("services")
-      .select("id, name, status, review_status, category_id, base_price_cents")
+      .select("id, name, status, review_status, category_id, hospedaje_type_id, base_price_cents")
       .eq("business_id", id)
       .order("name"),
     isTeam
@@ -53,7 +53,7 @@ export default async function BusinessDetailPage({
       : Promise.resolve({ data: [], error: null }),
     supabase
       .from("business_service_plans")
-      .select("id, quantity, category_id, categories(label), hospedaje_types(label)")
+      .select("id, quantity, category_id, hospedaje_type_id, categories(label), hospedaje_types(label)")
       .eq("business_id", id)
       .order("created_at"),
     supabase.from("categories").select("id, label").order("label"),
@@ -83,12 +83,13 @@ export default async function BusinessDetailPage({
   // Plan agrupado por categoría (las líneas de hospedaje guardan su tipo).
   type PlanLine = NonNullable<typeof plans.data>[number];
   const planGroups = Object.values((plans.data ?? []).reduce<Record<string, {
-    categoryId: string; label: string; quantity: number; lines: PlanLine[];
+    categoryId: string; label: string; quantity: number; free: number; lines: PlanLine[];
   }>>((acc, plan) => {
     const group = acc[plan.category_id] ?? {
       categoryId: plan.category_id,
       label: related(plan.categories)?.label ?? labelOf.get(plan.category_id) ?? "Servicio",
       quantity: 0,
+      free: 0,
       lines: [],
     };
     group.quantity += plan.quantity;
@@ -96,6 +97,17 @@ export default async function BusinessDetailPage({
     acc[plan.category_id] = group;
     return acc;
   }, {}));
+  // Disponibles para crear: por cada tipo, cupo menos servicios ya creados (nunca negativo).
+  for (const group of planGroups) {
+    const quotaByType = new Map<string | null, number>();
+    for (const line of group.lines) {
+      const key = line.hospedaje_type_id ?? null;
+      quotaByType.set(key, (quotaByType.get(key) ?? 0) + line.quantity);
+    }
+    group.free = [...quotaByType].reduce((sum, [typeId, quota]) => sum + Math.max(0, quota
+      - serviceList.filter((service) => service.category_id === group.categoryId
+        && (service.hospedaje_type_id ?? null) === typeId).length), 0);
+  }
 
   return (
     <>
@@ -197,7 +209,10 @@ export default async function BusinessDetailPage({
               <div className="list-row" key={group.categoryId}>
                 <div className="list-row-text">
                   <b>{group.label}</b>
-                  <small>{group.quantity} servicios en el plan · {usedOf(group.categoryId)} creados</small>
+                  <small>
+                    {group.quantity} en el plan · {usedOf(group.categoryId)} creados ·{" "}
+                    <b>{group.free} {group.free === 1 ? "disponible" : "disponibles"} para crear</b>
+                  </small>
                 </div>
                 {isTeam && (
                   <PlanAddServiceForm businessId={id} categoryId={group.categoryId}

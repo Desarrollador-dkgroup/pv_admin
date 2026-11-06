@@ -37,7 +37,7 @@ export function PlanAddServiceForm({
       <ConfirmSubmit tone="secondary" className="small" disabled={types.length > 0 && !typeId}
         confirm={{
           title: `¿Agregar un servicio de ${target}?`,
-          body: `El plan del negocio aumenta en 1 para ${target}. El propietario podrá crear ese servicio desde su cuenta.`,
+          body: `El propietario tendrá 1 servicio más disponible para crear en ${target}. Lo verá en «Mis servicios» y podrá enviarlo a revisión.`,
           confirmLabel: "Sí, agregar",
         }}>
         + Agregar nuevo servicio

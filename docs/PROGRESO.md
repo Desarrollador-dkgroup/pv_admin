@@ -40,6 +40,9 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
   sube el cupo del propietario; el propietario lo ve al recargar su panel.
   La ficha muestra solo categorías con su conteo. Se borró la línea repetida de Hospedaje ·
   Hoteles del negocio de prueba (quedó una).
+- Plan como tope total: el propietario crea servicios mientras los creados sean menos que el
+  cupo. «Agregar nuevo servicio» deja de verdad un cupo libre más: cupo = máx(cupo, creados) + N.
+  Une líneas repetidas. La ficha del admin muestra los disponibles para crear.
 
 ## Pendientes (actualizado 2026-11-06)
 

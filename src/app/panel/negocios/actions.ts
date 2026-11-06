@@ -15,7 +15,68 @@ function refreshBusinessViews(businessId: string) {
   revalidatePath("/panel/negocios");
   revalidatePath(`/panel/negocios/${businessId}`);
   revalidatePath("/panel/propietarios");
+  revalidatePath("/panel/servicios");
+  revalidatePath("/panel/servicios/nuevo");
   revalidatePath("/panel");
+}
+
+// Da al negocio `count` cupos libres más en una categoría (y tipo, en hospedaje).
+// El plan es un tope total: el propietario crea servicios mientras los creados sean menos que
+// el cupo. Por eso el cupo nuevo parte del mayor entre el cupo actual y los ya creados, y así
+// cada ampliación deja de verdad `count` servicios disponibles para crear. Si había líneas
+// repetidas de la misma combinación, se unen en una sola.
+async function grantPlanSlots(
+  businessId: string,
+  categoryId: string,
+  typeId: string | null,
+  count: number,
+): Promise<string | null> {
+  const admin = getSupabaseAdminClient();
+  const linesQuery = admin
+    .from("business_service_plans")
+    .select("id, quantity")
+    .eq("business_id", businessId)
+    .eq("category_id", categoryId)
+    .order("created_at");
+  const usedQuery = admin
+    .from("services")
+    .select("id", { count: "exact", head: true })
+    .eq("business_id", businessId)
+    .eq("category_id", categoryId);
+  const [lines, used] = await Promise.all([
+    typeId ? linesQuery.eq("hospedaje_type_id", typeId) : linesQuery.is("hospedaje_type_id", null),
+    typeId ? usedQuery.eq("hospedaje_type_id", typeId) : usedQuery.is("hospedaje_type_id", null),
+  ]);
+  if (lines.error) return lines.error.message;
+  if (used.error) return used.error.message;
+
+  const rows = lines.data ?? [];
+  const currentQuota = rows.reduce((sum, row) => sum + row.quantity, 0);
+  const quota = Math.max(currentQuota, used.count ?? 0) + count;
+
+  if (!rows.length) {
+    const { error } = await admin.from("business_service_plans").insert({
+      business_id: businessId,
+      category_id: categoryId,
+      hospedaje_type_id: typeId,
+      quantity: quota,
+    });
+    return error?.message ?? null;
+  }
+  const [first, ...rest] = rows;
+  const { error } = await admin
+    .from("business_service_plans")
+    .update({ quantity: quota })
+    .eq("id", first.id);
+  if (error) return error.message;
+  if (rest.length) {
+    const { error: mergeError } = await admin
+      .from("business_service_plans")
+      .delete()
+      .in("id", rest.map((row) => row.id));
+    if (mergeError) return mergeError.message;
+  }
+  return null;
 }
 
 // Asigna una cuenta existente a un negocio como propietario o colaborador.
@@ -141,34 +202,10 @@ export async function addServicePlanAction(
     return { error: "La cantidad debe ser un número mayor a 0." };
   }
 
-  // Si la categoría (y el tipo, en hospedaje) ya está en el plan, se suma a esa línea.
-  // Así no se crean líneas repetidas.
   const typeId = categoryId === "hospedaje" ? hospedajeTypeId || null : null;
-  const admin = getSupabaseAdminClient();
-  const base = admin
-    .from("business_service_plans")
-    .select("id, quantity")
-    .eq("business_id", businessId)
-    .eq("category_id", categoryId)
-    .order("created_at")
-    .limit(1);
-  const { data: existing, error: readError } = await (typeId
-    ? base.eq("hospedaje_type_id", typeId)
-    : base.is("hospedaje_type_id", null)).maybeSingle();
-  if (readError) return { error: readError.message };
-
-  const { error } = existing
-    ? await admin
-      .from("business_service_plans")
-      .update({ quantity: existing.quantity + Number(quantity) })
-      .eq("id", existing.id)
-    : await admin.from("business_service_plans").insert({
-      business_id: businessId,
-      category_id: categoryId,
-      hospedaje_type_id: typeId,
-      quantity: Number(quantity),
-    });
-  if (error) return { error: error.message };
+  if (categoryId === "hospedaje" && !typeId) return { error: "Elige el tipo de hospedaje." };
+  const error = await grantPlanSlots(businessId, categoryId, typeId, Number(quantity));
+  if (error) return { error };
 
   refreshBusinessViews(businessId);
   return { error: "" };
@@ -219,42 +256,17 @@ export async function createBusinessAction(
   redirect(`/panel/negocios/${data.id}`);
 }
 
-// Suma 1 servicio al plan de una categoría (y tipo de hospedaje, si lo tiene).
-// Si la línea ya existe, sube su cantidad; si no, la crea con cantidad 1.
+// Da 1 servicio disponible más en una categoría (y tipo de hospedaje, si lo tiene).
 export async function addPlanServiceAction(formData: FormData): Promise<void> {
   const { role } = await getPanelIdentity();
-  const admin = getSupabaseAdminClient();
   if (!canManageProviders(role)) throw new Error("Tu cuenta no puede ampliar el plan.");
   const businessId = formText(formData, "business_id");
   const categoryId = formText(formData, "category_id");
   const typeId = formText(formData, "hospedaje_type_id") || null;
   if (!categoryId) throw new Error("Falta la categoría.");
   if (categoryId === "hospedaje" && !typeId) throw new Error("Elige el tipo de hospedaje.");
-
-  const base = admin
-    .from("business_service_plans")
-    .select("id, quantity")
-    .eq("business_id", businessId)
-    .eq("category_id", categoryId)
-    .order("created_at")
-    .limit(1);
-  const { data: existing, error: readError } = await (typeId
-    ? base.eq("hospedaje_type_id", typeId)
-    : base.is("hospedaje_type_id", null)).maybeSingle();
-  if (readError) throw new Error(readError.message);
-
-  const { error } = existing
-    ? await admin
-      .from("business_service_plans")
-      .update({ quantity: existing.quantity + 1 })
-      .eq("id", existing.id)
-    : await admin.from("business_service_plans").insert({
-      business_id: businessId,
-      category_id: categoryId,
-      hospedaje_type_id: typeId,
-      quantity: 1,
-    });
-  if (error) throw new Error(error.message);
+  const error = await grantPlanSlots(businessId, categoryId, typeId, 1);
+  if (error) throw new Error(error);
   refreshBusinessViews(businessId);
 }
 
