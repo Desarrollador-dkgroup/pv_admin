@@ -32,6 +32,7 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 - Vista previa del panel sincronizada con promociones próximas y precios.
 - Solicitudes de negocios: formulario público, tabla `business_leads` y vista del equipo.
 - Sombra oscura del hero quitada.
+- Negocios: botón «Nuevo negocio» en el panel del equipo; el propietario se asigna desde «Personas» en la ficha.
 
 ## Pendientes (actualizado 2026-11-06)
 

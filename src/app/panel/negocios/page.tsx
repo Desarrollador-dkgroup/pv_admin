@@ -62,9 +62,12 @@ export default async function BusinessesPage({ searchParams }: { searchParams: S
           ? "Negocios registrados, sus propietarios y el tipo de servicios que ofrecen. Se crean al agregar un propietario."
           : "Tus establecimientos, servicios y las personas que tienen acceso."}
         actions={isTeam && (
-          <Link className="button primary" href="/panel/propietarios#agregar-propietario">
-            + Agregar propietario
-          </Link>
+          <>
+            <Link className="button secondary" href="/panel/negocios/nuevo">+ Nuevo negocio</Link>
+            <Link className="button primary" href="/panel/propietarios#agregar-propietario">
+              + Agregar propietario
+            </Link>
+          </>
         )}
       />
 
