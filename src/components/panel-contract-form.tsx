@@ -352,11 +352,7 @@ export function ContractForm({ initial }: { initial: ContractFormValues }) {
             </button>
             <div className="contract-paper">
               <header>
-                <span className="paper-logo">PV</span>
-                <div>
-                  <b>Panamá Viajero</b>
-                  <small>Versión {initial.version} · {initial.dateLabel}</small>
-                </div>
+                <img src="/Logo-rectangular-contrato.svg" alt="Panamá Viajero" className="contract-logo" />
               </header>
               <h3>{values.title}</h3>
               <pre className="contract-preview">
@@ -374,11 +370,7 @@ export function ContractForm({ initial }: { initial: ContractFormValues }) {
             {/* Hoja de impresión: solo se ve al imprimir, en negro y sin la vista previa del panel. */}
             <article className="contract-print contract-print-live contract-paper" aria-hidden="true">
               <header>
-                <span className="paper-logo">PV</span>
-                <div>
-                  <b>Panamá Viajero</b>
-                  <small>Versión {initial.version}</small>
-                </div>
+                <img src="/Logo-rectangular-contrato.svg" alt="Panamá Viajero" className="contract-logo" />
               </header>
               <h1>{values.title}</h1>
               <pre>{renderContract(body, previewValues)}</pre>

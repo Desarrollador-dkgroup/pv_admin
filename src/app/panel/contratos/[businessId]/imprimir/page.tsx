@@ -43,12 +43,8 @@ export default async function PrintContractPage({
       </div>
       <article className="contract-print contract-paper">
         <header>
-          <span className="paper-logo">PV</span>
-          <div>
-            <b>Panamá Viajero</b>
-            <small>Contrato de colaboración comercial · versión {contract.version ?? 1}</small>
-          </div>
-        </header>
+                <img src="/Logo-rectangular-contrato.svg" alt="Panamá Viajero" className="contract-logo" />
+              </header>
         <h1>{contract.title}</h1>
         <pre>{text}</pre>
         <p className="no-print muted">

@@ -3026,6 +3026,13 @@ a.callout:hover {
   color: var(--muted);
   font-size: 12px;
 }
+/* Logo de Panamá Viajero en la cabecera del contrato (vista previa e impresión). */
+.contract-logo {
+  display: block;
+  height: 44px;
+  width: auto;
+  margin-bottom: 16px;
+}
 .paper-logo {
   display: inline-grid;
   place-items: center;
