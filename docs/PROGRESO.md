@@ -33,8 +33,8 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 - Solicitudes de negocios: formulario público, tabla `business_leads` y vista del equipo.
 - Sombra oscura del hero quitada.
 - Negocios: botón «Nuevo negocio» en el panel del equipo; el propietario se asigna desde «Personas» en la ficha.
-- Negocios: el equipo ve los negocios por categoría. En la ficha del negocio, cada línea
-  del plan tiene «Ampliar +1» (con confirmación sí/no) para un servicio más de esa categoría.
+- Plan del negocio por categoría: «+ Agregar nuevo servicio» (pide el tipo en hospedaje y confirmación)
+  sube el cupo del propietario; el propietario lo ve al recargar su panel.
 
 ## Pendientes (actualizado 2026-11-06)
 

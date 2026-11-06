@@ -10,10 +10,10 @@ import { formatCents } from "@/lib/panel-format";
 import { ownerStateOf } from "@/lib/panel-labels";
 import { canManageProviders } from "@/lib/panel-permissions";
 import { getAccountNames } from "@/lib/panel-people";
+import { PlanAddServiceForm } from "@/components/panel-plan-add-service-form";
 import { related } from "@/lib/panel-relations";
 import { canManageCatalog } from "@/types/panel";
 import {
-  expandServicePlanAction,
   removeBusinessMemberAction,
   removeServicePlanAction,
   setBusinessActiveAction,
@@ -80,6 +80,22 @@ export default async function BusinessDetailPage({
   const usedOf = (categoryId: string) =>
     serviceList.filter((service) => service.category_id === categoryId).length;
   const hasOwner = memberList.some((member) => member.role === "owner");
+  // Plan agrupado por categoría (las líneas de hospedaje guardan su tipo).
+  type PlanLine = NonNullable<typeof plans.data>[number];
+  const planGroups = Object.values((plans.data ?? []).reduce<Record<string, {
+    categoryId: string; label: string; quantity: number; lines: PlanLine[];
+  }>>((acc, plan) => {
+    const group = acc[plan.category_id] ?? {
+      categoryId: plan.category_id,
+      label: related(plan.categories)?.label ?? labelOf.get(plan.category_id) ?? "Servicio",
+      quantity: 0,
+      lines: [],
+    };
+    group.quantity += plan.quantity;
+    group.lines.push(plan);
+    acc[plan.category_id] = group;
+    return acc;
+  }, {}));
 
   return (
     <>
@@ -177,46 +193,46 @@ export default async function BusinessDetailPage({
               <h2>Plan de servicios</h2>
               <p className="muted">Cuántos servicios de cada tipo puede crear el negocio.</p>
             </div>
-            {(plans.data ?? []).map((plan) => {
-              const category = related(plan.categories);
-              const lodging = related(plan.hospedaje_types);
-              return (
-                <div className="list-row" key={plan.id}>
-                  <span className="badge tone-info">{plan.quantity} ×</span>
+            {planGroups.map((group) => (
+              <div key={group.categoryId} className="stack compact">
+                <div className="list-row">
                   <div className="list-row-text">
-                    <b>{category?.label ?? "Servicio"}{lodging ? ` · ${lodging.label}` : ""}</b>
-                    <small>{usedOf(plan.category_id)} creados</small>
+                    <b>{group.label}</b>
+                    <small>{group.quantity} servicios en el plan · {usedOf(group.categoryId)} creados</small>
                   </div>
                   {isTeam && (
-                    <form action={expandServicePlanAction}>
-                      <input type="hidden" name="business_id" value={id} />
-                      <input type="hidden" name="plan_id" value={plan.id} />
-                      <ConfirmSubmit tone="secondary" className="small" confirm={{
-                        title: `¿Ampliar el plan en 1 × ${category?.label ?? "servicio"}${lodging ? ` · ${lodging.label}` : ""}?`,
-                        body: `El negocio podrá crear ${plan.quantity + 1} servicios de este tipo en lugar de ${plan.quantity}.`,
-                        confirmLabel: "Sí, ampliar",
-                      }}>
-                        Ampliar +1
-                      </ConfirmSubmit>
-                    </form>
-                  )}
-                  {isTeam && (
-                    <form action={removeServicePlanAction}>
-                      <input type="hidden" name="business_id" value={id} />
-                      <input type="hidden" name="plan_id" value={plan.id} />
-                      <ConfirmSubmit tone="quiet" className="small" confirm={{
-                        title: `¿Quitar ${plan.quantity} × ${category?.label ?? "servicio"} del plan?`,
-                        body: "Los servicios ya creados no se borran, pero el negocio no podrá crear más de este tipo.",
-                        confirmLabel: "Quitar del plan",
-                        danger: true,
-                      }}>
-                        Quitar
-                      </ConfirmSubmit>
-                    </form>
+                    <PlanAddServiceForm businessId={id} categoryId={group.categoryId}
+                      categoryLabel={group.label}
+                      types={group.categoryId === "hospedaje" ? (types.data ?? []) : []} />
                   )}
                 </div>
-              );
-            })}
+                {group.lines.map((plan) => {
+                  const lodging = related(plan.hospedaje_types);
+                  return (
+                    <div className="list-row" key={plan.id}>
+                      <span className="badge tone-info">{plan.quantity} ×</span>
+                      <div className="list-row-text">
+                        <b>{lodging ? lodging.label : group.label}</b>
+                      </div>
+                      {isTeam && (
+                        <form action={removeServicePlanAction}>
+                          <input type="hidden" name="business_id" value={id} />
+                          <input type="hidden" name="plan_id" value={plan.id} />
+                          <ConfirmSubmit tone="quiet" className="small" confirm={{
+                            title: `¿Quitar ${plan.quantity} × ${lodging?.label ?? group.label} del plan?`,
+                            body: "Los servicios ya creados no se borran, pero el negocio no podrá crear más de este tipo.",
+                            confirmLabel: "Quitar del plan",
+                            danger: true,
+                          }}>
+                            Quitar
+                          </ConfirmSubmit>
+                        </form>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
             {!plans.data?.length && (
               <p className="muted">No hay un plan de servicios registrado para este negocio.</p>
             )}

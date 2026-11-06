@@ -203,24 +203,40 @@ export async function createBusinessAction(
   redirect(`/panel/negocios/${data.id}`);
 }
 
-// Amplía una línea del plan en 1: el propietario puede crear un servicio más de esa categoría.
-export async function expandServicePlanAction(formData: FormData): Promise<void> {
+// Suma 1 servicio al plan de una categoría (y tipo de hospedaje, si lo tiene).
+// Si la línea ya existe, sube su cantidad; si no, la crea con cantidad 1.
+export async function addPlanServiceAction(formData: FormData): Promise<void> {
   const { supabase, role } = await getPanelIdentity();
   if (!canManageProviders(role)) throw new Error("Tu cuenta no puede ampliar el plan.");
   const businessId = formText(formData, "business_id");
-  const planId = formText(formData, "plan_id");
-  const { data: plan, error: readError } = await supabase
+  const categoryId = formText(formData, "category_id");
+  const typeId = formText(formData, "hospedaje_type_id") || null;
+  if (!categoryId) throw new Error("Falta la categoría.");
+  if (categoryId === "hospedaje" && !typeId) throw new Error("Elige el tipo de hospedaje.");
+
+  const base = supabase
     .from("business_service_plans")
-    .select("quantity")
-    .eq("id", planId)
+    .select("id, quantity")
     .eq("business_id", businessId)
-    .single();
-  if (readError || !plan) throw new Error("No se encontró esa línea del plan.");
-  const { error } = await supabase
-    .from("business_service_plans")
-    .update({ quantity: plan.quantity + 1 })
-    .eq("id", planId)
-    .eq("business_id", businessId);
+    .eq("category_id", categoryId)
+    .order("created_at")
+    .limit(1);
+  const { data: existing, error: readError } = await (typeId
+    ? base.eq("hospedaje_type_id", typeId)
+    : base.is("hospedaje_type_id", null)).maybeSingle();
+  if (readError) throw new Error(readError.message);
+
+  const { error } = existing
+    ? await supabase
+      .from("business_service_plans")
+      .update({ quantity: existing.quantity + 1 })
+      .eq("id", existing.id)
+    : await supabase.from("business_service_plans").insert({
+      business_id: businessId,
+      category_id: categoryId,
+      hospedaje_type_id: typeId,
+      quantity: 1,
+    });
   if (error) throw new Error(error.message);
   refreshBusinessViews(businessId);
 }

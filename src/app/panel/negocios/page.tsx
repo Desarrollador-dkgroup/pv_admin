@@ -72,25 +72,6 @@ export default async function BusinessesPage({ searchParams }: { searchParams: S
       />
 
       {isTeam && (
-        <Panel>
-          <div className="section-heading">
-            <h2>Negocios por categoría</h2>
-            <small className="muted">{all.length} negocios en total</small>
-          </div>
-          {(categories ?? []).map((category) => (
-            <div className="list-row" key={category.id}>
-              <div className="list-row-text">
-                <b>{category.label}</b>
-              </div>
-              <Badge tone={count(category.id) ? "info" : "neutral"}>
-                {count(category.id)} {count(category.id) === 1 ? "negocio" : "negocios"}
-              </Badge>
-            </div>
-          ))}
-        </Panel>
-      )}
-
-      {isTeam && (
         <div className="toolbar">
           <nav className="chip-row" aria-label="Filtrar negocios">
             <Link className={`chip ${!categoria && !filtro ? "active" : ""}`} href="/panel/negocios">
