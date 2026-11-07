@@ -42,16 +42,15 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
   cupo. «Agregar nuevo servicio» deja de verdad un cupo libre más: cupo = máx(cupo, creados) + N.
   Une líneas repetidas. La ficha del admin muestra los disponibles para crear.
 
-## Pendientes (actualizado 2026-11-06)
+## Pendientes (actualizado 2026-11-07)
 
-Por decidir (lo contesta el dueño del proyecto):
+En espera de terceros (no depende del dueño del proyecto):
 1. Revisión del contrato por el jefe, incluido el tope de responsabilidad (cláusula 13.4).
 
 Código pendiente:
-2. Anuncios con 2 imágenes:
-   - Celular (390×844): listo.
-   - Escritorio, adaptable a tablet: pendiente (imagen propia y vista en el banner y en la
-     maqueta del panel).
+2. Anuncios: imagen de escritorio. Una sola imagen vertical para celular, escritorio y tablet:
+   780 × 1688 px (2×, relación 390:844). Celular listo; falta subir la misma imagen para
+   escritorio y tablet, y revisar que el banner y la maqueta del panel la muestren bien.
 
 Por verificar:
 3. Pantallas nuevas del panel con cada rol, y el enlace «Ver documento actual» de anuncios.
