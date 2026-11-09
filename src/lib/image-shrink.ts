@@ -13,7 +13,7 @@ export async function shrinkImage(
 ): Promise<File> {
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return file;
   if (file.size > MAX_ORIGINAL_BYTES) {
-    throw new Error("Esa imagen es demasiado pesada. Elige una foto de hasta 50 MB.");
+    throw new Error("La imagen pesa más de 50 MB. Reduce su peso y vuelve a subirla.");
   }
   let bitmap: ImageBitmap;
   try {
@@ -45,7 +45,10 @@ export async function shrinkImage(
       canvas.toBlob(resolve, "image/jpeg", quality));
     if (blob && blob.size <= maxBytes) break;
   }
-  if (!blob) return file;
+  // Si no se logró reducirla, no se envía la original: pediría demasiado al servidor.
+  if (!blob || blob.size > 5 * 1024 * 1024) {
+    throw new Error("La imagen pesa demasiado. Reduce su peso y vuelve a subirla.");
+  }
   const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
   return new File([blob], name, { type: "image/jpeg" });
 }

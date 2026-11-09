@@ -63,7 +63,7 @@ onChange={async (event) => {
                 }
               }} />
             <small className="muted">
-              Para celular, vertical (recomendado 390 × 844 px). Puedes subir la foto original (hasta 50 MB): se optimiza sola.
+              Para celular: JPG, PNG o WEBP, máximo 50 MB. Vertical, 390 × 844 px (o 780 × 1688).
             </small>
           </label>
           <label className="field dropzone">
@@ -84,7 +84,7 @@ onChange={async (event) => {
                 }
               }} />
             <small className="muted">
-              Para computadora y tablet, horizontal (recomendado 1280 × 720 px). Puedes subir la foto original (hasta 50 MB): se optimiza sola.
+              Horizontal, 1280 × 720 px, JPG, PNG o WEBP, máximo 50 MB. Se usa en computadora y tablet.
             </small>
           </label>
           {fileError && <p className="form-error" role="alert">{fileError}</p>}
