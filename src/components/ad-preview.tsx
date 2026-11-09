@@ -1,16 +1,27 @@
 import type { ReactNode } from "react";
 
-// Cómo se ve el anuncio en el celular: un teléfono estándar de 390 × 844 px.
-export function AdPreview({ imageUrl, title, destination }: {
+// Cómo se ve el anuncio. Celular: 390 × 844 px. Computadora y tablet: la imagen de 780 × 1688 px
+// en la misma tarjeta vertical, centrada en la página. Si falta la imagen de escritorio, se usa la
+// de celular y se avisa.
+export function AdPreview({ imageUrl, desktopImageUrl, title, destination }: {
   imageUrl: string | null;
+  desktopImageUrl: string | null;
   title: string;
   destination: string;
 }) {
   return (
     <div className="ad-preview-set">
-      <AdFrame label="Celular (390 × 844)">
+      <AdFrame label="Celular (390 × 844)" className="ad-frame-mobile">
         <AdCard imageUrl={imageUrl} title={title} />
       </AdFrame>
+      <AdFrame label="Computadora y tablet (780 × 1688)" className="ad-frame-laptop">
+        <AdCard imageUrl={desktopImageUrl ?? imageUrl} title={title} />
+      </AdFrame>
+      {!desktopImageUrl && (
+        <p className="form-error" role="status">
+          Falta la imagen de computadora y tablet. Mientras tanto se muestra la de celular.
+        </p>
+      )}
       <p className="muted">
         {title || "Título del anuncio"} · Lleva a: {destination || "elige la promoción"}
       </p>
@@ -18,9 +29,13 @@ export function AdPreview({ imageUrl, title, destination }: {
   );
 }
 
-function AdFrame({ label, children }: { label: string; children: ReactNode }) {
+function AdFrame({ label, className, children }: {
+  label: string;
+  className: string;
+  children: ReactNode;
+}) {
   return (
-    <figure className="ad-frame ad-frame-mobile">
+    <figure className={`ad-frame ${className}`}>
       <figcaption>{label}</figcaption>
       <div className="ad-frame-screen">{children}</div>
     </figure>

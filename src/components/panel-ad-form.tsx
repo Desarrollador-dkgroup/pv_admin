@@ -12,6 +12,7 @@ export type AdRecord = {
   id: string;
   title: string;
   imageUrl: string;
+  desktopImageUrl: string | null;
   service_promotion_id: string | null;
   starts_on: string | null;
   ends_on: string | null;
@@ -23,6 +24,7 @@ export type AdRequestPrefill = {
   id: string;
   title: string;
   imageUrl: string;
+  desktopImageUrl: string | null;
   service_promotion_id: string | null;
   starts_on: string | null;
   ends_on: string | null;
@@ -39,6 +41,8 @@ export function AdForm({ promotions, ad, request }: {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [promotionId, setPromotionId] = useState(initial?.service_promotion_id ?? "");
   const [imageUrl, setImageUrl] = useState<string | null>(initial?.imageUrl ?? null);
+  const [desktopImageUrl, setDesktopImageUrl] = useState<string | null>(
+    initial?.desktopImageUrl ?? null);
   const destination = promotions.find((item) => item.id === promotionId)?.destination ?? "";
 
   return (
@@ -66,7 +70,21 @@ export function AdForm({ promotions, ad, request }: {
                 const file = event.target.files?.[0];
                 if (file) setImageUrl(URL.createObjectURL(file));
               }} />
-            <small className="muted">JPG, PNG o WEBP, máximo 5 MB.</small>
+            <small className="muted">
+              Para celular: JPG, PNG o WEBP, máximo 5 MB. Vertical, 390 × 844 px (o 780 × 1688).
+            </small>
+          </label>
+          <label className="field dropzone">
+            {ad || request ? "Cambiar imagen de computadora y tablet (opcional)" : "Imagen de computadora y tablet"}
+            <input type="file" name="desktop_image" accept="image/jpeg,image/png,image/webp"
+              required={!ad && !request}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) setDesktopImageUrl(URL.createObjectURL(file));
+              }} />
+            <small className="muted">
+              Vertical, 780 × 1688 px, JPG, PNG o WEBP, máximo 5 MB. Se usa en computadora y tablet.
+            </small>
           </label>
           <label className="field">
             Promoción a la que lleva el anuncio
@@ -101,7 +119,8 @@ export function AdForm({ promotions, ad, request }: {
         <Panel>
           <h2>Así se verá</h2>
           <p className="muted">En escritorio aparece en el centro de la página; en el celular ocupa la pantalla.</p>
-          <AdPreview imageUrl={imageUrl} title={title} destination={destination} />
+          <AdPreview imageUrl={imageUrl} desktopImageUrl={desktopImageUrl} title={title}
+            destination={destination} />
         </Panel>
       </div>
 

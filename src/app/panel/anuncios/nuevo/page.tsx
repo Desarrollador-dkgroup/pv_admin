@@ -26,7 +26,7 @@ export default async function NewAdPage({
   if (solicitud) {
     const { data } = await admin
       .from("ad_requests")
-      .select("id, title, image_path, document_path, service_promotion_id, starts_on, ends_on, status")
+      .select("id, title, image_path, desktop_image_path, document_path, service_promotion_id, starts_on, ends_on, status")
       .eq("id", solicitud)
       .maybeSingle();
     if (!data || !["en_gestion", "documento_listo", "publicado"].includes(data.status)) notFound();
@@ -34,6 +34,9 @@ export default async function NewAdPage({
       id: data.id,
       title: data.title,
       imageUrl: admin.storage.from("ads-media").getPublicUrl(data.image_path).data.publicUrl,
+      desktopImageUrl: data.desktop_image_path
+        ? admin.storage.from("ads-media").getPublicUrl(data.desktop_image_path).data.publicUrl
+        : null,
       service_promotion_id: data.service_promotion_id,
       starts_on: data.starts_on,
       ends_on: data.ends_on,

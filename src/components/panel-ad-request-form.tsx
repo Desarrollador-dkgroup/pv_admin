@@ -17,6 +17,7 @@ export function AdRequestForm({ businessId, promotions }: {
   const [title, setTitle] = useState("");
   const [promotionId, setPromotionId] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [desktopImageUrl, setDesktopImageUrl] = useState<string | null>(null);
   const destination = promotions.find((item) => item.id === promotionId)?.destination ?? "";
 
   if (state.saved) {
@@ -49,7 +50,20 @@ export function AdRequestForm({ businessId, promotions }: {
                 const file = event.target.files?.[0];
                 if (file) setImageUrl(URL.createObjectURL(file));
               }} />
-            <small className="muted">JPG, PNG o WEBP, máximo 5 MB.</small>
+            <small className="muted">
+              Para celular: JPG, PNG o WEBP, máximo 5 MB. Vertical, 390 × 844 px (o 780 × 1688).
+            </small>
+          </label>
+          <label className="field dropzone">
+            Imagen de computadora y tablet
+            <input type="file" name="desktop_image" accept="image/jpeg,image/png,image/webp" required
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) setDesktopImageUrl(URL.createObjectURL(file));
+              }} />
+            <small className="muted">
+              Vertical, 780 × 1688 px, JPG, PNG o WEBP, máximo 5 MB.
+            </small>
           </label>
           <label className="field">
             ¿A qué promoción lleva el anuncio?
@@ -82,7 +96,8 @@ export function AdRequestForm({ businessId, promotions }: {
         </Panel>
         <Panel>
           <h2>Así se verá</h2>
-          <AdPreview imageUrl={imageUrl} title={title} destination={destination} />
+          <AdPreview imageUrl={imageUrl} desktopImageUrl={desktopImageUrl} title={title}
+            destination={destination} />
         </Panel>
       </div>
 

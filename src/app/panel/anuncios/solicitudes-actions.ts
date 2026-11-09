@@ -40,6 +40,7 @@ export async function requestAdAction(_previous: FormState, formData: FormData):
   const endsOn = formText(formData, "ends_on") || null;
   const notes = formText(formData, "notes") || null;
   const image = formData.get("image");
+  const desktopImage = formData.get("desktop_image");
 
   if (title.length < 2) return { error: "Escribe un título para el anuncio." };
   if (!promotionId) return { error: "Elige la promoción a la que lleva el anuncio." };
@@ -47,6 +48,14 @@ export async function requestAdAction(_previous: FormState, formData: FormData):
   const extension = IMAGE_EXTENSIONS[image.type];
   if (!extension) return { error: "La imagen debe ser JPG, PNG o WEBP." };
   if (image.size > MAX_IMAGE_BYTES) return { error: "La imagen no puede pesar más de 5 MB." };
+  if (!(desktopImage instanceof File) || desktopImage.size === 0) {
+    return { error: "Sube la imagen para computadora y tablet." };
+  }
+  const desktopExtension = IMAGE_EXTENSIONS[desktopImage.type];
+  if (!desktopExtension) return { error: "La imagen de computadora y tablet debe ser JPG, PNG o WEBP." };
+  if (desktopImage.size > MAX_IMAGE_BYTES) {
+    return { error: "La imagen de computadora y tablet no puede pesar más de 5 MB." };
+  }
   if (startsOn && endsOn && endsOn < startsOn) {
     return { error: "La fecha de fin debe ser posterior a la de inicio." };
   }
@@ -70,11 +79,22 @@ export async function requestAdAction(_previous: FormState, formData: FormData):
   });
   if (upload.error) return { error: "No se pudo subir la imagen. Intenta de nuevo." };
 
+  const desktopPath = `${randomUUID()}.${desktopExtension}`;
+  const desktopUpload = await admin.storage.from("ads-media").upload(desktopPath, desktopImage, {
+    contentType: desktopImage.type,
+    upsert: false,
+  });
+  if (desktopUpload.error) {
+    await admin.storage.from("ads-media").remove([path]);
+    return { error: "No se pudo subir la imagen de computadora y tablet. Intenta de nuevo." };
+  }
+
   const { error } = await admin.from("ad_requests").insert({
     business_id: businessId,
     requested_by: user.id,
     title,
     image_path: path,
+    desktop_image_path: desktopPath,
     service_promotion_id: promotionId,
     starts_on: startsOn,
     ends_on: endsOn,
@@ -82,7 +102,7 @@ export async function requestAdAction(_previous: FormState, formData: FormData):
     status: "solicitado",
   });
   if (error) {
-    await admin.storage.from("ads-media").remove([path]);
+    await admin.storage.from("ads-media").remove([path, desktopPath]);
     return { error: "No se pudo enviar la solicitud. Intenta de nuevo." };
   }
 

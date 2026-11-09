@@ -37,6 +37,9 @@ export default async function EditAdPage({ params }: { params: Promise<{ id: str
           id: ad.id,
           title: ad.title,
           imageUrl: admin.storage.from("ads-media").getPublicUrl(ad.image_path).data.publicUrl,
+          desktopImageUrl: ad.desktop_image_path
+            ? admin.storage.from("ads-media").getPublicUrl(ad.desktop_image_path).data.publicUrl
+            : null,
           service_promotion_id: ad.service_promotion_id,
           starts_on: ad.starts_on,
           ends_on: ad.ends_on,

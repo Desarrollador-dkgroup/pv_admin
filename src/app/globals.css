@@ -3381,6 +3381,19 @@ a.callout:hover {
   width: 300px;
   max-width: 100%;
 }
+/* Computadora y tablet: la tarjeta vertical centrada sobre una página clara. */
+.ad-frame-laptop {
+  width: 100%;
+  max-width: 460px;
+}
+.ad-frame-laptop .ad-frame-screen {
+  padding: 18px;
+  background: #eef0fa;
+}
+.ad-frame-laptop .ad-card {
+  width: 240px;
+  margin: 0 auto;
+}
 .ad-frame-screen {
   padding: 12px 10px;
   border-radius: 30px;
