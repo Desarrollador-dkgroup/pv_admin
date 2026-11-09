@@ -18,9 +18,10 @@ export function AdPreview({ imageUrl, desktopImageUrl, title, destination }: {
         <AdCard imageUrl={desktopImageUrl ?? imageUrl} title={title} />
       </AdFrame>
       {!desktopImageUrl && (
-        <p className="form-error" role="status">
-          Falta la imagen de computadora y tablet. Mientras tanto se muestra la de celular.
-        </p>
+        <div className="callout warning" role="status">
+          <strong>Falta la imagen de computadora y tablet</strong>
+          <span>Súbela en el campo «Computadora y tablet». Mientras tanto se muestra la de celular.</span>
+        </div>
       )}
       <p className="muted">
         {title || "Título del anuncio"} · Lleva a: {destination || "elige la promoción"}
