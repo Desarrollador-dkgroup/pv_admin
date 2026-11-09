@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { requestAdAction } from "@/app/panel/anuncios/solicitudes-actions";
 import { AdPreview } from "@/components/ad-preview";
+import { setInputFile, shrinkImage } from "@/lib/image-shrink";
 import { Button, Panel } from "@/components/ui";
 
 export type OwnerPromotionOption = { id: string; label: string; destination: string };
@@ -46,23 +47,31 @@ export function AdRequestForm({ businessId, promotions }: {
           <label className="field dropzone">
             Imagen del anuncio
             <input type="file" name="image" accept="image/jpeg,image/png,image/webp" required
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) setImageUrl(URL.createObjectURL(file));
+onChange={async (event) => {
+                const input = event.currentTarget;
+                const file = input.files?.[0];
+                if (!file) return;
+                const small = await shrinkImage(file, 780, 1688);
+                if (small !== file) setInputFile(input, small);
+                setImageUrl(URL.createObjectURL(small));
               }} />
             <small className="muted">
-              Para celular: JPG, PNG o WEBP, máximo 5 MB. Vertical, 390 × 844 px (o 780 × 1688).
+              Para celular, vertical (recomendado 390 × 844 px). Puedes subir la foto original: se optimiza sola.
             </small>
           </label>
           <label className="field dropzone">
             Imagen de computadora y tablet
             <input type="file" name="desktop_image" accept="image/jpeg,image/png,image/webp" required
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) setDesktopImageUrl(URL.createObjectURL(file));
+onChange={async (event) => {
+                const input = event.currentTarget;
+                const file = input.files?.[0];
+                if (!file) return;
+                const small = await shrinkImage(file, 1280, 720);
+                if (small !== file) setInputFile(input, small);
+                setDesktopImageUrl(URL.createObjectURL(small));
               }} />
             <small className="muted">
-              Horizontal, 1280 × 720 px, JPG, PNG o WEBP, máximo 5 MB.
+              Para computadora y tablet, horizontal (recomendado 1280 × 720 px). Puedes subir la foto original: se optimiza sola.
             </small>
           </label>
           <label className="field">
