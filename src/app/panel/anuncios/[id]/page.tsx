@@ -5,6 +5,7 @@ import { PageHeader, Panel } from "@/components/ui";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { loadAdPromotionOptions } from "@/lib/panel-ad-options";
+import { loadOtherAdPreviews } from "@/lib/panel-ad-previews";
 
 // Edita un anuncio existente: título, imagen, promoción, fechas y estado.
 export default async function EditAdPage({ params }: { params: Promise<{ id: string }> }) {
@@ -16,6 +17,7 @@ export default async function EditAdPage({ params }: { params: Promise<{ id: str
   const { data: ad } = await admin.from("ads").select("*").eq("id", id).maybeSingle();
   if (!ad) notFound();
   const options = await loadAdPromotionOptions(admin);
+  const others = await loadOtherAdPreviews(admin, id);
 
   // Si el anuncio vino de una solicitud, aquí se adjunta el documento firmado por el propietario.
   const { data: request } = await admin
@@ -33,6 +35,7 @@ export default async function EditAdPage({ params }: { params: Promise<{ id: str
       />
       <AdForm
         promotions={options}
+        others={others}
         ad={{
           id: ad.id,
           title: ad.title,

@@ -5,6 +5,7 @@ import { useActionState, useState } from "react";
 import { createAdAction } from "@/app/panel/anuncios/actions";
 import { AdPreview } from "@/components/ad-preview";
 import { Button, Panel } from "@/components/ui";
+import type { PreviewOther } from "@/lib/panel-ad-previews";
 
 export type AdPromotionOption = { id: string; label: string; destination: string };
 
@@ -31,10 +32,11 @@ export type AdRequestPrefill = {
 };
 
 // Formulario de anuncio (crear o editar) con la maqueta de escritorio y celular.
-export function AdForm({ promotions, ad, request }: {
+export function AdForm({ promotions, ad, request, others = [] }: {
   promotions: AdPromotionOption[];
   ad?: AdRecord;
   request?: AdRequestPrefill;
+  others?: PreviewOther[];
 }) {
   const [state, action, pending] = useActionState(createAdAction, { error: "" });
   const initial = ad ?? request;
@@ -120,7 +122,7 @@ export function AdForm({ promotions, ad, request }: {
           <h2>Así se verá</h2>
           <p className="muted">En escritorio aparece en el centro de la página; en el celular ocupa la pantalla.</p>
           <AdPreview imageUrl={imageUrl} desktopImageUrl={desktopImageUrl} title={title}
-            destination={destination} />
+            destination={destination} others={others} />
         </Panel>
       </div>
 

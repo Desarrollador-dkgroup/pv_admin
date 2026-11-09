@@ -3394,6 +3394,29 @@ a.callout:hover {
   width: 240px;
   margin: 0 auto;
 }
+.ad-frame-laptop .ad-frame-screen {
+  position: relative;
+}
+.ad-preview-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(20, 22, 40, 0.72);
+  color: #FFFFFF;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.ad-preview-prev {
+  left: 12px;
+}
+.ad-preview-next {
+  right: 12px;
+}
 .ad-frame-screen {
   padding: 12px 10px;
   border-radius: 30px;

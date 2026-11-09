@@ -1,30 +1,53 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useState, type ReactNode } from "react";
+import type { PreviewOther } from "@/lib/panel-ad-previews";
 
 // Cómo se ve el anuncio. Celular: 390 × 844 px. Computadora y tablet: la imagen de 780 × 1688 px
-// en la misma tarjeta vertical, centrada en la página. Si falta la imagen de escritorio, se usa la
-// de celular y se avisa.
-export function AdPreview({ imageUrl, desktopImageUrl, title, destination }: {
+// en la tarjeta vertical centrada. Con flechas se cambia entre los anuncios, como en la web.
+// Si falta la imagen de escritorio, se usa la de celular y se avisa.
+export function AdPreview({ imageUrl, desktopImageUrl, title, destination, others = [] }: {
   imageUrl: string | null;
   desktopImageUrl: string | null;
   title: string;
   destination: string;
+  others?: PreviewOther[];
 }) {
+  const [index, setIndex] = useState(0);
+  const items: PreviewOther[] = [{ title, imageUrl, desktopImageUrl }, ...others];
+  const count = items.length;
+  const current = items[Math.min(index, count - 1)];
+  const isEdited = index === 0;
+  const go = (step: number) => setIndex((value) => (value + step + count) % count);
+
   return (
     <div className="ad-preview-set">
       <AdFrame label="Celular (390 × 844)" className="ad-frame-mobile">
-        <AdCard imageUrl={imageUrl} title={title} />
+        <AdCard imageUrl={current.imageUrl} title={current.title} />
       </AdFrame>
       <AdFrame label="Computadora y tablet (780 × 1688)" className="ad-frame-laptop">
-        <AdCard imageUrl={desktopImageUrl ?? imageUrl} title={title} />
+        <AdCard imageUrl={current.desktopImageUrl ?? current.imageUrl} title={current.title} />
+        {count > 1 && (
+          <>
+            <button type="button" className="ad-preview-nav ad-preview-prev"
+              aria-label="Anuncio anterior" onClick={() => go(-1)}>‹</button>
+            <button type="button" className="ad-preview-nav ad-preview-next"
+              aria-label="Anuncio siguiente" onClick={() => go(1)}>›</button>
+          </>
+        )}
       </AdFrame>
-      {!desktopImageUrl && (
+      {count > 1 && (
+        <p className="muted">Anuncio {Math.min(index, count - 1) + 1} de {count}</p>
+      )}
+      {isEdited && !desktopImageUrl && (
         <div className="callout warning" role="status">
           <strong>Falta la imagen de computadora y tablet</strong>
           <span>Súbela en el campo «Computadora y tablet». Mientras tanto se muestra la de celular.</span>
         </div>
       )}
       <p className="muted">
-        {title || "Título del anuncio"} · Lleva a: {destination || "elige la promoción"}
+        {current.title || "Título del anuncio"}
+        {isEdited ? ` · Lleva a: ${destination || "elige la promoción"}` : ""}
       </p>
     </div>
   );

@@ -5,6 +5,7 @@ import { Panel } from "@/components/ui";
 import { PageHeader } from "@/components/ui";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { loadAdPromotionOptions } from "@/lib/panel-ad-options";
+import { loadOtherAdPreviews } from "@/lib/panel-ad-previews";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 // Crea y publica un anuncio. Si viene de una solicitud aprobada (?solicitud=ID), se llena solo.
@@ -19,6 +20,7 @@ export default async function NewAdPage({
 
   const admin = getSupabaseAdminClient();
   const options = await loadAdPromotionOptions(admin);
+  const others = await loadOtherAdPreviews(admin, null);
 
   let request;
   let documentUrl: string | null = null;
@@ -54,7 +56,7 @@ export default async function NewAdPage({
         title="Nuevo anuncio"
         description="La imagen se muestra al entrar a la página principal."
       />
-      <AdForm promotions={options} request={request} />
+      <AdForm promotions={options} request={request} others={others} />
       {requestDocument && (
         <Panel>
           <h2>Documento del anuncio</h2>
