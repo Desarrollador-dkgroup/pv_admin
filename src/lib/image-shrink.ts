@@ -2,6 +2,8 @@
 // `maxBytes`. Así el propietario puede subir cualquier foto, incluso la original del teléfono.
 
 const SHRINK_BYTES = 1024 * 1024; // 1 MB
+// Fotos de teléfono: 3 a 15 MB. Por encima de 50 MB el navegador no puede procesarlas bien.
+export const MAX_ORIGINAL_BYTES = 50 * 1024 * 1024;
 
 export async function shrinkImage(
   file: File,
@@ -10,7 +12,15 @@ export async function shrinkImage(
   maxBytes: number = SHRINK_BYTES,
 ): Promise<File> {
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return file;
-  const bitmap = await createImageBitmap(file);
+  if (file.size > MAX_ORIGINAL_BYTES) {
+    throw new Error("Esa imagen es demasiado pesada. Elige una foto de hasta 50 MB.");
+  }
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    throw new Error("No pudimos leer esta imagen. Prueba con otra foto en JPG o PNG.");
+  }
   const scale = Math.min(1, maxWidth / bitmap.width, maxHeight / bitmap.height);
   if (scale === 1 && file.size <= maxBytes) {
     bitmap.close();

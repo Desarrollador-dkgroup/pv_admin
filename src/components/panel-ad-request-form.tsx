@@ -18,6 +18,7 @@ export function AdRequestForm({ businessId, promotions }: {
   const [title, setTitle] = useState("");
   const [promotionId, setPromotionId] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [fileError, setFileError] = useState("");
   const [desktopImageUrl, setDesktopImageUrl] = useState<string | null>(null);
   const destination = promotions.find((item) => item.id === promotionId)?.destination ?? "";
 
@@ -51,12 +52,18 @@ onChange={async (event) => {
                 const input = event.currentTarget;
                 const file = input.files?.[0];
                 if (!file) return;
-                const small = await shrinkImage(file, 780, 1688);
-                if (small !== file) setInputFile(input, small);
-                setImageUrl(URL.createObjectURL(small));
+                try {
+                  const small = await shrinkImage(file, 780, 1688);
+                  if (small !== file) setInputFile(input, small);
+                  setFileError("");
+                  setImageUrl(URL.createObjectURL(small));
+                } catch (failure) {
+                  input.value = "";
+                  setFileError(failure instanceof Error ? failure.message : "No pudimos usar esa imagen.");
+                }
               }} />
             <small className="muted">
-              Para celular, vertical (recomendado 390 × 844 px). Puedes subir la foto original: se optimiza sola.
+              Para celular, vertical (recomendado 390 × 844 px). Puedes subir la foto original (hasta 50 MB): se optimiza sola.
             </small>
           </label>
           <label className="field dropzone">
@@ -66,14 +73,21 @@ onChange={async (event) => {
                 const input = event.currentTarget;
                 const file = input.files?.[0];
                 if (!file) return;
-                const small = await shrinkImage(file, 1280, 720);
-                if (small !== file) setInputFile(input, small);
-                setDesktopImageUrl(URL.createObjectURL(small));
+                try {
+                  const small = await shrinkImage(file, 1280, 720);
+                  if (small !== file) setInputFile(input, small);
+                  setFileError("");
+                  setDesktopImageUrl(URL.createObjectURL(small));
+                } catch (failure) {
+                  input.value = "";
+                  setFileError(failure instanceof Error ? failure.message : "No pudimos usar esa imagen.");
+                }
               }} />
             <small className="muted">
-              Para computadora y tablet, horizontal (recomendado 1280 × 720 px). Puedes subir la foto original: se optimiza sola.
+              Para computadora y tablet, horizontal (recomendado 1280 × 720 px). Puedes subir la foto original (hasta 50 MB): se optimiza sola.
             </small>
           </label>
+          {fileError && <p className="form-error" role="alert">{fileError}</p>}
           <label className="field">
             ¿A qué promoción lleva el anuncio?
             <select name="service_promotion_id" required value={promotionId}
