@@ -62,7 +62,7 @@ export function AdRequestForm({ businessId, promotions }: {
                 if (file) setDesktopImageUrl(URL.createObjectURL(file));
               }} />
             <small className="muted">
-              Vertical, 780 × 1688 px, JPG, PNG o WEBP, máximo 5 MB.
+              Horizontal, 1280 × 720 px, JPG, PNG o WEBP, máximo 5 MB.
             </small>
           </label>
           <label className="field">

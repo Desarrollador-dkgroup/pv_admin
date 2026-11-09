@@ -3,8 +3,8 @@
 import { useState, type ReactNode } from "react";
 import type { PreviewOther } from "@/lib/panel-ad-previews";
 
-// Cómo se ve el anuncio. Celular: 390 × 844 px. Computadora y tablet: la imagen de 780 × 1688 px
-// en la tarjeta vertical centrada. Con flechas se cambia entre los anuncios, como en la web.
+// Cómo se ve el anuncio. Celular: 390 × 844 px. Computadora y tablet: imagen horizontal de
+// 1280 × 720 px. Con flechas se cambia entre los anuncios, como en la web.
 // Si falta la imagen de escritorio, se usa la de celular y se avisa.
 export function AdPreview({ imageUrl, desktopImageUrl, title, destination, others = [] }: {
   imageUrl: string | null;
@@ -25,7 +25,7 @@ export function AdPreview({ imageUrl, desktopImageUrl, title, destination, other
       <AdFrame label="Celular (390 × 844)" className="ad-frame-mobile">
         <AdCard imageUrl={current.imageUrl} title={current.title} />
       </AdFrame>
-      <AdFrame label="Computadora y tablet (780 × 1688)" className="ad-frame-laptop">
+      <AdFrame label="Computadora y tablet (1280 × 720)" className="ad-frame-laptop">
         <AdCard imageUrl={current.desktopImageUrl ?? current.imageUrl} title={current.title} />
         {count > 1 && (
           <>

@@ -85,7 +85,7 @@ export function AdForm({ promotions, ad, request, others = [] }: {
                 if (file) setDesktopImageUrl(URL.createObjectURL(file));
               }} />
             <small className="muted">
-              Vertical, 780 × 1688 px, JPG, PNG o WEBP, máximo 5 MB. Se usa en computadora y tablet.
+              Horizontal, 1280 × 720 px, JPG, PNG o WEBP, máximo 5 MB. Se usa en computadora y tablet.
             </small>
           </label>
           <label className="field">

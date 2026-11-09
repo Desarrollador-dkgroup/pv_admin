@@ -3391,7 +3391,8 @@ a.callout:hover {
   background: #eef0fa;
 }
 .ad-frame-laptop .ad-card {
-  width: 240px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   margin: 0 auto;
 }
 .ad-frame-laptop .ad-frame-screen {
