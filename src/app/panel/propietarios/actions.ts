@@ -251,8 +251,8 @@ export async function createOwnerAccountAction(
 }
 
 // Borra la cuenta de un propietario y sus vínculos con negocios. Nunca borra cuentas del
-// equipo ni la cuenta de quien ejecuta la acción. Los negocios que queden sin propietario
-// siguen existiendo y se ven como "Sin propietario".
+// equipo ni la cuenta de quien ejecuta la acción. Si la cuenta era la única de un negocio,
+// ese negocio también se borra, para que nunca quede un negocio sin propietario.
 export async function deleteOwnerAccountAction(
   _previous: { error: string },
   formData: FormData,
@@ -280,6 +280,28 @@ export async function deleteOwnerAccountAction(
     .maybeSingle();
   if (teamError) return { error: "No se pudo verificar la cuenta." };
   if (teamAccount) return { error: "Las cuentas del equipo no se borran desde aquí." };
+
+  // Si la cuenta es la única de un negocio, el negocio se borra con ella (en cascada).
+  const { data: memberships, error: membershipError } = await admin
+    .from("business_members")
+    .select("business_id")
+    .eq("user_id", userId);
+  if (membershipError) return { error: "No se pudo revisar los negocios de la cuenta." };
+  const businessIds = (memberships ?? []).map((item) => item.business_id);
+  if (businessIds.length) {
+    const { data: others, error: othersError } = await admin
+      .from("business_members")
+      .select("business_id")
+      .in("business_id", businessIds)
+      .neq("user_id", userId);
+    if (othersError) return { error: "No se pudo revisar los negocios de la cuenta." };
+    const shared = new Set((others ?? []).map((item) => item.business_id));
+    const soleIds = businessIds.filter((id) => !shared.has(id));
+    if (soleIds.length) {
+      const { error: businessError } = await admin.from("businesses").delete().in("id", soleIds);
+      if (businessError) return { error: "No se pudo borrar el negocio de la cuenta." };
+    }
+  }
 
   const links = await Promise.all([
     admin.from("business_members").delete().eq("user_id", userId),

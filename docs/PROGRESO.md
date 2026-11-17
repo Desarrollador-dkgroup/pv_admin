@@ -421,3 +421,4 @@ Por verificar:
 - 2026-11-17 (nube): resumen del equipo rediseñado: indicadores con ícono y color; se quitan
   las tarjetas de Destinos y Cuentas suspendidas (y su aviso de atención).
 - 2026-11-17 (nube): se quita el bloque "Accesos rápidos" del resumen.
+- 2026-11-17 (nube): los negocios siempre tienen propietario. Se quitan el filtro "Sin propietario", el botón "+ Nuevo negocio" y su ruta; al borrar la única cuenta de un negocio se borra también el negocio. Se borraron en producción "Negocio de comercio 1" (borrador) y "Faaa" (sin datos).

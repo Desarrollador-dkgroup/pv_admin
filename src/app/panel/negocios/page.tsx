@@ -5,7 +5,7 @@ import { contractStatusLabel, contractStatusTone } from "@/lib/panel-contracts";
 import { getAccountNames } from "@/lib/panel-people";
 import { canManageCatalog } from "@/types/panel";
 
-type SearchParams = Promise<{ categoria?: string; filtro?: string; q?: string }>;
+type SearchParams = Promise<{ categoria?: string; q?: string }>;
 
 // Lista negocios con su propietario, categorías, estado y contrato; el propietario ve los suyos.
 export default async function BusinessesPage({ searchParams }: { searchParams: SearchParams }) {
@@ -13,7 +13,7 @@ export default async function BusinessesPage({ searchParams }: { searchParams: S
   if (role === "propietario" && !businessIds.length) {
     return <Panel><p role="alert">La cuenta no tiene establecimientos asignados.</p></Panel>;
   }
-  const { categoria = "", filtro = "", q = "" } = await searchParams;
+  const { categoria = "", q = "" } = await searchParams;
   const isTeam = role !== "propietario";
   const isStaff = canManageCatalog(role);
 
@@ -43,11 +43,8 @@ export default async function BusinessesPage({ searchParams }: { searchParams: S
 
   const all = businesses ?? [];
   const term = q.trim().toLowerCase();
-  const withoutOwner = (business: (typeof all)[number]) =>
-    !business.business_members.some((member) => member.role === "owner");
   const rows = all.filter((business) =>
     (!categoria || business.services.some((service) => service.category_id === categoria))
-    && (filtro !== "sin-propietario" || withoutOwner(business))
     && (!term || business.name.toLowerCase().includes(term)
       || business.business_members.some((member) =>
         (names.get(member.user_id) ?? "").toLowerCase().includes(term))));
@@ -63,7 +60,6 @@ export default async function BusinessesPage({ searchParams }: { searchParams: S
           : "Tus establecimientos, servicios y las personas que tienen acceso."}
         actions={isTeam && (
           <>
-            <Link className="button secondary" href="/panel/negocios/nuevo">+ Nuevo negocio</Link>
             <Link className="button primary" href="/panel/propietarios#agregar-propietario">
               + Agregar propietario
             </Link>
@@ -74,12 +70,8 @@ export default async function BusinessesPage({ searchParams }: { searchParams: S
       {isTeam && (
         <div className="toolbar">
           <nav className="chip-row" aria-label="Filtrar negocios">
-            <Link className={`chip ${!categoria && !filtro ? "active" : ""}`} href="/panel/negocios">
+            <Link className={`chip ${!categoria ? "active" : ""}`} href="/panel/negocios">
               Todas <span>{all.length}</span>
-            </Link>
-            <Link className={`chip ${filtro === "sin-propietario" ? "active" : ""}`}
-              href="/panel/negocios?filtro=sin-propietario">
-              Sin propietario <span>{all.filter(withoutOwner).length}</span>
             </Link>
             {(categories ?? []).filter((category) => count(category.id)).map((category) => (
               <Link key={category.id}
@@ -120,7 +112,7 @@ export default async function BusinessesPage({ searchParams }: { searchParams: S
                     <td>
                       {owner
                         ? names.get(owner.user_id) ?? "Sin nombre"
-                        : <Badge tone="warning">Sin propietario</Badge>}
+                        : "—"}
                     </td>
                     <td>
                       <div className="chip-row">

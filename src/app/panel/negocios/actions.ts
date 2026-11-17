@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { canManageProviders } from "@/lib/panel-permissions";
 import { formText, formChecked } from "@/lib/panel-form";
@@ -224,36 +223,6 @@ export async function removeServicePlanAction(formData: FormData): Promise<void>
     .eq("business_id", businessId);
   if (error) throw new Error(error.message);
   refreshBusinessViews(businessId);
-}
-
-// Crea un negocio nuevo (sin propietario). Después se asigna el propietario desde su ficha.
-export async function createBusinessAction(
-  _previous: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  const { role } = await getPanelIdentity();
-  if (!canManageProviders(role)) {
-    return { error: "Tu cuenta no puede crear negocios." };
-  }
-  const name = formText(formData, "name");
-  if (name.length < 2 || name.length > 80) {
-    return { error: "El nombre debe tener entre 2 y 80 caracteres." };
-  }
-
-  const admin = getSupabaseAdminClient();
-  const { data, error } = await admin
-    .from("businesses")
-    .insert({
-      slug: `negocio-${crypto.randomUUID().slice(0, 8)}`,
-      name,
-      is_active: true,
-    })
-    .select("id")
-    .single();
-  if (error || !data) return { error: "No se pudo crear el negocio. Intenta de nuevo." };
-
-  revalidatePath("/panel/negocios");
-  redirect(`/panel/negocios/${data.id}`);
 }
 
 // Da 1 servicio disponible más en una categoría (y tipo de hospedaje, si lo tiene).

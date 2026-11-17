@@ -216,7 +216,7 @@ export async function StaffOverview({
   );
 }
 
-// Resumen del colaborador: propietarios, negocios sin propietario y cola de revisión.
+// Resumen del colaborador: propietarios, negocios y cola de revisión.
 export async function CollaboratorOverview({ supabase }: { supabase: SupabaseClient }) {
   const [owners, businesses, blocked, queue, categoryOf] = await Promise.all([
     supabase.from("business_members").select("business_id, user_id").eq("role", "owner"),
@@ -238,8 +238,6 @@ export async function CollaboratorOverview({ supabase }: { supabase: SupabaseCli
   const ownerIds = new Set(owners.data.map((row) => row.user_id));
   const blockedIds = new Set(blocked.data.map((row) => row.user_id));
   const suspendedOwners = [...ownerIds].filter((id) => blockedIds.has(id)).length;
-  const withOwner = new Set(owners.data.map((row) => row.business_id));
-  const withoutOwner = businesses.data.filter((business) => !withOwner.has(business.id));
   const pending = queue.data ?? [];
 
   return (
@@ -259,33 +257,11 @@ export async function CollaboratorOverview({ supabase }: { supabase: SupabaseCli
         <Metric label="Propietarios suspendidos" value={suspendedOwners}
           hint="Sin acceso al panel" href="/panel/propietarios?estado=suspendidos" />
         <Metric label="Negocios registrados" value={businesses.data.length}
-          hint={`${withoutOwner.length} sin propietario asignado`} href="/panel/negocios" />
+          hint="Cada uno con su propietario" href="/panel/negocios" />
         <Metric label="Pendientes de revisión" value={pending.length}
           hint="Enviados por negocios" href="/panel/revision" />
       </div>
       <div className="dashboard-grid">
-        <Panel>
-          <div className="section-heading">
-            <h2>Negocios sin propietario</h2>
-            <Link className="text-link" href="/panel/negocios?filtro=sin-propietario">
-              Ver negocios ›
-            </Link>
-          </div>
-          {withoutOwner.slice(0, 6).map((business) => (
-            <div className="list-row" key={business.id}>
-              <div className="list-row-text">
-                <b>{business.name}</b>
-                <small>{business.is_active ? "Activo" : "Inactivo"} · sin propietario</small>
-              </div>
-              <Link className="button secondary small" href={`/panel/negocios/${business.id}`}>
-                Asignar propietario
-              </Link>
-            </div>
-          ))}
-          {!withoutOwner.length && (
-            <p className="muted">Todos los negocios tienen un propietario asignado.</p>
-          )}
-        </Panel>
         <Panel>
           <div className="section-heading">
             <h2>Cola de revisión</h2>
