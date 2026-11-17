@@ -418,3 +418,5 @@ Por verificar:
 - 2026-10-22 (nube): se crean `CLAUDE.md` en ambos repos y esta bitácora.
 - 2026-11-17 (nube): la barra lateral del panel muestra el nombre de la cuenta (metadatos o
   tabla profiles) en vez del correo; si no hay nombre, no muestra nada.
+- 2026-11-17 (nube): resumen del equipo rediseñado: indicadores con ícono y color; se quitan
+  las tarjetas de Destinos y Cuentas suspendidas (y su aviso de atención).

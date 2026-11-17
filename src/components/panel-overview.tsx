@@ -1,5 +1,14 @@
 import Link from "next/link";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { IconType } from "react-icons";
+import {
+  IoBusinessOutline,
+  IoCheckmarkCircleOutline,
+  IoCreateOutline,
+  IoDocumentTextOutline,
+  IoPricetagOutline,
+  IoTimeOutline,
+} from "react-icons/io5";
 import { Badge, Metric, PageHeader, Panel } from "@/components/ui";
 import { OwnBusinessForm } from "@/components/panel-own-business-form";
 import { loadCategoryLabels } from "@/lib/panel-categories";
@@ -64,6 +73,29 @@ function Notice({ title, detail, tone, href }: {
   );
 }
 
+// Indicador del resumen: ícono de color, cifra grande y pie que enlaza a su sección.
+function OverviewMetric({ icon: Icon, tone, label, value, hint, href }: {
+  icon: IconType;
+  tone: "brand" | "success" | "warning" | "accent";
+  label: string;
+  value: number;
+  hint: string;
+  href: string;
+}) {
+  return (
+    <Link href={href} className="metric-card overview-metric">
+      <span className="overview-metric-head">
+        <span className={`overview-metric-icon ${tone}`} aria-hidden="true">
+          <Icon size={18} />
+        </span>
+        <span className="metric-label">{label}</span>
+      </span>
+      <strong className="metric-value">{value}</strong>
+      <small>{hint}</small>
+    </Link>
+  );
+}
+
 // Resumen del equipo interno (owner y admin): indicadores reales y cola de revisión.
 export async function StaffOverview({
   supabase,
@@ -73,7 +105,7 @@ export async function StaffOverview({
 }) {
   const today = todayIso();
   const [
-    published, drafts, pending, businesses, suspended, promotions, destinations, sites,
+    published, drafts, pending, businesses, promotions,
     contractsIssued, contractsSubmitted, suggestions,
   ] = await Promise.all([
     countOf(supabase.from("services").select("id", { count: "exact", head: true })
@@ -84,12 +116,9 @@ export async function StaffOverview({
       .eq("review_status", "pending")),
     countOf(supabase.from("businesses").select("id", { count: "exact", head: true })
       .eq("is_active", true)),
-    countOf(supabase.from("blocked_users").select("user_id", { count: "exact", head: true })),
     countOf(supabase.from("service_promotions").select("id", { count: "exact", head: true })
       .eq("is_active", true)
       .or(`schedule_mode.eq.weekdays,ends_on.gte.${today}`)),
-    countOf(supabase.from("destinations").select("id", { count: "exact", head: true })),
-    countOf(supabase.from("tourist_sites").select("id", { count: "exact", head: true })),
     countOf(supabase.from("business_contracts").select("id", { count: "exact", head: true })
       .eq("status", "issued")),
     countOf(supabase.from("business_contracts").select("id", { count: "exact", head: true })
@@ -121,22 +150,20 @@ export async function StaffOverview({
           </>
         }
       />
-      <div className="metrics">
-        <Metric label="Servicios publicados" value={published} hint="Visibles en la web"
-          href="/panel/servicios?estado=publicados" />
-        <Metric label="Pendientes de revisión" value={pending} hint="Enviados por negocios"
+      <div className="overview-metrics">
+        <OverviewMetric icon={IoCheckmarkCircleOutline} tone="success" label="Servicios publicados"
+          value={published} hint="Visibles en la web" href="/panel/servicios?estado=publicados" />
+        <OverviewMetric icon={IoTimeOutline} tone={pending > 0 ? "warning" : "brand"}
+          label="Pendientes de revisión" value={pending} hint="Enviados por negocios"
           href="/panel/revision" />
-        <Metric label="Borradores" value={drafts} hint="Aún no publicados"
-          href="/panel/servicios?estado=borradores" />
-        <Metric label="Negocios activos" value={businesses} hint="Con acceso habilitado"
-          href="/panel/negocios" />
-        <Metric label="Promociones vigentes" value={promotions} hint="Activas hoy"
-          href="/panel/promociones" />
-        <Metric label="Destinos" value={destinations} hint={`Con ${sites} sitios turísticos`}
-          href="/panel/sitios" />
-        <Metric label="Cuentas suspendidas" value={suspended} hint="Propietarios sin acceso"
-          href="/panel/propietarios?estado=suspendidos" />
-        <Metric label="Contratos por firmar" value={contractsIssued} hint="Emitidos sin firma"
+        <OverviewMetric icon={IoCreateOutline} tone="brand" label="Borradores" value={drafts}
+          hint="Aún no publicados" href="/panel/servicios?estado=borradores" />
+        <OverviewMetric icon={IoBusinessOutline} tone="brand" label="Negocios activos"
+          value={businesses} hint="Con acceso habilitado" href="/panel/negocios" />
+        <OverviewMetric icon={IoPricetagOutline} tone="accent" label="Promociones vigentes"
+          value={promotions} hint="Activas hoy" href="/panel/promociones" />
+        <OverviewMetric icon={IoDocumentTextOutline} tone={contractsIssued > 0 ? "warning" : "brand"}
+          label="Contratos por firmar" value={contractsIssued} hint="Emitidos sin firma"
           href="/panel/contratos?estado=esperando" />
       </div>
       <div className="split">
@@ -171,11 +198,6 @@ export async function StaffOverview({
           </Panel>
           <Panel>
             <h2>Requiere atención</h2>
-            {suspended > 0 && (
-              <Notice tone="danger" href="/panel/propietarios?estado=suspendidos"
-                title={`${suspended} ${suspended === 1 ? "cuenta suspendida" : "cuentas suspendidas"}`}
-                detail="Revisa si deben recuperar el acceso." />
-            )}
             {contractsSubmitted > 0 && (
               <Notice tone="info" href="/panel/contratos?estado=verificar"
                 title={`${contractsSubmitted} ${contractsSubmitted === 1
@@ -193,7 +215,7 @@ export async function StaffOverview({
                 title={`${suggestions} ${suggestions === 1 ? "sugerencia nueva" : "sugerencias nuevas"}`}
                 detail="Escritas por visitantes de la web." />
             )}
-            {!suspended && !contractsSubmitted && !contractsIssued && !suggestions && (
+            {!contractsSubmitted && !contractsIssued && !suggestions && (
               <p className="muted">Todo está al día.</p>
             )}
           </Panel>
