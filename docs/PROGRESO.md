@@ -416,3 +416,5 @@ Por verificar:
 - 2026-10-22 (nube): `fusion` pasa a `main`; se borra la rama `claude/adoring-lamport-hgz2jf`.
 - 2026-10-22 (nube): la rama de trabajo pasa a ser `fusion` en ambos repos.
 - 2026-10-22 (nube): se crean `CLAUDE.md` en ambos repos y esta bitácora.
+- 2026-11-17 (nube): la barra lateral del panel muestra el nombre de la cuenta (metadatos o
+  tabla profiles) en vez del correo; si no hay nombre, no muestra nada.
