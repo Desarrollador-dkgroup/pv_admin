@@ -188,15 +188,6 @@ export async function StaffOverview({
         </Panel>
         <div className="stack">
           <Panel>
-            <h2>Accesos rápidos</h2>
-            <nav className="quick-links">
-              <Link href="/panel/servicios/nuevo">Crear servicio ›</Link>
-              <Link href="/panel/promociones/nuevo">Crear promoción ›</Link>
-              <Link href="/panel/negocios">Administrar negocios ›</Link>
-              <Link href="/panel/permisos">Equipo y permisos ›</Link>
-            </nav>
-          </Panel>
-          <Panel>
             <h2>Requiere atención</h2>
             {contractsSubmitted > 0 && (
               <Notice tone="info" href="/panel/contratos?estado=verificar"

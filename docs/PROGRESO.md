@@ -420,3 +420,4 @@ Por verificar:
   tabla profiles) en vez del correo; si no hay nombre, no muestra nada.
 - 2026-11-17 (nube): resumen del equipo rediseñado: indicadores con ícono y color; se quitan
   las tarjetas de Destinos y Cuentas suspendidas (y su aviso de atención).
+- 2026-11-17 (nube): se quita el bloque "Accesos rápidos" del resumen.
