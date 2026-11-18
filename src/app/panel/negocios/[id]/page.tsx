@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge, Button, ConfirmSubmit, PageHeader, Panel } from "@/components/ui";
-import { MemberAddForm } from "@/components/panel-member-form";
 import { ServicePlanAddForm } from "@/components/panel-service-plan-form";
 import { OwnBusinessForm } from "@/components/panel-own-business-form";
 import { getPanelIdentity } from "@/lib/panel-access";
@@ -9,15 +8,10 @@ import { contractStatusLabel, contractStatusTone } from "@/lib/panel-contracts";
 import { formatCents } from "@/lib/panel-format";
 import { ownerStateOf } from "@/lib/panel-labels";
 import { canManageProviders } from "@/lib/panel-permissions";
-import { getAccountNames } from "@/lib/panel-people";
 import { PlanAddServiceForm } from "@/components/panel-plan-add-service-form";
 import { related } from "@/lib/panel-relations";
 import { canManageCatalog } from "@/types/panel";
-import {
-  removeBusinessMemberAction,
-  removeServicePlanCategoryAction,
-  setBusinessActiveAction,
-} from "../actions";
+import { removeServicePlanCategoryAction, setBusinessActiveAction } from "../actions";
 
 // Muestra un negocio con sus servicios, plan, personas, estado y contrato según el rol.
 export default async function BusinessDetailPage({
@@ -41,16 +35,13 @@ export default async function BusinessDetailPage({
 
   const isStaff = canManageCatalog(role);
   const isTeam = canManageProviders(role);
-  const [members, services, accounts, plans, categories, types, contract] = await Promise.all([
+  const [members, services, plans, categories, types, contract] = await Promise.all([
     supabase.from("business_members").select("user_id, role").eq("business_id", id).order("role"),
     supabase
       .from("services")
       .select("id, name, status, review_status, category_id, hospedaje_type_id, base_price_cents")
       .eq("business_id", id)
       .order("name"),
-    isTeam
-      ? supabase.from("profiles").select("id, display_name").order("display_name").limit(300)
-      : Promise.resolve({ data: [], error: null }),
     supabase
       .from("business_service_plans")
       .select("id, quantity, category_id, hospedaje_type_id, categories(label), hospedaje_types(label)")
@@ -64,17 +55,11 @@ export default async function BusinessDetailPage({
         .eq("business_id", id).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
   ]);
-  if (members.error || services.error || accounts.error || plans.error || categories.error
-    || types.error) {
+  if (members.error || services.error || plans.error || categories.error || types.error) {
     throw new Error("No se pudo cargar la información del negocio.");
   }
 
   const memberList = members.data ?? [];
-  const names = await getAccountNames(supabase, memberList.map((member) => member.user_id));
-  const memberIds = new Set(memberList.map((member) => member.user_id));
-  const availableAccounts = (accounts.data ?? [])
-    .filter((account) => !memberIds.has(account.id))
-    .map((account) => ({ id: account.id, name: account.display_name }));
   const labelOf = new Map((categories.data ?? []).map((item) => [item.id, item.label]));
   const serviceList = services.data ?? [];
   const usedOf = (categoryId: string) =>
@@ -246,33 +231,6 @@ export default async function BusinessDetailPage({
         </div>
 
         <div className="stack">
-          <Panel>
-            <h2>Personas con acceso</h2>
-            {memberList.map((member) => (
-              <div className="list-row" key={member.user_id}>
-                <div className="list-row-text">
-                  <b>{names.get(member.user_id) ?? "Cuenta sin perfil"}</b>
-                  <small>{member.role === "owner" ? "Propietario" : "Colaborador del negocio"}</small>
-                </div>
-                {isTeam && (
-                  <form action={removeBusinessMemberAction}>
-                    <input type="hidden" name="business_id" value={id} />
-                    <input type="hidden" name="user_id" value={member.user_id} />
-                    <ConfirmSubmit tone="quiet" className="small" confirm={{
-                      title: `¿Quitar a ${names.get(member.user_id) ?? "esta persona"} del negocio?`,
-                      body: "Perderá el acceso a este negocio. Su cuenta no se borra.",
-                      confirmLabel: "Quitar",
-                      danger: true,
-                    }}>
-                      Quitar
-                    </ConfirmSubmit>
-                  </form>
-                )}
-              </div>
-            ))}
-            {!memberList.length && <p className="muted">Este negocio aún no tiene personas asignadas.</p>}
-            {isTeam && <MemberAddForm businessId={id} accounts={availableAccounts} />}
-          </Panel>
 
           <Panel>
             <h2>Estado del negocio</h2>

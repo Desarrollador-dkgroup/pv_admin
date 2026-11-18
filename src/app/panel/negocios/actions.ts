@@ -78,64 +78,6 @@ async function grantPlanSlots(
   return null;
 }
 
-// Asigna una cuenta existente a un negocio como propietario o colaborador.
-// Las cuentas internas nunca se asignan como propietarios de negocio.
-export async function addBusinessMemberAction(
-  _previous: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  const { supabase, role } = await getPanelIdentity();
-  if (!canManageProviders(role)) {
-    return { error: "Tu cuenta no puede asignar personas a negocios." };
-  }
-
-  const businessId = formText(formData, "business_id");
-  const userId = formText(formData, "user_id");
-  const memberRole = formText(formData, "member_role");
-  if (!userId) return { error: "Selecciona una cuenta para asignar." };
-  if (memberRole !== "owner" && memberRole !== "staff") {
-    return { error: "El rol del negocio no es válido." };
-  }
-
-  // Consulta a la base si la cuenta pertenece al equipo interno.
-  const { data: isPlatform, error: platformError } = await supabase.rpc(
-    "padmin_is_platform_account",
-    { p_user_id: userId },
-  );
-  if (platformError) return { error: "No se pudo verificar la cuenta seleccionada." };
-  if (isPlatform) return { error: "Las cuentas del equipo no pueden ser propietarios de negocio." };
-
-  const { error } = await supabase
-    .from("business_members")
-    .insert({ business_id: businessId, user_id: userId, role: memberRole });
-  if (error) {
-    const duplicated = error.message.includes("duplicate");
-    return {
-      error: duplicated ? "Esa cuenta ya pertenece a este negocio." : error.message,
-    };
-  }
-
-  refreshBusinessViews(businessId);
-  return { error: "" };
-}
-
-// Quita a una persona de un negocio. Su cuenta y sus datos personales permanecen intactos.
-export async function removeBusinessMemberAction(formData: FormData): Promise<void> {
-  const { supabase, role } = await getPanelIdentity();
-  if (!canManageProviders(role)) throw new Error("Tu cuenta no puede quitar miembros.");
-
-  const businessId = formText(formData, "business_id");
-  const userId = formText(formData, "user_id");
-  const { error } = await supabase
-    .from("business_members")
-    .delete()
-    .eq("business_id", businessId)
-    .eq("user_id", userId);
-  if (error) throw new Error(error.message);
-
-  refreshBusinessViews(businessId);
-}
-
 // Activa o desactiva un negocio. Solo el propietario principal y los admins lo hacen.
 export async function setBusinessActiveAction(formData: FormData): Promise<void> {
   const { supabase, role } = await getPanelIdentity();
