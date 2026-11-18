@@ -422,3 +422,4 @@ Por verificar:
   las tarjetas de Destinos y Cuentas suspendidas (y su aviso de atención).
 - 2026-11-17 (nube): se quita el bloque "Accesos rápidos" del resumen.
 - 2026-11-17 (nube): los negocios siempre tienen propietario. Se quitan el filtro "Sin propietario", el botón "+ Nuevo negocio" y su ruta; al borrar la única cuenta de un negocio se borra también el negocio. Se borraron en producción "Negocio de comercio 1" (borrador) y "Faaa" (sin datos).
+- 2026-11-18 (nube): en Servicios, los filtros (estado, categoría y búsqueda) se agrupan en un solo botón "Filtros" que despliega un panel con Aplicar y Limpiar.

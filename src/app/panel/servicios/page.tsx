@@ -77,12 +77,7 @@ export default async function ServicesPage({
     && (!categoria || row.category_id === categoria)
     && (!term || row.name.toLowerCase().includes(term)
       || (related(row.businesses)?.name ?? "").toLowerCase().includes(term)));
-  const params = (next: Record<string, string>) => {
-    const search = new URLSearchParams({ estado, categoria, q, ...next });
-    for (const [key, value] of [...search.entries()]) if (!value) search.delete(key);
-    const text = search.toString();
-    return text ? `/panel/servicios?${text}` : "/panel/servicios";
-  };
+  const activeCount = (estado ? 1 : 0) + (categoria ? 1 : 0) + (q.trim() ? 1 : 0);
 
   return (
     <>
@@ -114,25 +109,44 @@ export default async function ServicesPage({
         </Panel>
       )}
       <div className="toolbar">
-        <nav className="chip-row" aria-label="Filtrar por estado">
-          {FILTERS.map((item) => (
-            <Link key={item.key} href={params({ estado: item.key })}
-              className={`chip ${item.key === filter.key ? "active" : ""}`}>
-              {item.label} <span>{all.filter(item.match).length}</span>
-            </Link>
-          ))}
-        </nav>
-        <form className="search-form" role="search">
-          {estado && <input type="hidden" name="estado" value={estado} />}
-          <select name="categoria" defaultValue={categoria} aria-label="Categoría">
-            <option value="">Todas las categorías</option>
-            {(categories ?? []).map((category) => (
-              <option key={category.id} value={category.id}>{category.label}</option>
-            ))}
-          </select>
-          <input name="q" defaultValue={q} placeholder="Buscar servicio o negocio"
-            aria-label="Buscar servicio o negocio" />
-          <button type="submit" className="button secondary small">Filtrar</button>
+        <form className="filter-form" role="search" method="get" action="/panel/servicios">
+          <details className="filter-menu">
+            <summary className="button secondary filter-summary">
+              Filtros
+              {activeCount > 0 && <span className="filter-count">{activeCount}</span>}
+            </summary>
+            <div className="filter-panel">
+              <fieldset className="filter-group">
+                <legend>Estado</legend>
+                <div className="chip-row">
+                  {FILTERS.map((item) => (
+                    <label key={item.key || "todos"} className="chip filter-option">
+                      <input type="radio" name="estado" value={item.key}
+                        defaultChecked={item.key === filter.key} />
+                      {item.label} <span>{all.filter(item.match).length}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <label className="filter-group">
+                Categoría
+                <select name="categoria" defaultValue={categoria}>
+                  <option value="">Todas las categorías</option>
+                  {(categories ?? []).map((category) => (
+                    <option key={category.id} value={category.id}>{category.label}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="filter-group">
+                Buscar
+                <input name="q" defaultValue={q} placeholder="Servicio o negocio" />
+              </label>
+              <div className="filter-actions">
+                <Link className="text-link" href="/panel/servicios">Limpiar</Link>
+                <button type="submit" className="button primary small">Aplicar</button>
+              </div>
+            </div>
+          </details>
         </form>
       </div>
       <Panel className="table-panel">

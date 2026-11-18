@@ -3539,3 +3539,97 @@ a.callout:hover {
   border-radius: 10px;
   border: 1px solid var(--border);
 }
+
+/* Filtros de servicios: un botón que despliega estado, categoría y búsqueda. */
+.filter-form {
+  position: relative;
+}
+.filter-menu {
+  position: relative;
+}
+.filter-menu > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  cursor: pointer;
+}
+.filter-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.filter-count {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--brand);
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+}
+.filter-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(420px, 90vw);
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 12px 30px #20274718;
+}
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.filter-group legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.filter-group select,
+.filter-group input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+}
+.filter-option {
+  position: relative;
+  cursor: pointer;
+}
+.filter-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.filter-option:has(input:checked) {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #ffffff;
+}
+.filter-option:has(input:checked) span {
+  background: #ffffff33;
+  color: #ffffff;
+}
+.filter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
