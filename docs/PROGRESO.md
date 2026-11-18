@@ -426,3 +426,4 @@ Por verificar:
 - 2026-11-18 (nube): todos los menús desplegables del panel usan el mismo diseño (flecha propia, borde de la marca).
 - 2026-11-18 (nube): el contador del botón Filtros solo cuenta categoría y búsqueda; el estado no suma.
 - 2026-11-18 (nube): nuevo selector propio PanelSelect (lista con diseño del panel). Se usa en el filtro de categoría de Servicios; los demás selectores siguen nativos.
+- 2026-11-18 (nube): en la tabla de negocios, las categorías se muestran solo con el ícono de la portada pública (react-icons/io5), con el nombre en el título. Componente CategoryIcon compartido.

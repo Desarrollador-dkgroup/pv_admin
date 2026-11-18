@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CategoryIcon } from "@/components/category-icon";
 import { Badge, PageHeader, Panel } from "@/components/ui";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { contractStatusLabel, contractStatusTone } from "@/lib/panel-contracts";
@@ -115,9 +116,9 @@ export default async function BusinessesPage({ searchParams }: { searchParams: S
                         : "—"}
                     </td>
                     <td>
-                      <div className="chip-row">
+                      <div className="category-icons">
                         {categoryIds.map((id) => (
-                          <span key={id} className="badge tone-info">{labelOf.get(id) ?? id}</span>
+                          <CategoryIcon key={id} id={id} label={labelOf.get(id) ?? id} />
                         ))}
                         {!categoryIds.length && <span className="muted">Sin servicios</span>}
                       </div>

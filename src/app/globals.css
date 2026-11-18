@@ -3729,3 +3729,21 @@ select:not([multiple]):disabled {
   font-size: 13px;
   color: var(--muted);
 }
+
+/* Categorías en la tabla de negocios: solo el ícono, en una fila. */
+.category-icons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.category-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--pale);
+}
