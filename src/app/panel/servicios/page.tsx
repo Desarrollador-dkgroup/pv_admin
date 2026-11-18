@@ -77,7 +77,8 @@ export default async function ServicesPage({
     && (!categoria || row.category_id === categoria)
     && (!term || row.name.toLowerCase().includes(term)
       || (related(row.businesses)?.name ?? "").toLowerCase().includes(term)));
-  const activeCount = (estado ? 1 : 0) + (categoria ? 1 : 0) + (q.trim() ? 1 : 0);
+  // Cuenta solo categoría y búsqueda; el estado se ve en el propio panel.
+  const activeCount = (categoria ? 1 : 0) + (q.trim() ? 1 : 0);
 
   return (
     <>
