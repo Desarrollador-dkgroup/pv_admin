@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PanelSelect } from "@/components/panel-select";
 import { Badge, PageHeader, Panel } from "@/components/ui";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { formatDate } from "@/lib/panel-format";
@@ -129,15 +130,21 @@ export default async function ServicesPage({
                   ))}
                 </div>
               </fieldset>
-              <label className="filter-group">
-                Categoría
-                <select name="categoria" defaultValue={categoria}>
-                  <option value="">Todas las categorías</option>
-                  {(categories ?? []).map((category) => (
-                    <option key={category.id} value={category.id}>{category.label}</option>
-                  ))}
-                </select>
-              </label>
+              <div className="filter-group">
+                <span className="filter-label">Categoría</span>
+                <PanelSelect
+                  name="categoria"
+                  ariaLabel="Categoría"
+                  defaultValue={categoria}
+                  options={[
+                    { value: "", label: "Todas las categorías" },
+                    ...(categories ?? []).map((category) => ({
+                      value: category.id,
+                      label: category.label,
+                    })),
+                  ]}
+                />
+              </div>
               <label className="filter-group">
                 Buscar
                 <input name="q" defaultValue={q} placeholder="Servicio o negocio" />

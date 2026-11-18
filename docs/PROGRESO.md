@@ -425,3 +425,4 @@ Por verificar:
 - 2026-11-18 (nube): en Servicios, los filtros (estado, categoría y búsqueda) se agrupan en un solo botón "Filtros" que despliega un panel con Aplicar y Limpiar.
 - 2026-11-18 (nube): todos los menús desplegables del panel usan el mismo diseño (flecha propia, borde de la marca).
 - 2026-11-18 (nube): el contador del botón Filtros solo cuenta categoría y búsqueda; el estado no suma.
+- 2026-11-18 (nube): nuevo selector propio PanelSelect (lista con diseño del panel). Se usa en el filtro de categoría de Servicios; los demás selectores siguen nativos.
