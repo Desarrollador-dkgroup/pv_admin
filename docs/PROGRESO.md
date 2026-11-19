@@ -431,3 +431,4 @@ Por verificar:
 - 2026-11-19 (nube): se quita el botón "Ver contrato" del encabezado de la ficha del negocio; la tarjeta Contrato con "Abrir" se mantiene.
 - 2026-11-19 (nube): Estado del negocio muestra el estado con su etiqueta y un botón Editar que despliega el interruptor de activo/inactivo y Guardar.
 - 2026-11-19 (nube): al guardar el estado del negocio, la tarjeta vuelve a la vista de lectura.
+- 2026-11-19 (nube): en la ficha del negocio, la lista de servicios solo muestra el estado; el nombre abre la ficha, donde están Galería, Habitaciones y Menú como pestañas.

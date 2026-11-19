@@ -139,44 +139,22 @@ export default async function BusinessDetailPage({
             </div>
             {serviceList.map((service) => {
               const state = ownerStateOf(service);
+              // Galería, habitaciones y menú viven dentro de la ficha (pestañas).
+              const canEditService = isStaff || role === "propietario";
               return (
                 <div className="list-row" key={service.id}>
                   <div className="list-row-text">
-                    <b>{service.name}</b>
+                    <Link href={canEditService
+                      ? `/panel/servicios/${service.id}`
+                      : `/panel/servicios/${service.id}/vista-previa`}>
+                      <b>{service.name}</b>
+                    </Link>
                     <small>
                       {labelOf.get(service.category_id) ?? service.category_id}
                       {service.base_price_cents ? ` · desde ${formatCents(service.base_price_cents)}` : ""}
                     </small>
                   </div>
                   <Badge tone={state.tone}>{state.label}</Badge>
-                  <div className="actions">
-                    {isStaff || role === "propietario" ? (
-                      <>
-                        <Link className="button secondary small" href={`/panel/servicios/${service.id}`}>
-                          Editar ficha
-                        </Link>
-                        <Link className="button quiet small" href={`/panel/servicios/${service.id}/galeria`}>
-                          Galería
-                        </Link>
-                        {service.category_id === "hospedaje" && (
-                          <Link className="button quiet small"
-                            href={`/panel/servicios/${service.id}?seccion=habitaciones`}>
-                            Habitaciones
-                          </Link>
-                        )}
-                        {service.category_id === "restaurantes" && (
-                          <Link className="button quiet small" href={`/panel/servicios/${service.id}/menu`}>
-                            Menú
-                          </Link>
-                        )}
-                      </>
-                    ) : (
-                      <Link className="button secondary small"
-                        href={`/panel/servicios/${service.id}/vista-previa`}>
-                        Vista previa
-                      </Link>
-                    )}
-                  </div>
                 </div>
               );
             })}
