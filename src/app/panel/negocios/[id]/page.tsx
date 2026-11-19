@@ -230,17 +230,25 @@ export default async function BusinessDetailPage({
         <div className="stack">
 
           <Panel>
-            <h2>Estado del negocio</h2>
+            <div className="section-heading">
+              <h2>Estado del negocio</h2>
+              <Badge tone={business.is_active ? "success" : "neutral"}>
+                {business.is_active ? "Activo" : "Inactivo"}
+              </Badge>
+            </div>
             {isStaff ? (
-              <form action={setBusinessActiveAction} className="stack compact">
-                <input type="hidden" name="business_id" value={id} />
-                <label className="checkbox-option">
-                  <input type="checkbox" name="is_active" defaultChecked={business.is_active} />
-                  Negocio activo
-                </label>
-                <small className="muted">Si lo desactivas, sus servicios dejan de verse en la web.</small>
-                <Button tone="secondary" type="submit">Guardar estado</Button>
-              </form>
+              <details className="status-edit">
+                <summary className="button secondary small">Editar</summary>
+                <form action={setBusinessActiveAction} className="stack compact">
+                  <input type="hidden" name="business_id" value={id} />
+                  <label className="checkbox-option">
+                    <input type="checkbox" name="is_active" defaultChecked={business.is_active} />
+                    Negocio activo
+                  </label>
+                  <small className="muted">Si lo desactivas, sus servicios dejan de verse en la web.</small>
+                  <Button tone="secondary" type="submit">Guardar estado</Button>
+                </form>
+              </details>
             ) : (
               <p className="muted">
                 {business.is_active
