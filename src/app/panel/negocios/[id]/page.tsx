@@ -135,7 +135,6 @@ export default async function BusinessDetailPage({
                   {serviceList.length} {serviceList.length === 1 ? "servicio registrado" : "servicios registrados"}
                 </p>
               </div>
-              {isStaff && <Link className="text-link" href="/panel/servicios">Ver servicios ›</Link>}
             </div>
             {serviceList.map((service) => {
               const state = ownerStateOf(service);
@@ -155,6 +154,12 @@ export default async function BusinessDetailPage({
                     </small>
                   </div>
                   <Badge tone={state.tone}>{state.label}</Badge>
+                  <Link className="button secondary small"
+                    href={canEditService
+                      ? `/panel/servicios/${service.id}`
+                      : `/panel/servicios/${service.id}/vista-previa`}>
+                    {canEditService ? "Editar" : "Vista previa"}
+                  </Link>
                 </div>
               );
             })}
