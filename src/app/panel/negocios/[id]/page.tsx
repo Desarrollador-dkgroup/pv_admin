@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Badge, Button, ConfirmSubmit, PageHeader, Panel } from "@/components/ui";
+import { Badge, ConfirmSubmit, PageHeader, Panel } from "@/components/ui";
+import { BusinessStatusEditor } from "@/components/business-status-editor";
 import { ServicePlanAddForm } from "@/components/panel-service-plan-form";
 import { OwnBusinessForm } from "@/components/panel-own-business-form";
 import { getPanelIdentity } from "@/lib/panel-access";
@@ -237,18 +238,8 @@ export default async function BusinessDetailPage({
               </Badge>
             </div>
             {isStaff ? (
-              <details className="status-edit">
-                <summary className="button secondary small">Editar</summary>
-                <form action={setBusinessActiveAction} className="stack compact">
-                  <input type="hidden" name="business_id" value={id} />
-                  <label className="checkbox-option">
-                    <input type="checkbox" name="is_active" defaultChecked={business.is_active} />
-                    Negocio activo
-                  </label>
-                  <small className="muted">Si lo desactivas, sus servicios dejan de verse en la web.</small>
-                  <Button tone="secondary" type="submit">Guardar estado</Button>
-                </form>
-              </details>
+              <BusinessStatusEditor businessId={id} isActive={business.is_active}
+                action={setBusinessActiveAction} />
             ) : (
               <p className="muted">
                 {business.is_active

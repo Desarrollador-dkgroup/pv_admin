@@ -3747,19 +3747,3 @@ select:not([multiple]):disabled {
   border-radius: 50%;
   background: var(--pale);
 }
-
-/* Estado del negocio: lectura con botón Editar que despliega el formulario. */
-.status-edit > summary {
-  display: inline-flex;
-  list-style: none;
-  cursor: pointer;
-}
-.status-edit > summary::-webkit-details-marker {
-  display: none;
-}
-.status-edit[open] > summary {
-  display: none;
-}
-.status-edit form {
-  margin-top: 14px;
-}

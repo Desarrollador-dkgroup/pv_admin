@@ -430,3 +430,4 @@ Por verificar:
 - 2026-11-18 (nube): se quita la sección "Personas con acceso" de la ficha del negocio, con su formulario y las acciones de asignar y quitar personas. Los negocios siguen teniendo propietario al crearse con "Agregar propietario".
 - 2026-11-19 (nube): se quita el botón "Ver contrato" del encabezado de la ficha del negocio; la tarjeta Contrato con "Abrir" se mantiene.
 - 2026-11-19 (nube): Estado del negocio muestra el estado con su etiqueta y un botón Editar que despliega el interruptor de activo/inactivo y Guardar.
+- 2026-11-19 (nube): al guardar el estado del negocio, la tarjeta vuelve a la vista de lectura.
