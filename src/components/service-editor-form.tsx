@@ -148,7 +148,7 @@ export function ServiceEditorForm(props: Props) {
           Nombre comercial
           <input name="name" required defaultValue={String(service.name ?? "")} />
         </label>
-        {isStaff ? (
+        {isStaff && isNew ? (
           <label className="field">
             Negocio
             <select
@@ -165,10 +165,12 @@ export function ServiceEditorForm(props: Props) {
           </label>
         ) : (
           <>
-            <label className="field">
-              Propietario
-              <input value={props.ownerName ?? ""} readOnly />
-            </label>
+            {!isStaff && (
+              <label className="field">
+                Propietario
+                <input value={props.ownerName ?? ""} readOnly />
+              </label>
+            )}
             <input
               type="hidden"
               name="business_id"

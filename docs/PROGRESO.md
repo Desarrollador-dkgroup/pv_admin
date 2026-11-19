@@ -433,3 +433,4 @@ Por verificar:
 - 2026-11-19 (nube): al guardar el estado del negocio, la tarjeta vuelve a la vista de lectura.
 - 2026-11-19 (nube): en la ficha del negocio, la lista de servicios solo muestra el estado; el nombre abre la ficha, donde están Galería, Habitaciones y Menú como pestañas.
 - 2026-11-19 (nube): en la ficha del negocio se quita el enlace Ver servicios; cada servicio tiene un botón Editar después del estado.
+- 2026-11-19 (nube): en la ficha de un servicio ya creado se oculta el selector Negocio; se mantiene el negocio actual. Solo aparece al crear un servicio nuevo.
