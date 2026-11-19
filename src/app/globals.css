@@ -3747,3 +3747,16 @@ select:not([multiple]):disabled {
   border-radius: 50%;
   background: var(--pale);
 }
+
+/* Buscador de Destacados: texto y categoría en una fila; en celular se apilan. */
+.filter-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 14px;
+  align-items: end;
+}
+@media (max-width: 560px) {
+  .filter-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

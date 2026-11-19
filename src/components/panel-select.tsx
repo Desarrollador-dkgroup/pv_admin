@@ -11,11 +11,13 @@ export function PanelSelect({
   options,
   defaultValue = "",
   ariaLabel,
+  onChange,
 }: {
   name: string;
   options: Option[];
   defaultValue?: string;
   ariaLabel: string;
+  onChange?: (value: string) => void;
 }) {
   const [value, setValue] = useState(defaultValue);
   const [open, setOpen] = useState(false);
@@ -64,6 +66,7 @@ export function PanelSelect({
                   onClick={() => {
                     setValue(option.value);
                     setOpen(false);
+                    onChange?.(option.value);
                   }}
                 >
                   {option.label}

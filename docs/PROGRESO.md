@@ -435,3 +435,4 @@ Por verificar:
 - 2026-11-19 (nube): en la ficha del negocio se quita el enlace Ver servicios; cada servicio tiene un botón Editar después del estado.
 - 2026-11-19 (nube): en la ficha de un servicio ya creado se oculta el selector Negocio; se mantiene el negocio actual. Solo aparece al crear un servicio nuevo.
 - 2026-11-19 (nube): Servicio recomendado sale de la ficha del servicio. Nueva sección Destacados (solo owner y admin) para elegir los servicios de la portada.
+- 2026-11-19 (nube): Destacados: botón Destacar servicio arriba; buscador por nombre, negocio, categoría y estado. Ya no se muestra la lista.

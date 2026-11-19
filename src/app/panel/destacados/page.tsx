@@ -1,4 +1,5 @@
-import { Badge, Button, PageHeader, Panel } from "@/components/ui";
+import { FeaturedPicker, type FeaturedRow } from "@/components/featured-picker";
+import { PageHeader } from "@/components/ui";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { loadCategoryLabels } from "@/lib/panel-categories";
 import { SERVICE_STATUS, statusOf } from "@/lib/panel-labels";
@@ -19,41 +20,30 @@ export default async function FeaturedPage() {
   const { supabase, role } = await getPanelIdentity();
   requireRole(role, ["owner", "admin"]);
 
-  const [{ data, error }, categoryOf] = await Promise.all([
+  const [{ data, error }, { data: categories }] = await Promise.all([
     supabase
       .from("services")
       .select("id, name, status, category_id, is_recommended, businesses(name)")
       .or("status.eq.published,is_recommended.eq.true")
       .order("name"),
-    loadCategoryLabels(supabase),
+    supabase.from("categories").select("id, label").order("sort_order"),
   ]);
   if (error) throw new Error("No se pudieron cargar los servicios.");
 
-  const rows = (data ?? []) as unknown as Row[];
-  const featured = rows.filter((row) => row.is_recommended);
-  const candidates = rows.filter((row) => !row.is_recommended && row.status === "published");
-
-  const renderRow = (row: Row) => {
+  const categoryOf = await loadCategoryLabels(supabase);
+  const rows: FeaturedRow[] = ((data ?? []) as unknown as Row[]).map((row) => {
     const state = statusOf(SERVICE_STATUS, row.status);
-    return (
-      <div className="list-row" key={row.id}>
-        <div className="list-row-text">
-          <b>{row.name}</b>
-          <small>
-            {related(row.businesses)?.name ?? "Negocio sin nombre"} · {categoryOf(row.category_id)}
-          </small>
-        </div>
-        <Badge tone={state.tone}>{state.label}</Badge>
-        <form action={setFeaturedAction}>
-          <input type="hidden" name="service_id" value={row.id} />
-          <input type="hidden" name="featured" value={row.is_recommended ? "false" : "true"} />
-          <Button tone={row.is_recommended ? "quiet" : "secondary"} type="submit" className="small">
-            {row.is_recommended ? "Quitar" : "Destacar"}
-          </Button>
-        </form>
-      </div>
-    );
-  };
+    return {
+      id: row.id,
+      name: row.name,
+      businessName: related(row.businesses)?.name ?? "Negocio sin nombre",
+      categoryId: row.category_id,
+      categoryLabel: categoryOf(row.category_id),
+      statusLabel: state.label,
+      statusTone: state.tone,
+      featured: row.is_recommended,
+    };
+  });
 
   return (
     <>
@@ -61,26 +51,11 @@ export default async function FeaturedPage() {
         title="Destacados"
         description="Servicios que aparecen en «Servicio destacado» de la portada. Solo el equipo los administra."
       />
-      <Panel>
-        <div className="section-heading">
-          <h2>Servicios destacados</h2>
-          <span className="muted">{featured.length} en la portada</span>
-        </div>
-        {featured.map(renderRow)}
-        {!featured.length && (
-          <p className="muted">
-            Todavía no hay destacados. Mientras tanto, la portada muestra los primeros 6 servicios.
-          </p>
-        )}
-      </Panel>
-      <Panel>
-        <div className="section-heading">
-          <h2>Agregar a destacados</h2>
-          <span className="muted">Servicios publicados que no están destacados</span>
-        </div>
-        {candidates.map(renderRow)}
-        {!candidates.length && <p className="muted">No hay más servicios publicados por destacar.</p>}
-      </Panel>
+      <FeaturedPicker
+        rows={rows}
+        categories={(categories ?? []).map((item) => ({ value: item.id, label: item.label }))}
+        action={setFeaturedAction}
+      />
     </>
   );
 }
