@@ -105,9 +105,6 @@ export default async function BusinessDetailPage({
             <Badge tone={business.is_active ? "success" : "neutral"}>
               {business.is_active ? "Activo" : "Inactivo"}
             </Badge>
-            {isStaff && (
-              <Link className="button secondary" href={`/panel/contratos/${id}`}>Ver contrato</Link>
-            )}
           </>
         }
       />

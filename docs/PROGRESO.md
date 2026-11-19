@@ -428,3 +428,4 @@ Por verificar:
 - 2026-11-18 (nube): nuevo selector propio PanelSelect (lista con diseño del panel). Se usa en el filtro de categoría de Servicios; los demás selectores siguen nativos.
 - 2026-11-18 (nube): en la tabla de negocios, las categorías se muestran solo con el ícono de la portada pública (react-icons/io5), con el nombre en el título. Componente CategoryIcon compartido.
 - 2026-11-18 (nube): se quita la sección "Personas con acceso" de la ficha del negocio, con su formulario y las acciones de asignar y quitar personas. Los negocios siguen teniendo propietario al crearse con "Agregar propietario".
+- 2026-11-19 (nube): se quita el botón "Ver contrato" del encabezado de la ficha del negocio; la tarjeta Contrato con "Abrir" se mantiene.
