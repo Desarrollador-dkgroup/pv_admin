@@ -276,14 +276,6 @@ export function ServiceEditorForm(props: Props) {
                 <option value="suspended">Suspendido</option>
               </select>
             </label>
-            <label className="checkbox-option">
-              <input
-                type="checkbox"
-                name="is_recommended"
-                defaultChecked={service.is_recommended === true}
-              />
-              Servicio recomendado
-            </label>
             <TextField
               label="Nota de revisión"
               name="review_comment"

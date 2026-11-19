@@ -296,9 +296,6 @@ export async function saveServiceAction(
     review_comment: isStaff
       ? nullable(text(formData, "review_comment"))
       : undefined,
-    is_recommended: isStaff
-      ? formData.get("is_recommended") === "on"
-      : undefined,
     status: isStaff ? selectedStatus : existing?.status === "published" ? "published" : "draft",
   };
 
