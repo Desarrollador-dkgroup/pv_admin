@@ -3,6 +3,7 @@
 import { useState, useActionState } from "react";
 import { addServicePlanAction } from "@/app/panel/negocios/actions";
 import { Button } from "@/components/ui";
+import { PanelSelect } from "@/components/panel-select";
 
 type Category = { id: string; label: string | null };
 type LodgingType = { id: string; label: string | null };
@@ -63,7 +64,7 @@ export function ServicePlanAddForm({
       <div className="form-row">
         <label className="field">
           Categoría
-          <select
+          <PanelSelect
             name="category_id"
             value={categoryId}
             onChange={(e) => handleCategoryChange(e.target.value)}
@@ -75,12 +76,12 @@ export function ServicePlanAddForm({
                 {category.label ?? category.id}
               </option>
             ))}
-          </select>
+          </PanelSelect>
         </label>
         {categoryId === HOSPEDAJE && (
           <label className="field">
             Tipo de hospedaje
-            <select
+            <PanelSelect
               name="hospedaje_type_id"
               value={typeId}
               onChange={(e) => setTypeId(e.target.value)}
@@ -91,7 +92,7 @@ export function ServicePlanAddForm({
                   {type.label ?? type.id}
                 </option>
               ))}
-            </select>
+            </PanelSelect>
           </label>
         )}
       </div>

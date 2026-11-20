@@ -12,6 +12,7 @@ import type { EntityKind, PreviewEntity } from "@/types/preview";
 import { usePreview } from "./context";
 import { Field } from "./field";
 import { PromotionFields } from "./promotion-fields";
+import { PanelSelect } from "@/components/panel-select";
 
 type Props = { kind: EntityKind; record?: PreviewEntity; category?: string; parentId?: string };
 
@@ -104,13 +105,13 @@ export function EntityEditor({ kind, record, category = "hospedaje", parentId }:
           {role === "admin" && ["services", "promotions"].includes(kind) && (
             <label className="field">
               Negocio
-              <select value={business} onChange={(event) => setBusiness(event.target.value)}>
+              <PanelSelect value={business} onChange={(event) => setBusiness(event.target.value)}>
                 {data.entities
                   .filter((entity) => entity.kind === "businesses")
                   .map((entity) => (
                     <option key={entity.id}>{entity.name}</option>
                   ))}
-              </select>
+              </PanelSelect>
             </label>
           )}
           {kind === "services" && (
@@ -151,7 +152,7 @@ export function EntityEditor({ kind, record, category = "hospedaje", parentId }:
             <>
               <label className="field">
                 Servicio asociado
-                <select
+                <PanelSelect
                   required
                   value={fields.service ?? ""}
                   onChange={(event) => change("service", event.target.value)}
@@ -164,7 +165,7 @@ export function EntityEditor({ kind, record, category = "hospedaje", parentId }:
                         {entity.name}
                       </option>
                     ))}
-                </select>
+                </PanelSelect>
               </label>
               {[
                 { key: "description", label: "Descripción", type: "textarea" as const },

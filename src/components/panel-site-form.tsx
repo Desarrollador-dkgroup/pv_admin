@@ -13,6 +13,7 @@ import {
   sitePhotoUrl,
 } from "@/lib/panel-sites";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { PanelSelect } from "@/components/panel-select";
 
 type Option = { id: string; label: string };
 type Site = {
@@ -100,7 +101,7 @@ export function SiteForm({
           </label>
           <label className="field">
             Provincia destino
-            <select
+            <PanelSelect
             name="province_id"
             required
             defaultValue={site?.province_id ?? defaultProvinceId}
@@ -109,7 +110,7 @@ export function SiteForm({
               {provinces.map((province) => (
                 <option key={province.id} value={province.id}>{province.label}</option>
               ))}
-            </select>
+            </PanelSelect>
           </label>
         </div>
         <div className="form-row">

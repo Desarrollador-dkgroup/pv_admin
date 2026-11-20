@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PanelSelect } from "@/components/panel-select";
 
 export type DestinationOption = { provinceId: string; name: string };
 
@@ -50,7 +51,7 @@ export function ServiceSitePicker({
     <>
       <label className="field">
         Destino
-        <select
+        <PanelSelect
           name="destination_province_id"
           value={provinceId}
           onChange={(event) => handleProvinceChange(event.target.value)}
@@ -61,7 +62,7 @@ export function ServiceSitePicker({
               {destination.name}
             </option>
           ))}
-        </select>
+        </PanelSelect>
       </label>
       <fieldset className="choice-group">
         <legend>Sitio turístico</legend>

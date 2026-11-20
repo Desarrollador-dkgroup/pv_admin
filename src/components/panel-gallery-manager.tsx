@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { Button, Panel, confirmAction } from "@/components/ui";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { PanelSelect } from "@/components/panel-select";
 
 export type Photo = {
   id: string;
@@ -265,14 +266,14 @@ export function PanelGalleryManager({
         {items.length > 1 && (
           <label className="field">
             Sección de imágenes
-            <select value={active?.id ?? ""} disabled={busy}
+            <PanelSelect value={active?.id ?? ""} disabled={busy}
               onChange={(event) => setActiveId(event.target.value)}>
               {items.map((group) => (
                 <option key={group.id} value={group.id}>
                   {group.label} · {group.photos.length}/{group.limit}
                 </option>
               ))}
-            </select>
+            </PanelSelect>
           </label>
         )}
         {active && (

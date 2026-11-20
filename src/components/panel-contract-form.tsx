@@ -21,6 +21,7 @@ import {
   type ContractValues,
 } from "@/lib/panel-contracts";
 import { previewPromotion } from "@/lib/promotion-commission";
+import { PanelSelect } from "@/components/panel-select";
 
 export type ContractFormValues = {
   businessId: string;
@@ -263,12 +264,12 @@ export function ContractForm({ initial }: { initial: ContractFormValues }) {
                     <label className="field" key={field.key}>
                       {field.label}
                       {field.kind === "select" ? (
-                        <select name={`field_${field.key}`} value={fields[field.key] ?? ""}
+                        <PanelSelect name={`field_${field.key}`} value={fields[field.key] ?? ""}
                           onChange={(e) => setFields({ ...fields, [field.key]: e.target.value })}>
                           {field.options?.map((option) => (
                             <option key={option} value={option}>{option}</option>
                           ))}
-                        </select>
+                        </PanelSelect>
                       ) : field.kind === "textarea" ? (
                         <textarea name={`field_${field.key}`} rows={3} value={fields[field.key] ?? ""}
                           onChange={(e) => setFields({ ...fields, [field.key]: e.target.value })} />

@@ -132,18 +132,12 @@ export default async function ServicesPage({
               </fieldset>
               <div className="filter-group">
                 <span className="filter-label">Categoría</span>
-                <PanelSelect
-                  name="categoria"
-                  ariaLabel="Categoría"
-                  defaultValue={categoria}
-                  options={[
-                    { value: "", label: "Todas las categorías" },
-                    ...(categories ?? []).map((category) => ({
-                      value: category.id,
-                      label: category.label,
-                    })),
-                  ]}
-                />
+                <PanelSelect name="categoria" aria-label="Categoría" defaultValue={categoria}>
+                  <option value="">Todas las categorías</option>
+                  {(categories ?? []).map((category) => (
+                    <option key={category.id} value={category.id}>{category.label}</option>
+                  ))}
+                </PanelSelect>
               </div>
               <label className="filter-group">
                 Buscar

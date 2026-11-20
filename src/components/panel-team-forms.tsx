@@ -9,6 +9,7 @@ import {
   updateTeamRoleAction,
 } from "@/app/panel/permisos/actions";
 import { Button, ConfirmSubmit } from "@/components/ui";
+import { PanelSelect } from "@/components/panel-select";
 
 type TeamRole = "admin" | "collaborator";
 type Message = { tone: "ok" | "error"; text: string } | null;
@@ -97,14 +98,14 @@ export function CreateTeamAccountForm({ roles }: { roles: TeamRole[] }) {
       </div>
       <label className="field">
         Rol de equipo
-        <select
+        <PanelSelect
           value={role}
           onChange={(event) => { setRole(event.target.value as TeamRole); setPassword(""); }}
         >
           {roles.map((item) => (
             <option key={item} value={item}>{ROLE_NAMES[item]}</option>
           ))}
-        </select>
+        </PanelSelect>
       </label>
 
       {password ? (
@@ -168,11 +169,11 @@ export function TeamRoleForm({
   return (
     <form action={save} className="inline-form">
       <input type="hidden" name="user_id" value={userId} />
-      <select name="platform_role" defaultValue={currentRole} aria-label="Cambiar rol">
+      <PanelSelect name="platform_role" defaultValue={currentRole} aria-label="Cambiar rol">
         {roles.map((item) => (
           <option key={item} value={item}>{ROLE_NAMES[item]}</option>
         ))}
-      </select>
+      </PanelSelect>
       <Button tone="secondary" type="submit" disabled={busy}>
         {busy ? "Guardando…" : "Cambiar"}
       </Button>

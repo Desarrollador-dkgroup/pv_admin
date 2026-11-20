@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button, Panel, confirmAction } from "@/components/ui";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { PanelSelect } from "@/components/panel-select";
 
 export type Dish = {
   id: string;
@@ -245,7 +246,7 @@ export function RestaurantMenuManager({
         {sections.length > 0 && (
           <label className="field">
             Sección seleccionada
-            <select value={sectionId} onChange={(event) => {
+            <PanelSelect value={sectionId} onChange={(event) => {
               setSectionId(event.target.value);
               setEditingDish(null);
               setRenamingSectionId(null);
@@ -255,7 +256,7 @@ export function RestaurantMenuManager({
                   {section.title}
                 </option>
               ))}
-            </select>
+            </PanelSelect>
           </label>
         )}
       </Panel>

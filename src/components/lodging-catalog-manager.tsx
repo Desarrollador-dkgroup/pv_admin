@@ -19,6 +19,7 @@ import {
   deleteRoomTypeAction,
   updateRoomTypeAction,
 } from "@/app/panel/servicios/[id]/unidades/actions";
+import { PanelSelect } from "@/components/panel-select";
 
 export type Room = {
   id: string;
@@ -644,11 +645,11 @@ function RoomFields({
       {!room && (
         <label className="field">
           Qué reserva el cliente
-          <select name="booking_unit" defaultValue="room">
+          <PanelSelect name="booking_unit" defaultValue="room">
             {BOOKING_UNITS.map(([key, label]) => (
               <option key={key} value={key}>{label}</option>
             ))}
-          </select>
+          </PanelSelect>
         </label>
       )}
       <Field label="Capacidad de huéspedes" name="capacity" type="number"

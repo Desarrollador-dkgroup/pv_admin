@@ -11,6 +11,7 @@ import {
 } from "@/lib/panel-destinations";
 import { extractMapsEmbedUrl } from "@/lib/panel-maps";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { PanelSelect } from "@/components/panel-select";
 
 export type DestinationValues = {
   id: string;
@@ -141,12 +142,12 @@ export function DestinationForm({
         <label className="field">
           Provincia
           {isNew ? (
-            <select name="province_id" required defaultValue={initial.provinceId}>
+            <PanelSelect name="province_id" required defaultValue={initial.provinceId}>
               <option value="">Selecciona una provincia</option>
               {provinces.map((item) => (
                 <option key={item.id} value={item.id}>{item.label}</option>
               ))}
-            </select>
+            </PanelSelect>
           ) : (
             <input value={initial.provinceId} readOnly />
           )}

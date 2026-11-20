@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PanelSelect } from "@/components/panel-select";
 
 // Lista desplegable para respuestas de opción única, con "Sin definir" como valor inicial.
 export function ChoiceField({
@@ -18,14 +19,14 @@ export function ChoiceField({
   return (
     <label className="field">
       {label}
-      <select name={name} defaultValue={options.includes(initial) ? initial : ""}>
+      <PanelSelect name={name} defaultValue={options.includes(initial) ? initial : ""}>
         <option value="">Sin definir</option>
         {options.map((option) => (
           <option key={option} value={option}>
             {option}
           </option>
         ))}
-      </select>
+      </PanelSelect>
     </label>
   );
 }
@@ -49,7 +50,7 @@ export function ReceptionHoursField({ initial }: { initial: unknown }) {
     <>
       <label className="field">
         ¿Mantiene horario de recepción?
-        <select
+        <PanelSelect
           name="reception_mode"
           value={mode}
           onChange={(event) => setMode(event.target.value as ReceptionMode)}
@@ -57,7 +58,7 @@ export function ReceptionHoursField({ initial }: { initial: unknown }) {
           <option value="no">No</option>
           <option value="24">Sí, recepción 24 horas</option>
           <option value="horario">Sí, en un horario</option>
-        </select>
+        </PanelSelect>
       </label>
       {mode === "horario" && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -82,14 +83,14 @@ export function EventsPolicyField({ policy, rules }: { policy: unknown; rules: u
     <>
       <label className="field">
         ¿Se permiten eventos?
-        <select
+        <PanelSelect
           name="events_policy"
           value={allowed ? "Sí" : "No"}
           onChange={(event) => setAllowed(event.target.value === "Sí")}
         >
           <option value="No">No</option>
           <option value="Sí">Sí</option>
-        </select>
+        </PanelSelect>
       </label>
       {allowed && (
         <label className="field">

@@ -8,6 +8,7 @@ import { getBusinessCategories, getBusinessOwner } from "@/lib/preview-catalog";
 import type { EntityKind, PreviewEntity } from "@/types/preview";
 import { Badge, Button, Panel } from "@/components/ui";
 import { usePreview } from "./context";
+import { PanelSelect } from "@/components/panel-select";
 
 // Busca y pagina registros; los propietarios activos tienen prioridad al abrir su listado.
 export function EntityList({ kind, parentId }: { kind: EntityKind; parentId?: string }) {
@@ -95,7 +96,7 @@ export function EntityList({ kind, parentId }: { kind: EntityKind; parentId?: st
         </label>
         <label>
           Estado
-          <select
+          <PanelSelect
             value={status}
             onChange={(event) => {
               setStatus(event.target.value);
@@ -107,12 +108,12 @@ export function EntityList({ kind, parentId }: { kind: EntityKind; parentId?: st
                 {option.label}
               </option>
             ))}
-          </select>
+          </PanelSelect>
         </label>
         {["services", "businesses"].includes(kind) && (
           <label>
             Categoría
-            <select
+            <PanelSelect
               value={category}
               onChange={(event) => {
                 setCategory(event.target.value);
@@ -125,7 +126,7 @@ export function EntityList({ kind, parentId }: { kind: EntityKind; parentId?: st
                   {item.name}
                 </option>
               ))}
-            </select>
+            </PanelSelect>
           </label>
         )}
       </div>

@@ -61,9 +61,13 @@ export function FeaturedPicker({
             </label>
             <div className="filter-group">
               <span className="filter-label">Categoría</span>
-              <PanelSelect name="categoria" ariaLabel="Categoría de los servicios"
-                onChange={setCategory}
-                options={[{ value: "", label: "Todas las categorías" }, ...categories]} />
+              <PanelSelect aria-label="Categoría de los servicios"
+                onChange={(event) => setCategory(event.target.value)}>
+                <option value="">Todas las categorías</option>
+                {categories.map((item) => (
+                  <option key={item.value} value={item.value}>{item.label}</option>
+                ))}
+              </PanelSelect>
             </div>
           </div>
           <p className="muted">{results.length} servicios encontrados</p>

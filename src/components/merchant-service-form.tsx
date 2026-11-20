@@ -6,6 +6,7 @@ import { saveMerchantServiceAction } from "@/app/panel/actions";
 import { ServiceSitePicker, type DestinationOption, type SiteOption } from "@/components/panel-service-site-picker";
 import { Button, Panel } from "@/components/ui";
 import { extractMapsEmbedUrl } from "@/lib/panel-maps";
+import { PanelSelect } from "@/components/panel-select";
 
 type Option = { id: string; label?: string };
 
@@ -96,10 +97,10 @@ export function MerchantServiceForm({
             <p>Los precios se muestran a partir de las habitaciones que agregues.</p>
             <label className="field">
               Plan de comidas
-              <select name="meal_plan_id" defaultValue={String(service.meal_plan_id ?? "")}>
+              <PanelSelect name="meal_plan_id" defaultValue={String(service.meal_plan_id ?? "")}>
                 <option value="">Selecciona un plan</option>
                 {mealPlans.map((plan) => <option key={plan.id} value={plan.id}>{plan.label}</option>)}
-              </select>
+              </PanelSelect>
             </label>
             <Link className="button secondary" href={`/panel/servicios/${serviceId}/unidades#habitaciones`}>
               Editar habitaciones

@@ -7,6 +7,7 @@ import { AdPreview } from "@/components/ad-preview";
 import { Button, Panel } from "@/components/ui";
 import type { PreviewOther } from "@/lib/panel-ad-previews";
 import { setInputFile, shrinkImage } from "@/lib/image-shrink";
+import { PanelSelect } from "@/components/panel-select";
 
 export type AdPromotionOption = { id: string; label: string; destination: string };
 
@@ -113,13 +114,13 @@ onChange={async (event) => {
           {fileError && <p className="form-error" role="alert">{fileError}</p>}
           <label className="field">
             Promoción a la que lleva el anuncio
-            <select name="service_promotion_id" value={promotionId}
+            <PanelSelect name="service_promotion_id" value={promotionId}
               onChange={(event) => setPromotionId(event.target.value)}>
               <option value="">Sin promoción (solo se cierra)</option>
               {promotions.map((promotion) => (
                 <option key={promotion.id} value={promotion.id}>{promotion.label}</option>
               ))}
-            </select>
+            </PanelSelect>
             <small className="muted">
               {destination
                 ? `El botón «Descubrir» lleva a: ${destination}.`

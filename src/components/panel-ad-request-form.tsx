@@ -6,6 +6,7 @@ import { requestAdAction } from "@/app/panel/anuncios/solicitudes-actions";
 import { AdPreview } from "@/components/ad-preview";
 import { setInputFile, shrinkImage } from "@/lib/image-shrink";
 import { Button, Panel } from "@/components/ui";
+import { PanelSelect } from "@/components/panel-select";
 
 export type OwnerPromotionOption = { id: string; label: string; destination: string };
 
@@ -90,13 +91,13 @@ onChange={async (event) => {
           {fileError && <p className="form-error" role="alert">{fileError}</p>}
           <label className="field">
             ¿A qué promoción lleva el anuncio?
-            <select name="service_promotion_id" required value={promotionId}
+            <PanelSelect name="service_promotion_id" required value={promotionId}
               onChange={(event) => setPromotionId(event.target.value)}>
               <option value="">Elige una promoción</option>
               {promotions.map((promotion) => (
                 <option key={promotion.id} value={promotion.id}>{promotion.label}</option>
               ))}
-            </select>
+            </PanelSelect>
             <small className="muted">
               {destination ? `El botón «Descubrir» llevará a: ${destination}.` : "Crea primero una promoción en Promociones."}
             </small>

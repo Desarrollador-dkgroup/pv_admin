@@ -2,6 +2,7 @@
 
 import { Badge, Button, Modal } from "@/components/ui";
 import { usePreview } from "./context";
+import { PanelSelect } from "@/components/panel-select";
 
 // Simula la habilitación sin crear usuarios reales ni guardar la contraseña temporal.
 export function InviteModal({ onClose }: { onClose: () => void }) {
@@ -49,13 +50,13 @@ export function InviteModal({ onClose }: { onClose: () => void }) {
         </label>
         <label className="field">
           Negocio asignado
-          <select name="business" required>
+          <PanelSelect name="business" required>
             {data.entities
               .filter((entity) => entity.kind === "businesses")
               .map((entity) => (
                 <option key={entity.id}>{entity.name}</option>
               ))}
-          </select>
+          </PanelSelect>
         </label>
         <label className="field">
           Contraseña temporal

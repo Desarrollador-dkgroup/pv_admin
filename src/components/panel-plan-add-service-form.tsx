@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { addPlanServiceAction } from "@/app/panel/negocios/actions";
 import { ConfirmSubmit } from "@/components/ui";
+import { PanelSelect } from "@/components/panel-select";
 
 // Suma un servicio al plan de una categoría. Si la categoría tiene tipos (hospedaje), pide el tipo
 // y el diálogo de confirmación muestra cuál se va a sumar.
@@ -26,13 +27,13 @@ export function PlanAddServiceForm({
       <input type="hidden" name="business_id" value={businessId} />
       <input type="hidden" name="category_id" value={categoryId} />
       {types.length > 0 && (
-        <select name="hospedaje_type_id" required value={typeId}
+        <PanelSelect name="hospedaje_type_id" required value={typeId}
           onChange={(event) => setTypeId(event.target.value)} aria-label="Tipo de hospedaje">
           <option value="" disabled>Elige el tipo</option>
           {types.map((item) => (
             <option key={item.id} value={item.id}>{item.label}</option>
           ))}
-        </select>
+        </PanelSelect>
       )}
       <ConfirmSubmit tone="secondary" className="small" disabled={types.length > 0 && !typeId}
         confirm={{

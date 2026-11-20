@@ -1,28 +1,70 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  Children,
+  isValidElement,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
-type Option = { value: string; label: string };
+type OptionItem = { value: string; label: string; disabled: boolean };
+type ChangeLike = { target: { value: string } };
 
-// Selector con diseño propio: el valor viaja en un campo oculto, así que sigue funcionando
-// en formularios GET y en acciones del servidor, igual que un <select> normal.
+// Texto visible de un nodo (para la etiqueta de cada opción).
+function textOf(node: ReactNode): string {
+  if (node === null || node === undefined || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join("");
+  if (isValidElement<{ children?: ReactNode }>(node)) return textOf(node.props.children);
+  return "";
+}
+
+// Lee las <option> hijas igual que lo haría un <select> nativo.
+function readOptions(children: ReactNode): OptionItem[] {
+  const items: OptionItem[] = [];
+  Children.forEach(children, (child) => {
+    if (!isValidElement<{ value?: string; children?: ReactNode; disabled?: boolean }>(child)) {
+      return;
+    }
+    const label = textOf(child.props.children).trim();
+    const value = child.props.value !== undefined ? String(child.props.value) : label;
+    items.push({ value, label, disabled: Boolean(child.props.disabled) });
+  });
+  return items;
+}
+
+// Selector con diseño propio del panel. Recibe las mismas <option> que un <select>, así que
+// se usa igual: value/defaultValue, onChange y name. El valor viaja en un campo oculto, por lo
+// que los formularios GET y las acciones del servidor siguen funcionando.
 export function PanelSelect({
   name,
-  options,
+  children,
+  value,
   defaultValue = "",
-  ariaLabel,
   onChange,
+  disabled = false,
+  "aria-label": ariaLabel,
 }: {
-  name: string;
-  options: Option[];
+  name?: string;
+  children: ReactNode;
+  value?: string;
   defaultValue?: string;
-  ariaLabel: string;
-  onChange?: (value: string) => void;
+  onChange?: (event: ChangeLike) => void;
+  disabled?: boolean;
+  "aria-label"?: string;
+  // Se aceptan para no cambiar los usos existentes; el navegador no los aplica aquí.
+  required?: boolean;
+  className?: string;
 }) {
-  const [value, setValue] = useState(defaultValue);
+  const [internal, setInternal] = useState(defaultValue);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const current = options.find((option) => option.value === value) ?? options[0];
+  const options = readOptions(children);
+  const current = value ?? internal;
+  const selected = options.find((option) => option.value === current);
+  const shown = selected?.label || options[0]?.label || "";
 
   // Cierra al tocar fuera del selector o al pulsar Escape.
   useEffect(() => {
@@ -41,33 +83,37 @@ export function PanelSelect({
     };
   }, [open]);
 
+  const choose = (next: string) => {
+    if (value === undefined) setInternal(next);
+    setOpen(false);
+    onChange?.({ target: { value: next } });
+  };
+
   return (
     <div className="panel-select" ref={rootRef}>
-      <input type="hidden" name={name} value={value} />
+      {name && <input type="hidden" name={name} value={current} disabled={disabled} />}
       <button
         type="button"
         className="panel-select-trigger"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel}
+        disabled={disabled}
         onClick={() => setOpen((previous) => !previous)}
       >
-        <span>{current?.label}</span>
+        <span className={selected ? undefined : "panel-select-placeholder"}>{shown}</span>
       </button>
       {open && (
         <ul role="listbox" aria-label={ariaLabel} className="panel-select-list">
           {options.map((option) => {
-            const selected = option.value === value;
+            const isSelected = option.value === current;
             return (
-              <li key={option.value} role="option" aria-selected={selected}>
+              <li key={option.value} role="option" aria-selected={isSelected}>
                 <button
                   type="button"
-                  className={`panel-select-option${selected ? " selected" : ""}`}
-                  onClick={() => {
-                    setValue(option.value);
-                    setOpen(false);
-                    onChange?.(option.value);
-                  }}
+                  disabled={option.disabled}
+                  className={`panel-select-option${isSelected ? " selected" : ""}`}
+                  onClick={() => choose(option.value)}
                 >
                   {option.label}
                 </button>

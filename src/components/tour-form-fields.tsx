@@ -2,6 +2,7 @@
 
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui";
+import { PanelSelect } from "@/components/panel-select";
 
 export type TourDeparture = { date: string; time: string };
 
@@ -96,7 +97,7 @@ export function TourFields({ tour, onChange }: Props) {
 
       <label className="field">
         Salidas
-        <select
+        <PanelSelect
           value={tour.departureMode}
           onChange={(e) => update({
             departureMode: e.target.value as TourDetails["departureMode"],
@@ -105,7 +106,7 @@ export function TourFields({ tour, onChange }: Props) {
           {(Object.keys(MODE_LABELS) as TourDetails["departureMode"][]).map((mode) => (
             <option key={mode} value={mode}>{MODE_LABELS[mode]}</option>
           ))}
-        </select>
+        </PanelSelect>
       </label>
 
       {showDates && (

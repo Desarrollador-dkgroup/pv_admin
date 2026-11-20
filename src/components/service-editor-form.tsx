@@ -19,6 +19,7 @@ import { saveServiceAction } from "@/app/panel/actions";
 import { DeleteOwnServiceButton } from "@/components/panel-own-service-status";
 import { extractMapsEmbedUrl } from "@/lib/panel-maps";
 import { canManageCatalog, type PanelRole } from "@/types/panel";
+import { PanelSelect } from "@/components/panel-select";
 
 type Option = { id: string; name?: string; label?: string; province_id?: string };
 type Props = {
@@ -151,7 +152,7 @@ export function ServiceEditorForm(props: Props) {
         {isStaff && isNew ? (
           <label className="field">
             Negocio
-            <select
+            <PanelSelect
               name="business_id"
               required
               defaultValue={String(service.business_id ?? props.businesses[0]?.id ?? "")}
@@ -161,7 +162,7 @@ export function ServiceEditorForm(props: Props) {
                   {business.name ?? business.id}
                 </option>
               ))}
-            </select>
+            </PanelSelect>
           </label>
         ) : (
           <>
@@ -180,7 +181,7 @@ export function ServiceEditorForm(props: Props) {
         )}
         <label className="field">
           Categoría
-          <select
+          <PanelSelect
             name="category_id"
             value={categoryId}
             onChange={(event) => setCategoryId(event.target.value)}
@@ -192,7 +193,7 @@ export function ServiceEditorForm(props: Props) {
                 {category.label ?? category.name ?? category.id}
               </option>
             ))}
-          </select>
+          </PanelSelect>
           {!isStaff && !isNew && (
             <input type="hidden" name="category_id" value={categoryId} />
           )}
@@ -200,7 +201,7 @@ export function ServiceEditorForm(props: Props) {
         {categoryId === "hospedaje" && (
           <label className="field">
             Tipo de hospedaje
-            <select
+            <PanelSelect
               name="hospedaje_type_id"
               defaultValue={lodgingTypeId}
               required
@@ -212,7 +213,7 @@ export function ServiceEditorForm(props: Props) {
                   {type.label ?? type.name ?? type.id}
                 </option>
               ))}
-            </select>
+            </PanelSelect>
             {!isStaff && !isNew && (
               <input type="hidden" name="hospedaje_type_id" value={lodgingTypeId} />
             )}
@@ -270,11 +271,11 @@ export function ServiceEditorForm(props: Props) {
           <>
             <label className="field">
               Publicación
-              <select name="status" defaultValue={String(service.status ?? "draft")}>
+              <PanelSelect name="status" defaultValue={String(service.status ?? "draft")}>
                 <option value="draft">Borrador</option>
                 <option value="published">Publicado</option>
                 <option value="suspended">Suspendido</option>
-              </select>
+              </PanelSelect>
             </label>
             <TextField
               label="Nota de revisión"
@@ -332,7 +333,7 @@ export function ServiceEditorForm(props: Props) {
           </fieldset>
           <label className="field">
             Plan de comidas
-            <select
+            <PanelSelect
               name="meal_plan_id"
               defaultValue={String(service.meal_plan_id ?? "")}
             >
@@ -342,7 +343,7 @@ export function ServiceEditorForm(props: Props) {
                   {plan.label}
                 </option>
               ))}
-            </select>
+            </PanelSelect>
           </label>
           <ChoiceField
             label="Estacionamiento"
@@ -612,10 +613,10 @@ function RestaurantFields({
       />
       <label className="field">
         Estilo de servicio
-        <select name="service_style" defaultValue={String(restaurant.service_style ?? "casual")}>
+        <PanelSelect name="service_style" defaultValue={String(restaurant.service_style ?? "casual")}>
           <option value="casual">Casual</option>
           <option value="formal">Formal</option>
-        </select>
+        </PanelSelect>
       </label>
       <TextField
         label="Teléfono de reservas"

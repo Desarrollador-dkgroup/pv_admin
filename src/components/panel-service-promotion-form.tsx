@@ -6,6 +6,7 @@ import { saveServicePromotionAction } from "@/app/panel/promociones/actions";
 import { Button, Panel } from "@/components/ui";
 import { formatCents } from "@/lib/panel-format";
 import { previewPromotion, type CommissionTerms } from "@/lib/promotion-commission";
+import { PanelSelect } from "@/components/panel-select";
 
 export type PromotionServiceOption = {
   id: string;
@@ -90,7 +91,7 @@ export function ServicePromotionForm({
         <h2>Servicio y descuento</h2>
         <label className="field">
           Servicio
-          <select
+          <PanelSelect
             name="service_id"
             value={serviceId}
             onChange={(e) => { setServiceId(e.target.value); setRoomId(""); }}
@@ -98,7 +99,7 @@ export function ServicePromotionForm({
             {services.map((item) => (
               <option key={item.id} value={item.id}>{item.name}</option>
             ))}
-          </select>
+          </PanelSelect>
         </label>
 
         {isHotel && (
@@ -115,7 +116,7 @@ export function ServicePromotionForm({
               Solo una habitación
             </label>
             {scope === "room" && (
-              <select
+              <PanelSelect
                 name="room_type_id"
                 value={roomId}
                 onChange={(e) => setRoomId(e.target.value)}
@@ -127,7 +128,7 @@ export function ServicePromotionForm({
                     {item.name} · {formatCents(item.priceCents)}
                   </option>
                 ))}
-              </select>
+              </PanelSelect>
             )}
             {scope === "all" && (
               <small className="muted">

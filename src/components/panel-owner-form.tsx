@@ -5,6 +5,7 @@ import {
   createOwnerAccountAction,
   generateOwnerPasswordAction,
 } from "@/app/panel/propietarios/actions";
+import { PanelSelect } from "@/components/panel-select";
 
 type Option = { id: string; label: string | null };
 type Item = {
@@ -181,7 +182,7 @@ export function CreateOwnerForm({
             <div className="owner-item" key={item.key}>
               <label className="field">
                 Categoría
-                <select
+                <PanelSelect
                   className="picker"
                   value={item.categoryId}
                   onChange={(event) =>
@@ -199,12 +200,12 @@ export function CreateOwnerForm({
                       {category.label ?? category.id}
                     </option>
                   ))}
-                </select>
+                </PanelSelect>
               </label>
               {item.categoryId === HOSPEDAJE && (
                 <label className="field">
                   Tipo de hospedaje
-                  <select
+                  <PanelSelect
                     className="picker"
                     value={item.typeId}
                     onChange={(event) => updateItem(item.key, { typeId: event.target.value })}
@@ -214,7 +215,7 @@ export function CreateOwnerForm({
                         {type.label ?? type.id}
                       </option>
                     ))}
-                  </select>
+                  </PanelSelect>
                 </label>
               )}
               <div className="field owner-count">
