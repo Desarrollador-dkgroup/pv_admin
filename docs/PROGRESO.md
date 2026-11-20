@@ -6,6 +6,18 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 > **Regla estricta de sincronización.** Antes de empezar: pull en ambos repos y leer esta
 > bitácora. Al terminar: actualizarla, commit y push. Claude debe recordarlo siempre.
 
+## Guía (Panama_Viajero): ajustes y dominio (2026-11-20)
+
+- Aclaración del usuario: la guía en Vite se queda publicada en `panamaviajero.com` (proyecto
+  Cloudflare Pages `panama-viajero`); se retiran solo `Panama_Viajero_Admin` y la API.
+- Ventana emergente: «2027» en lugar de «Octubre 2026»; quitados el botón «Empieza a
+  explorar» y el texto del concurso. El formulario flotante de prerregistro se conserva sin
+  botón que lo abra. Contacto: hola@panamaviajero.com.
+- Decisiones para la unificación: migrar las actividades por sitio y decidir dónde se ven en
+  la web; eliminar «Riviera Pacífica»; la guía usa la descripción corta de Supabase; el
+  prerregistro pasa al Supabase principal (hoy está en otro proyecto). Se hace después del
+  dominio. Hasta entonces, añadir el dominio a `ALLOWED_ORIGINS` de la API.
+
 ## Galería de sitios turísticos y unificación con la guía (2026-11-20)
 
 Decisión del usuario: Supabase es la fuente única y `pv_admin` el único panel. El stack de la
