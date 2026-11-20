@@ -6,6 +6,30 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 > **Regla estricta de sincronización.** Antes de empezar: pull en ambos repos y leer esta
 > bitácora. Al terminar: actualizarla, commit y push. Claude debe recordarlo siempre.
 
+## Galería de sitios turísticos y unificación con la guía (2026-11-20)
+
+Decisión del usuario: Supabase es la fuente única y `pv_admin` el único panel. El stack de la
+guía (`Panama_Viajero` en Vite, `Panama_Viajero_Admin` y `Panama_Viajero_API` con D1 y R2)
+se va a retirar.
+
+- Migración `202611200001_tourist_site_photos.sql` aplicada en producción (probada antes
+  con ROLLBACK). Tabla `tourist_site_photos` (posición 0 = portada) y función
+  `padmin_set_tourist_site_photos`, que reemplaza la galería y copia la portada en
+  `tourist_sites.photo_storage_path` (las tarjetas y la app siguen leyendo esa columna).
+  Bucket `site-media` subido a 10 MB.
+- Imágenes migradas desde la API de la guía con `scripts/migrar-fotos-guia.mjs`: 77 sitios
+  emparejados por slug, 449 fotos nuevas, 86 descartadas por repetidas (comparación
+  visual: las portadas del catálogo eran los banners de la guía recomprimidos). Sin pareja:
+  las 3 «comarca-ngabe-bugle» y 2 sitios de prueba de la guía. Solo imágenes.
+- Panel: el formulario de sitio sube varias fotos, las ordena, elige portada y quita
+  (`panel-site-gallery.tsx`), con foco y anuncios para lector de pantalla.
+- Web: `sitios-turisticos/[slug]` muestra la galería con flechas y contador (`PhotoGallery`).
+- Pendiente: decidir cómo retirar la guía (sitios y prerregistro dependen de la API; las
+  actividades de cada sitio solo existen en D1). Borrar la clave secreta
+  `migracion-fotos-guia` en Supabase. Añadir la migración a `sync:content`, que además está
+  desfasado (arrastra migraciones viejas y cambia `content.ts`). `panel-site-form.tsx` sigue
+  en 168 líneas: separar el bloque del mapa.
+
 ## Contrato de colaboración (plantilla nueva, 2026-11-06)
 
 - Migración `202611060001_contract_fields.sql` aplicada en producción (prueba previa con

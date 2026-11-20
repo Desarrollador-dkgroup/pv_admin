@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { formText, nullableText } from "@/lib/panel-form";
 import { extractMapsEmbedUrl } from "@/lib/panel-maps";
-import { isSitePhotoUrl } from "@/lib/panel-sites";
+import { sitePhotosError } from "@/lib/panel-sites";
 import { slugCandidates, slugify } from "@/lib/panel-slug";
 import { canManageCatalog } from "@/types/panel";
 
@@ -33,21 +33,21 @@ export async function saveTouristSiteAction(
   const provinceId = formText(formData, "province_id");
   const sortOrder = Number(formText(formData, "sort_order") || "0");
 
-  const photo = formText(formData, "photo_storage_path");
+  // Galería en el orden del formulario; la primera es la portada.
+  const photos = formData.getAll("photos")
+    .map((value) => (typeof value === "string" ? value.trim() : ""))
+    .filter(Boolean);
   const mapsRaw = formText(formData, "maps_embed");
   const mapsUrl = mapsRaw ? extractMapsEmbedUrl(mapsRaw) : null;
 
   if (!name || !description) return { error: "Completa el nombre y la descripción del sitio." };
-  if (photo && !isSitePhotoUrl(photo, siteId)) {
-    // Los sitios del catálogo inicial guardan una ruta de `catalog-photos`; se acepta si no cambió.
-    const current = isNew
-      ? null
-      : await supabase.from("tourist_sites").select("photo_storage_path").eq("id", siteId)
-        .maybeSingle();
-    if (current?.data?.photo_storage_path !== photo) {
-      return { error: "La foto no pertenece a este sitio. Vuelve a subirla." };
-    }
-  }
+  // Las fotos que el sitio ya tenía se aceptan aunque no estén en su carpeta (catálogo inicial).
+  const current = isNew
+    ? []
+    : ((await supabase.from("tourist_site_photos").select("storage_path")
+      .eq("tourist_site_id", siteId)).data ?? []).map((row) => row.storage_path as string);
+  const photosError = sitePhotosError(photos, siteId, current);
+  if (photosError) return { error: photosError };
   if (mapsRaw && !mapsUrl) return { error: "Ese código no es un mapa de Google válido." };
   if (!provinceId) return { error: "Selecciona la provincia destino del sitio." };
   if (!Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 32767) {
@@ -60,7 +60,6 @@ export async function saveTouristSiteAction(
     short_description: nullableText(formText(formData, "short_description")),
     province_id: provinceId,
     sort_order: sortOrder,
-    photo_storage_path: photo || null,
     maps_embed_url: mapsUrl,
     updated_at: new Date().toISOString(),
   };
@@ -82,6 +81,15 @@ export async function saveTouristSiteAction(
       if (!created.error.message.includes("duplicate")) return { error: created.error.message };
     }
     if (!inserted) return { error: "No se pudo crear el identificador del sitio." };
+  }
+
+  // Guarda la galería y copia la primera foto como portada, en una sola operación.
+  const savedPhotos = await supabase.rpc("padmin_set_tourist_site_photos", {
+    p_site_id: siteId,
+    p_paths: photos,
+  });
+  if (savedPhotos.error) {
+    return { error: "Se guardó el sitio, pero no sus fotos. Intenta de nuevo." };
   }
 
   revalidatePath("/panel/sitios");

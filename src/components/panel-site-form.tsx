@@ -1,18 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useState } from "react";
 import { deleteTouristSiteAction, saveTouristSiteAction } from "@/app/panel/sitios/actions";
+import { SiteGallery } from "@/components/panel-site-gallery";
 import { Button, Panel, confirmAction } from "@/components/ui";
 import { extractMapsEmbedUrl } from "@/lib/panel-maps";
-import {
-  SITE_IMAGE_BUCKET,
-  SITE_IMAGE_MAX_BYTES,
-  SITE_IMAGE_TYPES,
-  siteImageExtension,
-  sitePhotoUrl,
-} from "@/lib/panel-sites";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { PanelSelect } from "@/components/panel-select";
 
 type Option = { id: string; label: string };
@@ -24,69 +17,41 @@ type Site = {
   short_description: string | null;
   province_id: string | null;
   sort_order: number;
-  photo_storage_path: string | null;
   maps_embed_url: string | null;
 };
 
-// Formulario de un sitio turístico: datos, foto, ubicación y mapa de Google.
+// Formulario de un sitio turístico: datos, fotos, ubicación y mapa de Google.
 export function SiteForm({
   site,
+  photos = [],
   provinces,
   defaultProvinceId = "",
 }: {
   site: Site | null;
+  photos?: string[];
   provinces: Option[];
   defaultProvinceId?: string;
 }) {
   const [state, action, pending] = useActionState(saveTouristSiteAction, { error: "" });
-  // La carpeta de la foto usa el identificador del sitio. Un sitio nuevo lo recibe al subir
-  // su primera imagen, así la foto ya queda guardada en su carpeta antes de crear el sitio.
+  // La carpeta de las fotos usa el identificador del sitio. Un sitio nuevo lo recibe al subir
+  // su primera foto, así las fotos ya quedan en su carpeta antes de crear el sitio.
   const [siteId, setSiteId] = useState(site?.id ?? "");
-  const [photoPath, setPhotoPath] = useState(site?.photo_storage_path ?? "");
-  const [photoBusy, setPhotoBusy] = useState(false);
-  const [photoError, setPhotoError] = useState("");
-  const fileInput = useRef<HTMLInputElement>(null);
+  const [photosBusy, setPhotosBusy] = useState(false);
   const [mapsInput, setMapsInput] = useState(site?.maps_embed_url ?? "");
   const mapsUrl = extractMapsEmbedUrl(mapsInput);
   const mapsInvalid = mapsInput.trim() !== "" && !mapsUrl;
 
-  // Valida la imagen y la sube a la carpeta del sitio.
-  async function uploadPhoto(file: File | undefined) {
-    setPhotoError("");
-    if (!file) return;
-    if (!(SITE_IMAGE_TYPES as readonly string[]).includes(file.type)) {
-      setPhotoError("La imagen debe ser JPG, PNG o WebP.");
-      return;
-    }
-    if (file.size > SITE_IMAGE_MAX_BYTES) {
-      setPhotoError("La imagen no puede pesar más de 3 MB.");
-      return;
-    }
-    const folder = siteId || crypto.randomUUID();
-    setSiteId(folder);
-    setPhotoBusy(true);
-    try {
-      const supabase = getSupabaseBrowserClient();
-      const path = `${folder}/${crypto.randomUUID()}.${siteImageExtension(file.type)}`;
-      const { error: uploadError } = await supabase.storage
-        .from(SITE_IMAGE_BUCKET)
-        .upload(path, file, { contentType: file.type, upsert: false });
-      if (uploadError) {
-        setPhotoError("No se pudo subir la imagen. Intenta de nuevo.");
-        return;
-      }
-      setPhotoPath(supabase.storage.from(SITE_IMAGE_BUCKET).getPublicUrl(path).data.publicUrl);
-    } finally {
-      setPhotoBusy(false);
-      if (fileInput.current) fileInput.current.value = "";
-    }
+  function ensureSiteId() {
+    if (siteId) return siteId;
+    const created = crypto.randomUUID();
+    setSiteId(created);
+    return created;
   }
 
   return (
     <form action={action} className="site-form">
       <input type="hidden" name="site_id" value={siteId} />
       <input type="hidden" name="is_new" value={site ? "" : "1"} />
-      <input type="hidden" name="photo_storage_path" value={photoPath} />
       <Panel>
         <div className="form-row">
           <label className="field">
@@ -126,49 +91,11 @@ export function SiteForm({
           </label>
         </div>
 
-        <section className="destination-block">
-          <h3>Foto del sitio</h3>
-          <p className="muted">
-            Tamaño recomendado: 1920 × 1080 px (horizontal). Formatos JPG, PNG o WebP, máximo
-            3 MB. Es la imagen grande de la página del sitio.
-          </p>
-          <div className="destination-image-row">
-            <div className="destination-image-preview">
-              {photoPath ? (
-                // Vista previa de la foto; la URL pública no necesita optimización aquí.
-                <img src={sitePhotoUrl(photoPath) ?? ""} alt="" />
-              ) : (
-                <span className="muted">Sin imagen</span>
-              )}
-            </div>
-            <div className="destination-image-actions">
-              <input
-                ref={fileInput}
-                type="file"
-                hidden
-                accept={SITE_IMAGE_TYPES.join(",")}
-                onChange={(event) => uploadPhoto(event.target.files?.[0])}
-                aria-label="Foto del sitio"
-              />
-              <div className="actions">
-                <Button
-                  type="button"
-                  tone="secondary"
-                  disabled={photoBusy}
-                  onClick={() => fileInput.current?.click()}
-                >
-                  {photoBusy ? "Subiendo imagen…" : photoPath ? "Cambiar imagen" : "Añadir imagen"}
-                </Button>
-                {photoPath && (
-                  <Button type="button" tone="quiet" onClick={() => setPhotoPath("")}>
-                    Quitar imagen
-                  </Button>
-                )}
-              </div>
-              {photoError && <small role="alert" className="form-error">{photoError}</small>}
-            </div>
-          </div>
-        </section>
+        <SiteGallery
+          initialPhotos={photos}
+          ensureSiteId={ensureSiteId}
+          onBusyChange={setPhotosBusy}
+        />
 
 
         <section className="destination-block">
@@ -212,7 +139,7 @@ export function SiteForm({
       </Panel>
       {state.error && <p role="alert" className="form-error">{state.error}</p>}
       <div className="actions">
-        <Button type="submit" disabled={pending || photoBusy || mapsInvalid}>
+        <Button type="submit" disabled={pending || photosBusy || mapsInvalid}>
           {pending ? "Guardando…" : site ? "Guardar sitio" : "Crear sitio"}
         </Button>
         {site && (
