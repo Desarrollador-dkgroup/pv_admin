@@ -13,6 +13,8 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 - Ventana emergente: «2027» en lugar de «Octubre 2026»; quitados el botón «Empieza a
   explorar» y el texto del concurso. El formulario flotante de prerregistro se conserva sin
   botón que lo abra. Contacto: hola@panamaviajero.com.
+- Botón «Ingresar» bajo el texto de la ventana emergente: la cierra, igual que la X.
+- Dominio `panamaviajero.com` conectado a la guía por el usuario (2026-11-23).
 - Decisiones para la unificación: migrar las actividades por sitio y decidir dónde se ven en
   la web; eliminar «Riviera Pacífica»; la guía usa la descripción corta de Supabase; el
   prerregistro pasa al Supabase principal (hoy está en otro proyecto). Se hace después del
