@@ -46,15 +46,34 @@ export function FeaturedPicker({
       // Los destacados van primero, para que siempre se vean al abrir el buscador.
       .sort((a, b) => Number(b.featured) - Number(a.featured) || a.name.localeCompare(b.name, "es"));
   }, [rows, query, category]);
-  const featuredCount = rows.filter((row) => row.featured).length;
+  const featuredRows = rows.filter((row) => row.featured);
+  const featuredCount = featuredRows.length;
 
   return (
     <>
-      <div className="section-heading">
-        <Button tone="primary" onClick={() => setOpen((previous) => !previous)}>
-          {open ? "Cerrar" : "Destacar servicio"}
-        </Button>
-      </div>
+      <Panel>
+        <div className="section-heading">
+          <div>
+            <h2>Servicios destacados</h2>
+            <p className="muted">{featuredRows.length} en la portada</p>
+          </div>
+          <Button tone="primary" onClick={() => setOpen((previous) => !previous)}>
+            {open ? "Cerrar" : "Editar"}
+          </Button>
+        </div>
+        {featuredRows.map((row) => (
+          <div className="list-row" key={row.id}>
+            <div className="list-row-text">
+              <b>{row.name}</b>
+              <small>{row.businessName} · {row.categoryLabel}</small>
+            </div>
+            <Badge tone={row.statusTone}>{row.statusLabel}</Badge>
+          </div>
+        ))}
+        {!featuredRows.length && (
+          <p className="muted">Todavía no hay servicios destacados. Toca «Editar» para agregar.</p>
+        )}
+      </Panel>
       {open && (
         <Panel>
           <div className="filter-row">
