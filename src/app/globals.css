@@ -3861,36 +3861,111 @@ select:not([multiple]):disabled {
   cursor: not-allowed;
 }
 
-/* Solicitudes: bloque «Ver» con todos los datos de la solicitud. */
-.lead-details {
-  width: 100%;
+/* Solicitudes: tarjeta responsiva; laptop en dos columnas, celular apilado. */
+.lead-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+.lead-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+}
+.lead-card-title {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.lead-card-title h3 {
+  margin: 0;
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.lead-card-title p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.lead-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
 }
 .lead-details > summary {
   display: inline-flex;
   list-style: none;
   cursor: pointer;
+  color: var(--brand);
+  font-size: 14px;
+  font-weight: 600;
 }
 .lead-details > summary::-webkit-details-marker {
   display: none;
 }
-.lead-details[open] > summary {
-  display: none;
+.lead-details > summary::after {
+  content: " ▾";
+}
+.lead-details[open] > summary::after {
+  content: " ▴";
 }
 .lead-facts {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: 6px 16px;
-  margin: 12px 0 0;
-  padding: 14px;
-  border-radius: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 24px;
+  margin: 14px 0 0;
+  padding: 16px 18px;
+  border-radius: 12px;
   background: var(--canvas);
-  font-size: 14px;
+}
+.lead-facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 .lead-facts dt {
+  font-size: 12px;
+  font-weight: 500;
   color: var(--muted);
 }
 .lead-facts dd {
   margin: 0;
+  font-size: 15px;
   color: var(--ink);
   overflow-wrap: anywhere;
+}
+.lead-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.lead-card-actions > form {
+  display: contents;
+}
+@media (max-width: 640px) {
+  .lead-card {
+    padding: 16px;
+  }
+  .lead-facts {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px;
+  }
+  .lead-card-actions {
+    justify-content: stretch;
+  }
+  .lead-card-actions > * {
+    flex: 1 1 100%;
+  }
+  .lead-card-actions .button {
+    width: 100%;
+    justify-content: center;
+  }
 }

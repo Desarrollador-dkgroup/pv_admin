@@ -481,3 +481,4 @@ Por verificar:
 - 2026-11-25 (nube): Destacados muestra solo los servicios destacados, con botón Editar para agregar o quitar.
 - 2026-11-25 (nube): Destacados: la lista muestra los destacados; Editar abre el buscador (solo servicios no destacados, para destacar) y permite quitar destacados.
 - 2026-11-25 (nube): Solicitudes: Eliminar solicitud (con confirmación) reemplaza a Descartar; Ver muestra todos los datos de la solicitud.
+- 2026-11-25 (nube): Solicitudes: tarjeta rediseñada; datos en dos columnas en laptop y apilados en celular; acciones alineadas.
