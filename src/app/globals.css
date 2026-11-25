@@ -3860,3 +3860,37 @@ select:not([multiple]):disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Solicitudes: bloque «Ver» con todos los datos de la solicitud. */
+.lead-details {
+  width: 100%;
+}
+.lead-details > summary {
+  display: inline-flex;
+  list-style: none;
+  cursor: pointer;
+}
+.lead-details > summary::-webkit-details-marker {
+  display: none;
+}
+.lead-details[open] > summary {
+  display: none;
+}
+.lead-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 16px;
+  margin: 12px 0 0;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--canvas);
+  font-size: 14px;
+}
+.lead-facts dt {
+  color: var(--muted);
+}
+.lead-facts dd {
+  margin: 0;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}

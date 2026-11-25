@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Badge, Button, PageHeader } from "@/components/ui";
+import { Badge, Button, ConfirmSubmit, PageHeader } from "@/components/ui";
 import { getPanelIdentity, requireRole } from "@/lib/panel-access";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
-import { setLeadStatusAction } from "./actions";
+import { deleteLeadAction, setLeadStatusAction } from "./actions";
 
 const STATUS_LABELS: Record<string, string> = {
   nuevo: "Nueva",
@@ -67,6 +67,27 @@ export default async function LeadsAdminPage({
             </p>
           </div>
           <div className="actions">
+            <details className="lead-details">
+              <summary className="button quiet small">Ver</summary>
+              <dl className="lead-facts">
+                <dt>Nombre del negocio</dt>
+                <dd>{item.business_name}</dd>
+                <dt>Razón social</dt>
+                <dd>{item.legal_name}</dd>
+                <dt>RUC</dt>
+                <dd>{item.ruc}</dd>
+                <dt>Persona de contacto</dt>
+                <dd>{item.contact_person}</dd>
+                <dt>Teléfono</dt>
+                <dd>{item.phone}</dd>
+                <dt>Correo</dt>
+                <dd><a href={`mailto:${item.email}`}>{item.email}</a></dd>
+                <dt>Recibida</dt>
+                <dd>{new Date(item.created_at).toLocaleString("es-PA")}</dd>
+                <dt>Estado</dt>
+                <dd>{STATUS_LABELS[item.status] ?? item.status}</dd>
+              </dl>
+            </details>
             {item.status !== "contactado" && (
               <form action={setLeadStatusAction}>
                 <input type="hidden" name="lead_id" value={item.id} />
@@ -74,13 +95,17 @@ export default async function LeadsAdminPage({
                 <Button type="submit" tone="secondary" className="small">Marcar como contactada</Button>
               </form>
             )}
-            {item.status !== "descartado" && (
-              <form action={setLeadStatusAction}>
-                <input type="hidden" name="lead_id" value={item.id} />
-                <input type="hidden" name="status" value="descartado" />
-                <Button type="submit" tone="quiet" className="small">Descartar</Button>
-              </form>
-            )}
+            <form action={deleteLeadAction}>
+              <input type="hidden" name="lead_id" value={item.id} />
+              <ConfirmSubmit tone="danger" className="small" confirm={{
+                title: `¿Eliminar la solicitud de ${item.business_name}?`,
+                body: "Se borra la solicitud y sus datos de contacto. No se puede deshacer.",
+                confirmLabel: "Eliminar",
+                danger: true,
+              }}>
+                Eliminar solicitud
+              </ConfirmSubmit>
+            </form>
             {item.status !== "nuevo" && (
               <form action={setLeadStatusAction}>
                 <input type="hidden" name="lead_id" value={item.id} />
