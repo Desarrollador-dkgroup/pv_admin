@@ -110,6 +110,19 @@ export async function requestAdAction(_previous: FormState, formData: FormData):
   return { error: "", saved: true };
 }
 
+// Elimina una solicitud de anuncio. El anuncio publicado, si existe, sigue activo y sus imágenes
+// no se borran porque pueden estar en uso. La confirmación se pide en la pantalla.
+export async function deleteAdRequestAction(formData: FormData): Promise<void> {
+  const { role } = await getPanelIdentity();
+  if (!canManageCatalog(role)) return;
+  const admin = getSupabaseAdminClient();
+  const { error } = await admin.from("ad_requests").delete().eq("id", formText(formData, "request_id"));
+  if (error) throw new Error("No se pudo eliminar la solicitud.");
+  revalidatePath("/panel/anuncios");
+  revalidatePath("/panel/contratos");
+  revalidatePath("/panel/notificaciones");
+}
+
 // El equipo aprueba la solicitud y se abre el editor para publicar el anuncio.
 export async function takeAdRequestAction(formData: FormData) {
   const { role } = await getPanelIdentity();

@@ -7,7 +7,7 @@ import { formatDate } from "@/lib/panel-format";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { canManageCatalog } from "@/types/panel";
 import { deleteAdAction, moveAdAction, setAdActiveAction } from "./actions";
-import { takeAdRequestAction } from "./solicitudes-actions";
+import { deleteAdRequestAction, takeAdRequestAction } from "./solicitudes-actions";
 
 // Estado que ve cada rol: lo aprobado por el equipo se muestra como «Aprobada».
 const REQUEST_STATUS: Record<string, { label: string; tone: "neutral" | "info" | "warning" | "success" | "danger" }> = {
@@ -146,6 +146,19 @@ export default async function AdsPage() {
                 <Link className="button primary small" href={`/panel/anuncios/nuevo?solicitud=${request.id}`}>
                   Abrir editor
                 </Link>
+              )}
+              {isStaff && (
+                <form action={deleteAdRequestAction}>
+                  <input type="hidden" name="request_id" value={request.id} />
+                  <ConfirmSubmit tone="danger" className="small" confirm={{
+                    title: `¿Eliminar la solicitud «${request.title}»?`,
+                    body: "Se quita de la lista. Si ya hay un anuncio publicado, sigue activo.",
+                    confirmLabel: "Eliminar",
+                    danger: true,
+                  }}>
+                    Eliminar solicitud
+                  </ConfirmSubmit>
+                </form>
               )}
             </div>
           );
