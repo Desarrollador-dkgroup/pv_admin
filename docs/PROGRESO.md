@@ -479,3 +479,4 @@ Por verificar:
 - 2026-11-20 (nube): todos los selectores del panel usan PanelSelect (mismo diseño que el resto). Acepta las mismas <option> que un <select> nativo.
 - 2026-11-25 (nube): el buscador de Destacados muestra primero los servicios destacados y su conteo.
 - 2026-11-25 (nube): Destacados muestra solo los servicios destacados, con botón Editar para agregar o quitar.
+- 2026-11-25 (nube): Destacados: la lista muestra los destacados; Editar abre el buscador (solo servicios no destacados, para destacar) y permite quitar destacados.
