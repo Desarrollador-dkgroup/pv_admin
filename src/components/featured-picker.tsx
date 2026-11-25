@@ -34,23 +34,53 @@ export function FeaturedPicker({
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
 
+  // Buscador: solo servicios que todavía no están destacados, para agregarlos.
   const results = useMemo(() => {
     const term = plain(query.trim());
-    return rows.filter((row) => {
-      if (category && row.categoryId !== category) return false;
-      if (!term) return true;
-      return [row.name, row.businessName, row.categoryLabel, row.statusLabel]
-        .some((text) => plain(text).includes(term));
-    });
+    return rows
+      .filter((row) => {
+        if (row.featured) return false;
+        if (category && row.categoryId !== category) return false;
+        if (!term) return true;
+        return [row.name, row.businessName, row.categoryLabel, row.statusLabel]
+          .some((text) => plain(text).includes(term));
+      })
+      .sort((a, b) => a.name.localeCompare(b.name, "es"));
   }, [rows, query, category]);
+  const featuredRows = rows.filter((row) => row.featured);
 
   return (
     <>
-      <div className="section-heading">
-        <Button tone="primary" onClick={() => setOpen((previous) => !previous)}>
-          {open ? "Cerrar" : "Destacar servicio"}
-        </Button>
-      </div>
+      <Panel>
+        <div className="section-heading">
+          <div>
+            <h2>Servicios destacados</h2>
+            <p className="muted">{featuredRows.length} en la portada</p>
+          </div>
+          <Button tone="primary" onClick={() => setOpen((previous) => !previous)}>
+            {open ? "Cerrar" : "Editar"}
+          </Button>
+        </div>
+        {featuredRows.map((row) => (
+          <div className="list-row" key={row.id}>
+            <div className="list-row-text">
+              <b>{row.name}</b>
+              <small>{row.businessName} · {row.categoryLabel}</small>
+            </div>
+            <Badge tone={row.statusTone}>{row.statusLabel}</Badge>
+            {open && (
+              <form action={action}>
+                <input type="hidden" name="service_id" value={row.id} />
+                <input type="hidden" name="featured" value="false" />
+                <Button tone="quiet" type="submit" className="small">Quitar</Button>
+              </form>
+            )}
+          </div>
+        ))}
+        {!featuredRows.length && (
+          <p className="muted">Todavía no hay servicios destacados. Toca «Editar» para agregar.</p>
+        )}
+      </Panel>
       {open && (
         <Panel>
           <div className="filter-row">
@@ -70,7 +100,7 @@ export function FeaturedPicker({
               </PanelSelect>
             </div>
           </div>
-          <p className="muted">{results.length} servicios encontrados</p>
+          <p className="muted">{results.length} servicios para destacar</p>
           {results.slice(0, 30).map((row) => (
             <div className="list-row" key={row.id}>
               <div className="list-row-text">
@@ -80,14 +110,12 @@ export function FeaturedPicker({
               <Badge tone={row.statusTone}>{row.statusLabel}</Badge>
               <form action={action}>
                 <input type="hidden" name="service_id" value={row.id} />
-                <input type="hidden" name="featured" value={row.featured ? "false" : "true"} />
-                <Button tone={row.featured ? "quiet" : "secondary"} type="submit" className="small">
-                  {row.featured ? "Quitar" : "Destacar"}
-                </Button>
+                <input type="hidden" name="featured" value="true" />
+                <Button tone="secondary" type="submit" className="small">Destacar</Button>
               </form>
             </div>
           ))}
-          {!results.length && <p className="muted">Ningún servicio coincide con la búsqueda.</p>}
+          {!results.length && <p className="muted">No hay servicios para destacar con esa búsqueda.</p>}
           {results.length > 30 && (
             <p className="muted">Se muestran 30. Escribe más para afinar la búsqueda.</p>
           )}

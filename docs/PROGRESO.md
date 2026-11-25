@@ -477,3 +477,9 @@ Por verificar:
 - 2026-11-19 (nube): Servicio recomendado sale de la ficha del servicio. Nueva sección Destacados (solo owner y admin) para elegir los servicios de la portada.
 - 2026-11-19 (nube): Destacados: botón Destacar servicio arriba; buscador por nombre, negocio, categoría y estado. Ya no se muestra la lista.
 - 2026-11-20 (nube): todos los selectores del panel usan PanelSelect (mismo diseño que el resto). Acepta las mismas <option> que un <select> nativo.
+- 2026-11-25 (nube): el buscador de Destacados muestra primero los servicios destacados y su conteo.
+- 2026-11-25 (nube): Destacados muestra solo los servicios destacados, con botón Editar para agregar o quitar.
+- 2026-11-25 (nube): Destacados: la lista muestra los destacados; Editar abre el buscador (solo servicios no destacados, para destacar) y permite quitar destacados.
+- 2026-11-25 (nube): Solicitudes: Eliminar solicitud (con confirmación) reemplaza a Descartar; Ver muestra todos los datos de la solicitud.
+- 2026-11-25 (nube): Solicitudes: tarjeta rediseñada; datos en dos columnas en laptop y apilados en celular; acciones alineadas.
+- 2026-11-25 (nube): Anuncios: las solicitudes de anuncio se pueden eliminar, con confirmación. No se borran el anuncio ni sus imágenes.
