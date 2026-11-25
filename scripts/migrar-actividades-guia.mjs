@@ -1,10 +1,12 @@
-// Copia las actividades de cada sitio de la guía antigua (API de D1) a Supabase y crea los
-// sitios de la Comarca Ngäbe-Buglé, que solo existían en la guía. Empareja por slug.
+// Copia las actividades de cada sitio de la guía antigua (API de D1) a Supabase, completa el
+// mapa de Google donde Supabase no tiene ninguno y crea los sitios de la Comarca Ngäbe-Buglé,
+// que solo existían en la guía. Empareja por slug.
 // Uso, desde la raíz del repo, con .env.local (NEXT_PUBLIC_SUPABASE_URL y
 // SUPABASE_SERVICE_ROLE_KEY con la clave secreta de Supabase):
 //   node --env-file=.env.local scripts/migrar-actividades-guia.mjs            informe
 //   node --env-file=.env.local scripts/migrar-actividades-guia.mjs --aplicar  escribe
-// Es idempotente: omite los sitios que ya tienen actividades. Las fotos de los sitios
+// Es idempotente: omite los sitios que ya tienen actividades y no cambia ningún mapa que ya
+// exista. Las fotos de los sitios
 // creados se copian después con scripts/migrar-fotos-guia.mjs.
 
 const GUIDE_API = process.env.GUIDE_API_URL
@@ -42,7 +44,7 @@ const slugify = (text) => text.normalize("NFD").replace(/[̀-ͯ]/g, "")
   .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
 const { sites: guideSites } = await (await request(`${GUIDE_API}/api/v1/public/sites`)).json();
-const sites = await getJson(`${base}/rest/v1/tourist_sites?select=id,slug`);
+const sites = await getJson(`${base}/rest/v1/tourist_sites?select=id,slug,maps_embed_url`);
 const provinces = await getJson(`${base}/rest/v1/provinces?select=id`);
 const withActivities = new Set((await getJson(
   `${base}/rest/v1/tourist_site_activities?select=tourist_site_id&position=eq.0`,
@@ -50,7 +52,10 @@ const withActivities = new Set((await getJson(
 
 const bySlug = new Map(sites.map((site) => [site.slug, site]));
 const provinceBySlug = new Map(provinces.map((province) => [slugify(province.id), province.id]));
-const report = { creados: [], conActividades: 0, actividades: 0, omitidos: [], sinPareja: [] };
+const report = {
+  creados: [], conActividades: 0, actividades: 0, mapas: 0, omitidos: [], sinPareja: [],
+};
+const MAPS_PREFIX = "https://www.google.com/maps/embed";
 
 for (const guideSite of guideSites) {
   let site = bySlug.get(guideSite.slug);
@@ -77,6 +82,17 @@ for (const guideSite of guideSites) {
   if (!site) {
     report.sinPareja.push(guideSite.slug);
     continue;
+  }
+  // Solo completa mapas vacíos; nunca reemplaza uno que ya se haya puesto en el panel.
+  if (!site.maps_embed_url && guideSite.mapUrl?.startsWith(MAPS_PREFIX)) {
+    if (apply) {
+      await request(`${base}/rest/v1/tourist_sites?id=eq.${site.id}&maps_embed_url=is.null`, {
+        method: "PATCH",
+        headers: { ...auth, "content-type": "application/json" },
+        body: JSON.stringify({ maps_embed_url: guideSite.mapUrl }),
+      });
+    }
+    report.mapas += 1;
   }
   if (withActivities.has(site.id)) {
     report.omitidos.push(guideSite.slug);
