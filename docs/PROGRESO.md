@@ -6,6 +6,33 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 > **Regla estricta de sincronización.** Antes de empezar: pull en ambos repos y leer esta
 > bitácora. Al terminar: actualizarla, commit y push. Claude debe recordarlo siempre.
 
+## Guía y página oficial con una sola fuente: Supabase (2026-11-25)
+
+- Un sitio creado o editado en `pv_admin` aparece igual en la guía y en la página oficial.
+- Migraciones aplicadas en producción (probadas con ROLLBACK):
+  `202611250001_tourist_site_activities.sql` (tabla y función para reemplazar las actividades)
+  y `202611250002_site_gallery_activities_grants.sql`. Esta última corrige un fallo: faltaban
+  los GRANT de `tourist_site_photos` (y de actividades). La web no veía la galería y el panel
+  no podía abrir «Editar sitio».
+- `scripts/migrar-actividades-guia.mjs`: 429 actividades en 80 sitios, mapas de Google en
+  77 sitios que no tenían, y los 3 sitios «comarca-ngabe-bugle» creados con fotos y
+  actividades. Comparación final: los 80 sitios de la guía coinciden en todo con Supabase.
+- Panel: el formulario edita actividades (nombre, descripción y orden). El icono lo elige
+  cada web según el nombre, con las mismas reglas. El mapa pasó a `panel-site-map-field.tsx`.
+- Web: sección «Qué hacer en …» en la ficha del sitio (`site-activities.tsx`).
+- Guía: lee de Supabase con la clave publicable (`publishedSitesSource.js`). Direcciones
+  `/sitios/<slug>`; las antiguas `/sitios/api-<id>` redirigen (`legacySiteSlugs.js`).
+  Riviera Pacífica eliminada (página, menú, imagen y sugerencias).
+- Pendiente:
+  - Prerregistro: hoy va a la API y a otro proyecto de Supabase. Falta saber cuál es el
+    proyecto y la URL de Apps Script.
+  - Retirar en Cloudflare el panel antiguo, la API, D1 y R2 cuando el prerregistro ya no
+    dependa de la API.
+  - Sitio de prueba «aña» (slug `ana`) visible en la web y la guía; el usuario decide si se
+    borra.
+  - Borrar la clave secreta `migracion-fotos-guia` en Supabase.
+  - En Playa Tortuguilla, «Camping» repite la descripción de «Fotografía» (dato de origen).
+
 ## Guía (Panama_Viajero): ajustes y dominio (2026-11-20)
 
 - Aclaración del usuario: la guía en Vite se queda publicada en `panamaviajero.com` (proyecto
