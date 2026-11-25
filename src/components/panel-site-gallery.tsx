@@ -4,7 +4,7 @@ import { useId, useRef, useState } from "react";
 import { Button } from "@/components/ui";
 import { type GalleryAction, SiteGalleryItem } from "@/components/panel-site-gallery-item";
 import {
-  SITE_GALLERY_MAX, SITE_IMAGE_TYPES, moveSitePhoto, sitePhotoFileError,
+  SITE_GALLERY_MAX, SITE_IMAGE_TYPES, moveListItem, sitePhotoFileError,
 } from "@/lib/panel-sites";
 import { uploadSitePhotos } from "@/lib/site-photo-upload";
 
@@ -56,7 +56,7 @@ export function SiteGallery({
       return;
     }
     const target = action === "up" ? index - 1 : action === "down" ? index + 1 : 0;
-    setPhotos(moveSitePhoto(photos, index, target));
+    setPhotos(moveListItem(photos, index, target));
     setAnnouncement(
       action === "cover"
         ? `La foto ${number} es ahora la portada.`

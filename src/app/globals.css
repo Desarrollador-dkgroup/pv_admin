@@ -2100,6 +2100,28 @@ select[multiple] {
   align-items: center;
   gap: 12px;
 }
+/* Actividades del sitio: una tarjeta por actividad con sus campos y controles. */
+.site-activity-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.site-activity-item fieldset {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.site-activity-item legend {
+  padding: 0 6px;
+  font-weight: 700;
+  color: var(--ink);
+}
 .site-gallery-empty {
   margin: 0;
   padding: 18px;

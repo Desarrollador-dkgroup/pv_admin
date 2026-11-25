@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { deleteTouristSiteAction, saveTouristSiteAction } from "@/app/panel/sitios/actions";
+import { SiteActivities } from "@/components/panel-site-activities";
 import { SiteGallery } from "@/components/panel-site-gallery";
+import { SiteMapField } from "@/components/panel-site-map-field";
 import { Button, Panel, confirmAction } from "@/components/ui";
-import { extractMapsEmbedUrl } from "@/lib/panel-maps";
+import type { SiteActivity } from "@/lib/panel-site-activities";
 import { PanelSelect } from "@/components/panel-select";
 
 type Option = { id: string; label: string };
@@ -20,15 +22,17 @@ type Site = {
   maps_embed_url: string | null;
 };
 
-// Formulario de un sitio turístico: datos, fotos, ubicación y mapa de Google.
+// Formulario de un sitio turístico: datos, fotos, mapa de Google y actividades.
 export function SiteForm({
   site,
   photos = [],
+  activities = [],
   provinces,
   defaultProvinceId = "",
 }: {
   site: Site | null;
   photos?: string[];
+  activities?: SiteActivity[];
   provinces: Option[];
   defaultProvinceId?: string;
 }) {
@@ -37,9 +41,7 @@ export function SiteForm({
   // su primera foto, así las fotos ya quedan en su carpeta antes de crear el sitio.
   const [siteId, setSiteId] = useState(site?.id ?? "");
   const [photosBusy, setPhotosBusy] = useState(false);
-  const [mapsInput, setMapsInput] = useState(site?.maps_embed_url ?? "");
-  const mapsUrl = extractMapsEmbedUrl(mapsInput);
-  const mapsInvalid = mapsInput.trim() !== "" && !mapsUrl;
+  const [mapsInvalid, setMapsInvalid] = useState(false);
 
   function ensureSiteId() {
     if (siteId) return siteId;
@@ -97,36 +99,10 @@ export function SiteForm({
           onBusyChange={setPhotosBusy}
         />
 
-
-        <section className="destination-block">
-          <h3>Mapa de Google</h3>
-          <p className="muted">
-            En Google Maps busca el lugar, pulsa <strong>Compartir → Insertar un mapa</strong> y
-            pega aquí el código completo (iframe) o solo la URL del atributo src.
-          </p>
-          <textarea
-            name="maps_embed"
-            value={mapsInput}
-            onChange={(event) => setMapsInput(event.target.value)}
-            rows={3}
-            placeholder='<iframe src="https://www.google.com/maps/embed?..."></iframe>'
-            aria-invalid={mapsInvalid}
-          />
-          {mapsInvalid && (
-            <small role="alert" className="form-error">
-              Ese código no es un mapa de Google válido.
-            </small>
-          )}
-          {mapsUrl && (
-            <iframe
-              className="destination-map"
-              src={mapsUrl}
-              title="Vista previa del mapa"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          )}
-        </section>
+        <SiteMapField
+          initialValue={site?.maps_embed_url ?? ""}
+          onInvalidChange={setMapsInvalid}
+        />
 
         <label className="field">
           Descripción breve
@@ -136,6 +112,8 @@ export function SiteForm({
           Descripción
           <textarea name="description" required rows={5} defaultValue={site?.description ?? ""} />
         </label>
+
+        <SiteActivities initialActivities={activities} />
       </Panel>
       {state.error && <p role="alert" className="form-error">{state.error}</p>}
       <div className="actions">

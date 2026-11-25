@@ -14,7 +14,7 @@ export default async function EditSitePage({
   const { supabase, role } = await getPanelIdentity();
   requireRole(role, ["owner", "admin"]);
 
-  const [{ data: site, error }, gallery, options] = await Promise.all([
+  const [{ data: site, error }, gallery, activityRows, options] = await Promise.all([
     supabase
       .from("tourist_sites")
       .select("*")
@@ -25,11 +25,22 @@ export default async function EditSitePage({
       .select("storage_path")
       .eq("tourist_site_id", id)
       .order("position"),
+    supabase
+      .from("tourist_site_activities")
+      .select("name, description")
+      .eq("tourist_site_id", id)
+      .order("position"),
     loadSiteOptions(supabase),
   ]);
-  if (error || gallery.error) throw new Error("No se pudo cargar el sitio turístico.");
+  if (error || gallery.error || activityRows.error) {
+    throw new Error("No se pudo cargar el sitio turístico.");
+  }
   if (!site) notFound();
   const photos = gallery.data.map((photo) => photo.storage_path as string);
+  const activities = activityRows.data.map((row) => ({
+    name: row.name as string,
+    description: row.description as string,
+  }));
 
   return (
     <>
@@ -40,7 +51,12 @@ export default async function EditSitePage({
           <p>Cambia la información que muestra la web para este sitio.</p>
         </div>
       </header>
-      <SiteForm site={site} photos={photos} provinces={options.provinces} />
+      <SiteForm
+        site={site}
+        photos={photos}
+        activities={activities}
+        provinces={options.provinces}
+      />
     </>
   );
 }

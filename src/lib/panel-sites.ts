@@ -22,12 +22,12 @@ export function sitePhotoFileError(file: File): string | null {
   return null;
 }
 
-// Devuelve la lista con la foto movida de una posición a otra. La posición 0 es la portada.
-export function moveSitePhoto(photos: string[], from: number, to: number): string[] {
-  if (from === to || to < 0 || to >= photos.length) return photos;
-  const next = [...photos];
-  const [photo] = next.splice(from, 1);
-  next.splice(to, 0, photo);
+// Devuelve la lista con un elemento movido de una posición a otra (fotos, actividades…).
+export function moveListItem<T>(items: T[], from: number, to: number): T[] {
+  if (from === to || to < 0 || to >= items.length) return items;
+  const next = [...items];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item);
   return next;
 }
 

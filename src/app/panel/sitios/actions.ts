@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getPanelIdentity } from "@/lib/panel-access";
 import { formText, nullableText } from "@/lib/panel-form";
 import { extractMapsEmbedUrl } from "@/lib/panel-maps";
+import { parseSiteActivities } from "@/lib/panel-site-activities";
 import { sitePhotosError } from "@/lib/panel-sites";
 import { slugCandidates, slugify } from "@/lib/panel-slug";
 import { canManageCatalog } from "@/types/panel";
@@ -48,6 +49,8 @@ export async function saveTouristSiteAction(
       .eq("tourist_site_id", siteId)).data ?? []).map((row) => row.storage_path as string);
   const photosError = sitePhotosError(photos, siteId, current);
   if (photosError) return { error: photosError };
+  const parsedActivities = parseSiteActivities(formText(formData, "activities"));
+  if (parsedActivities.error !== null) return { error: parsedActivities.error };
   if (mapsRaw && !mapsUrl) return { error: "Ese código no es un mapa de Google válido." };
   if (!provinceId) return { error: "Selecciona la provincia destino del sitio." };
   if (!Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 32767) {
@@ -83,13 +86,17 @@ export async function saveTouristSiteAction(
     if (!inserted) return { error: "No se pudo crear el identificador del sitio." };
   }
 
-  // Guarda la galería y copia la primera foto como portada, en una sola operación.
-  const savedPhotos = await supabase.rpc("padmin_set_tourist_site_photos", {
-    p_site_id: siteId,
-    p_paths: photos,
-  });
-  if (savedPhotos.error) {
-    return { error: "Se guardó el sitio, pero no sus fotos. Intenta de nuevo." };
+  // Galería (la primera foto queda como portada) y actividades, cada una en una operación.
+  const [savedPhotos, savedActivities] = await Promise.all([
+    supabase.rpc("padmin_set_tourist_site_photos", { p_site_id: siteId, p_paths: photos }),
+    supabase.rpc("padmin_set_tourist_site_activities", {
+      p_site_id: siteId,
+      p_activities: parsedActivities.activities,
+    }),
+  ]);
+  if (savedPhotos.error || savedActivities.error) {
+    const part = savedPhotos.error ? "sus fotos" : "sus actividades";
+    return { error: `Se guardó el sitio, pero no ${part}. Intenta de nuevo.` };
   }
 
   revalidatePath("/panel/sitios");
