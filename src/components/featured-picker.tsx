@@ -36,13 +36,17 @@ export function FeaturedPicker({
 
   const results = useMemo(() => {
     const term = plain(query.trim());
-    return rows.filter((row) => {
-      if (category && row.categoryId !== category) return false;
-      if (!term) return true;
-      return [row.name, row.businessName, row.categoryLabel, row.statusLabel]
-        .some((text) => plain(text).includes(term));
-    });
+    return rows
+      .filter((row) => {
+        if (category && row.categoryId !== category) return false;
+        if (!term) return true;
+        return [row.name, row.businessName, row.categoryLabel, row.statusLabel]
+          .some((text) => plain(text).includes(term));
+      })
+      // Los destacados van primero, para que siempre se vean al abrir el buscador.
+      .sort((a, b) => Number(b.featured) - Number(a.featured) || a.name.localeCompare(b.name, "es"));
   }, [rows, query, category]);
+  const featuredCount = rows.filter((row) => row.featured).length;
 
   return (
     <>
@@ -70,7 +74,9 @@ export function FeaturedPicker({
               </PanelSelect>
             </div>
           </div>
-          <p className="muted">{results.length} servicios encontrados</p>
+          <p className="muted">
+            {featuredCount} destacados · {results.length} servicios encontrados
+          </p>
           {results.slice(0, 30).map((row) => (
             <div className="list-row" key={row.id}>
               <div className="list-row-text">
