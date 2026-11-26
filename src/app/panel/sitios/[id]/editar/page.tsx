@@ -27,7 +27,7 @@ export default async function EditSitePage({
       .order("position"),
     supabase
       .from("tourist_site_activities")
-      .select("name, description")
+      .select("name, description, icon_key")
       .eq("tourist_site_id", id)
       .order("position"),
     loadSiteOptions(supabase),
@@ -40,6 +40,7 @@ export default async function EditSitePage({
   const activities = activityRows.data.map((row) => ({
     name: row.name as string,
     description: row.description as string,
+    icon: (row.icon_key as string | null) ?? "",
   }));
 
   return (

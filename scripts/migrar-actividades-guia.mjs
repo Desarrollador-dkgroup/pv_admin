@@ -40,7 +40,7 @@ const postJson = (url, body, extra = {}) => request(url, {
 });
 
 // «Bocas del Toro» → «bocas-del-toro», igual que los slugs de provincia de la guía.
-const slugify = (text) => text.normalize("NFD").replace(/[̀-ͯ]/g, "")
+const slugify = (text) => text.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
 const { sites: guideSites } = await (await request(`${GUIDE_API}/api/v1/public/sites`)).json();

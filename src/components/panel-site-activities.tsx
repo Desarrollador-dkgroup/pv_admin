@@ -19,7 +19,9 @@ export function SiteActivities({ initialActivities }: { initialActivities: SiteA
   const list = useRef<HTMLOListElement>(null);
   const headingId = useId();
   const addId = useId();
-  const payload = JSON.stringify(items.map(({ name, description }) => ({ name, description })));
+  const payload = JSON.stringify(
+    items.map(({ name, description, icon }) => ({ name, description, icon })),
+  );
 
   // Lleva el foco al control indicado de una actividad; si no existe, al botón de añadir.
   function focusActivity(index: number, selector: string) {
@@ -39,7 +41,8 @@ export function SiteActivities({ initialActivities }: { initialActivities: SiteA
 
   function add() {
     nextKey.current += 1;
-    setItems([...items, { key: `nueva-${nextKey.current}`, name: "", description: "" }]);
+    const added = { key: `nueva-${nextKey.current}`, name: "", description: "", icon: "" };
+    setItems([...items, added]);
     setAnnouncement(`Actividad ${items.length + 1} añadida. Escribe su nombre.`);
     focusActivity(items.length, "input");
   }
@@ -62,8 +65,8 @@ export function SiteActivities({ initialActivities }: { initialActivities: SiteA
     <section className="destination-block" aria-labelledby={headingId}>
       <h3 id={headingId}>Qué hacer en el sitio</h3>
       <p className="muted">
-        Actividades que se muestran en la guía y en la página oficial, en este orden. El icono
-        se elige solo a partir del nombre.
+        Actividades que se muestran en la guía y en la página oficial, en este orden. Elige el
+        icono de cada una; en «Automático» se elige según el nombre.
       </p>
       <input type="hidden" name="activities" value={payload} />
       {items.length === 0 ? (

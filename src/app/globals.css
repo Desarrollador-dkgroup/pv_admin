@@ -2117,6 +2117,29 @@ select[multiple] {
   border-radius: 14px;
   background: var(--surface);
 }
+.site-activity-icon-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+.site-activity-icon-row .field {
+  flex: 1 1 220px;
+}
+.site-activity-icon-preview {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--pale);
+  color: var(--brand);
+}
+.site-activity-icon-chosen {
+  flex: 1 1 100%;
+  font-size: 0.875rem;
+}
 .site-activity-item legend {
   padding: 0 6px;
   font-weight: 700;
@@ -2131,8 +2154,12 @@ select[multiple] {
   color: var(--muted);
   text-align: center;
 }
+/* Texto solo para lectores de pantalla. top y left fijan su posición: sin ellos quedaba al
+   final del formulario, fuera del área con scroll, y alargaba la página entera. */
 .visually-hidden {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 1px;
   height: 1px;
   margin: -1px;

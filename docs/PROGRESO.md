@@ -6,6 +6,22 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
 > **Regla estricta de sincronización.** Antes de empezar: pull en ambos repos y leer esta
 > bitácora. Al terminar: actualizarla, commit y push. Claude debe recordarlo siempre.
 
+## Iconos de actividades y scroll del panel (2026-11-26)
+
+- Decisión del usuario: la API antigua se mantiene por ahora (el prerregistro la usa).
+- Migración `202611260001_activity_icons.sql` aplicada (probada con ROLLBACK): columna
+  `icon_key` en `tourist_site_activities`. Vacía = automático según el nombre. Solo admite
+  las 20 claves de `ACTIVITY_ICONS`.
+- Las claves y las reglas automáticas están copiadas en el panel (`activity-icon.tsx`,
+  `panel-site-activities.ts`), la web (`activity-icons.ts`) y la guía (`activityIcons.js`).
+  Si se añade un icono, hay que añadirlo en los tres y en la restricción de la base.
+- Panel: cada actividad tiene un selector de icono con vista previa; en automático dice
+  «Se usará: …». La guía usa el icono elegido en la ficha y en los filtros de provincia
+  (`Activities.jsx` dejó su copia propia de las reglas).
+- Corregido el espacio vacío al bajar en el panel: `.visually-hidden` sin `top`/`left`
+  quedaba fuera del área con scroll y alargaba la página (1159 px en una pantalla de 800).
+- Pendiente: `PanelSelect` no se maneja con flechas (solo Tab y Enter).
+
 ## Guía y página oficial con una sola fuente: Supabase (2026-11-25)
 
 - Un sitio creado o editado en `pv_admin` aparece igual en la guía y en la página oficial.
