@@ -19,7 +19,8 @@ Registro compartido entre las sesiones de Claude en local y en la nube. Cubre am
   actividades. Comparación final: los 80 sitios de la guía coinciden en todo con Supabase.
 - Panel: el formulario edita actividades (nombre, descripción y orden). El icono lo elige
   cada web según el nombre, con las mismas reglas. El mapa pasó a `panel-site-map-field.tsx`.
-- Web: sección «Qué hacer en …» en la ficha del sitio (`site-activities.tsx`).
+- Web: actividades en la ficha del sitio (`site-activities.tsx`), al final, bajo «Ubicación»,
+  con el título «Algunas cosas que puedes hacer en …» (la lista no es completa).
 - Guía: lee de Supabase con la clave publicable (`publishedSitesSource.js`). Direcciones
   `/sitios/<slug>`; las antiguas `/sitios/api-<id>` redirigen (`legacySiteSlugs.js`).
   Riviera Pacífica eliminada (página, menú, imagen y sugerencias).
